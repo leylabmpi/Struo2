@@ -1,0 +1,10 @@
+channels: !!python/tuple
+- bioconda
+- biobakery
+dependencies:
+- pigz
+- bioconda::seqkit
+- bioconda::vsearch
+- bioconda::prodigal
+- bioconda::diamond=0.9.24
+- biobakery::humann

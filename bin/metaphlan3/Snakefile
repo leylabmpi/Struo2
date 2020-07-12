@@ -1,0 +1,27 @@
+rule metaphlan3_species_specific_markers:
+    """
+    Splitting gene fasta for distributed searching
+    """
+    input:
+        fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
+        faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
+        tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
+    output:
+        tsv = config['tmp_dir'] + 'species_specific.txt'
+    params:
+        exe = config['pipeline']['script_folder'] + 'species_specific.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'metaphlan3_species_specific_markers/all.log'
+    benchmark:
+        benchmark_dir + 'metaphlan3_species_specific_markers/all.txt'
+    shell:
+        """
+        exit 1
+        {params.exe} {input.tsv} > {output.tsv} 2> {log}
+        """
+

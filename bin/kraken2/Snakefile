@@ -1,0 +1,141 @@
+if not config['names_dmp'].startswith('Skip') and \
+   not config['nodes_dmp'].startswith('Skip'):
+    localrules: kraken2_cp_dump  
+    rule kraken2_cp_dump:
+        """
+        Copying names.dmp taxdump files to kraken2 db
+        """
+        input:
+            names = ancient(config['names_dmp']),
+            nodes = ancient(config['nodes_dmp'])
+        output:
+            names = kraken2_dir + 'taxonomy/names.dmp',
+            nodes = kraken2_dir + 'taxonomy/nodes.dmp'
+        log:
+            log_dir + 'kraken2_cp_dump/all.log'
+        shell:
+            """
+            cp -f {input.names} {output.names} 2> {log}
+            cp -f {input.nodes} {output.nodes} 2>> {log}
+            """
+else:
+    localrules: kraken2_build_download_tax
+    rule kraken2_build_download_tax:
+        """
+        Downloading NCBI taxonomy
+        """
+        output:
+            gb = kraken2_dir + 'taxonomy/nucl_gb.accession2taxid',
+            wgs = kraken2_dir + 'taxonomy/nucl_wgs.accession2taxid',
+            dump = kraken2_dir + 'taxonomy/taxdump.tar.gz',
+            nodes = kraken2_dir + 'taxonomy/nodes.dmp',
+            names = kraken2_dir + 'taxonomy/names.dmp',
+            merged = kraken2_dir + 'taxonomy/merged.dmp'
+        params:
+            exe = config['pipeline']['script_folder'] + 'kraken2-build'
+        conda:
+            '../envs/kraken2.yaml'
+        log:
+            log_dir + 'kraken_build_download_tax/all.log'
+        benchmark:
+            benchmark_dir + 'kraken_build_download_tax/all.txt'
+        shell:
+            """
+            OUTDIR=`dirname {output.gb}`
+            OUTDIR=`dirname $OUTDIR`
+            rm -rf $OUTDIR 2> {log}
+            mkdir -p $OUTDIR 2>> {log}
+            echo "# Downloading NCBI taxonomy to $OUTDIR" >> {log}
+            {params.exe} --use-ftp --download-taxonomy --db $OUTDIR 2>> {log} 1>&2
+            """
+    
+rule kraken2_add_taxID:
+    """
+    Adding a taxononmy ID to the header of each genome.
+    Assuming the taxID is in the samples table.
+    Writing edited genome to temp dir.
+
+    Format: `kraken:taxid|<taxID>|<seqID>`
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']]
+    output:
+        temp(config['tmp_dir'] + '{sample}.fna')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 6
+    params:
+        taxID = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['taxID_col']].astype(str),
+        exe = config['pipeline']['script_folder'] + 'kraken2_rename_genome.py'
+    log:
+        log_dir + 'kraken2_add_taxID/{sample}.log'
+    benchmark:
+        benchmark_dir + 'kraken2_add_taxID/{sample}.txt'
+    shell:
+        """
+        {params.exe} {input.fasta} {params.taxID} > {output} 2> {log}
+        """
+
+localrules: kraken2_build_add
+
+rule kraken2_build_add:
+    """
+    Adding genome fasta files to the kraken database.
+    Using the --add-to-library flag
+    """
+    input:
+        fasta = config['tmp_dir'] + '{sample}.fna',
+        nodes = kraken2_dir + 'taxonomy/nodes.dmp',
+        names = kraken2_dir + 'taxonomy/names.dmp'
+    output:
+        kraken2_dir + 'added/{sample}.done'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 6
+    conda:
+        '../envs/kraken2.yaml'
+    log:
+        log_dir + 'kraken2_build_add/{sample}.log'
+    benchmark:
+        benchmark_dir + 'kraken2_build_add/{sample}.txt'
+    shell:
+        """
+        DB=`dirname {input.names}`
+        DB=`dirname $DB`
+
+        kraken2-build --db $DB --add-to-library {input.fasta}  2> {log} 1>&2
+        touch {output} 2>> {log}
+        """
+    
+rule kraken2_build:
+    """
+    Building the kraken database
+    """
+    input:
+        expand(kraken2_dir + 'added/{sample}.done',
+	       sample = config['samples_unique'])
+    output:
+        hash = os.path.join(kraken2_dir, 'hash.k2d'),
+	opts = os.path.join(kraken2_dir, 'opts.k2d'),
+	map  = os.path.join(kraken2_dir, 'seqid2taxid.map'),
+	taxo = os.path.join(kraken2_dir, 'taxo.k2d')
+    threads:
+        24
+    resources:
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 3
+    conda:
+        '../envs/kraken2.yaml'
+    log:
+        log_dir + 'kraken2_build/all.log'
+    benchmark:
+        benchmark_dir + 'kraken2_build/all.txt'
+    shell:
+        """
+        DB=`dirname {output.hash}`
+        kraken2-build --build --threads {threads} --db $DB 2> {log} 1>&2
+        """
+    

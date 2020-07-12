@@ -1,0 +1,38 @@
+rule bracken_build:
+    """
+    Build braken database from kraken2 database
+    """
+    input:
+        kraken2_db = kraken2_dir + 'hash.k2d'
+    output:
+        os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
+        os.path.join(kraken2_dir, 'database{read_len}mers.kmer_distrib')
+    params:
+        kmer = config['params']['bracken']['bracken_build_kmer'],
+        exe = config['pipeline']['script_folder'] + 'bracken-build.py',
+        read_len = lambda wildcards: wildcards.read_len,
+    threads:
+        24
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 8,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 4
+    conda:
+        '../envs/kraken2.yaml'
+    log:
+        log_dir + 'bracken_build/ReadLen{read_len}.log'
+    benchmark:
+        benchmark_dir + 'bracken_build/ReadLen{read_len}.txt'
+    shell:
+        """
+        # location of the kraken2 db files
+        DB=`dirname {input.kraken2_db}`
+        # removing existing files possibly created by bracken
+        TMP_FILE=$DB"/database.kraken"
+        rm -f $TMP_FILE
+
+        {params.exe} -t {threads} -d $DB \
+          -k {params.kmer} -l {params.read_len} \
+          2> {log} 1>&2
+        """
+

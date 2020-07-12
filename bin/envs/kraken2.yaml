@@ -1,0 +1,7 @@
+channels: !!python/tuple
+- bioconda
+dependencies:
+- libiconv
+- bioconda::kraken2
+- bioconda::bracken
+

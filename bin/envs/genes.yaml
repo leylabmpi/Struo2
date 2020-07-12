@@ -1,0 +1,10 @@
+channels: !!python/tuple
+- bioconda
+dependencies:
+- pigz
+- python=3
+- numpy
+- bioconda::fasta-splitter
+- bioconda::vsearch
+- bioconda::prodigal
+- bioconda::mmseqs2

@@ -1,0 +1,418 @@
+wildcard_constraints:
+    sample="[^/]+"
+
+rule prodigal:
+    """
+    Running prodigal on each genome
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']]
+    output:
+        fna = temp(config['tmp_dir'] + 'prodigal/{sample}.fna'),
+        faa = temp(config['tmp_dir'] + 'prodigal/{sample}.faa'),
+        gbk = temp(config['tmp_dir'] + 'prodigal/{sample}.gbk')
+    params:
+        params = config['params']['genes']['prodigal']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8 + 8
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'prodigal/{sample}.log'
+    benchmark:
+        benchmark_dir + 'prodigal/{sample}.txt'
+    shell:
+        """
+        gunzip -c {input.fasta} | \
+          prodigal {params.params} \
+          -o {output.gbk} -d {output.fna} -a {output.faa} \
+          2> {log} 1>&2
+        """    
+
+rule vsearch_per_genome:
+    """
+    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    """
+    input:
+        fna = config['tmp_dir'] + 'prodigal/{sample}.fna',
+        faa = config['tmp_dir'] + 'prodigal/{sample}.faa'
+    output:
+        reps = temp(config['tmp_dir'] + 'vsearch/{sample}_reps.fna')
+    params:
+        params = config['params']['genes']['vsearch_per_genome']
+    threads:
+        4
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 3
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'vsearch_per_genome/{sample}.log'
+    benchmark:
+        benchmark_dir + 'vsearch_per_genome/{sample}.txt'
+    shell:
+        """
+        vsearch {params.params} \
+          --threads {threads} \
+          --cluster_fast {input.fna} \
+          --centroids {output.reps} \
+          2> {log} 1>&2
+        """
+        
+rule filter_gene_seqs:
+    """
+    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    Renaming as [seq_name]|gene_length|taxonomy
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']],
+        reps = config['tmp_dir'] + 'vsearch/{sample}_reps.fna',
+        faa = config['tmp_dir'] + 'prodigal/{sample}.faa'
+    output:
+        fna = temp(config['tmp_dir'] + 'nuc_filtered/{sample}_reps.fna'),
+        faa = temp(config['tmp_dir'] + 'prot_filtered/{sample}_reps.faa'),
+        txt = temp(config['tmp_dir'] + 'names_filtered/{sample}_reps.txt')
+    params:
+        exe = config['pipeline']['script_folder'] + 'filter_seqs.py',
+        tax = lambda wildcards: \
+                config['samples'].loc[wildcards.sample, config['taxonomy_col']],
+        taxID = lambda wildcards: \
+	          config['samples'].loc[wildcards.sample, config['taxID_col']]
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 8
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'filter_gene_seqs/{sample}.log'
+    benchmark:
+        benchmark_dir + 'filter_gene_seqs/{sample}.txt'
+    shell:
+        """        
+        {params.exe} --taxonomy "{params.tax}" \
+           --taxID {params.taxID} \
+           --genome-file {input.fasta} \
+           {input.reps} {input.faa} \
+           {output.fna} {output.faa} \
+           > {output.txt} 2> {log}
+        """        
+        
+# rule rename_genes:
+#     """
+#     Combine gene sequences and renaming to:
+#     Using naming format: `gene_length|taxonomy`
+#     Taxonomy format: `g__{genus};s__{species}_taxID{taxID}`
+#     """
+#     input:
+#         fna = config['tmp_dir'] + 'prodigal/{sample}.fna',
+#         faa = config['tmp_dir'] + 'prodigal/{sample}.faa'
+#     output:
+#         fna = temp(config['tmp_dir'] + 'prodigal_rename/{sample}.fna'),
+#         faa = temp(config['tmp_dir'] + 'prodigal_rename/{sample}.faa')
+#     params:
+#         tax = lambda wildcards: \
+# 	      config['samples'].loc[wildcards.sample, config['taxonomy_col']],
+#         taxID = lambda wildcards: \
+# 	        config['samples'].loc[wildcards.sample, config['taxID_col']],
+#         exe = config['pipeline']['script_folder'] + 'rename_genes.py'
+#     shell:
+#         """
+#         OUTDIR=`dirname {output.fna}`
+#         {params.exe} --outdir $OUTDIR \
+#           {input.fna} {input.faa} \
+#           "{params.tax}" {params.taxID} \
+#           2> {log} 1>&2
+#         """
+        
+rule combine_fna:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        fna = expand(config['tmp_dir'] + 'nuc_filtered/{sample}_reps.fna',
+                     sample = config['samples_unique'])
+    output:
+        fna = temp(config['tmp_dir'] + 'filtered_reps_tmp.fna')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.fna, 'w') as outF:
+            for F in input.fna:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+rule combine_faa:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        faa = expand(config['tmp_dir'] + 'prot_filtered/{sample}_reps.faa',
+                     sample = config['samples_unique'])
+    output:
+        faa = temp(config['tmp_dir'] + 'filtered_reps_tmp.faa')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.faa, 'w') as outF:
+            for F in input.faa:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+rule combine_txt:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        txt = expand(config['tmp_dir'] + 'names_filtered/{sample}_reps.txt',
+                     sample = config['samples_unique'])
+    output:
+        txt = temp(config['tmp_dir'] + 'filtered_reps_tmp.txt')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.txt, 'w') as outF:
+            for F in input.txt:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+def which_user_add_seqs(wildcards):
+    seq_files = []
+    if not skipped(config['humann_nuc_seqs']):
+        seq_files.append(ancient(config['humann_nuc_seqs']))
+    if not skipped(config['humann_prot_seqs']):
+        seq_files.append(ancient(config['humann_prot_seqs']))
+    return seq_files
+                        
+if (not skipped(config['humann_nuc_seqs']) or
+    not skipped(config['humann_prot_seqs'])):
+    rule add_user_seqs:
+        """
+        Adding the user-specified genes to the collection
+        """
+        input:
+            fasta = which_user_add_seqs,
+            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
+            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
+            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
+        output:
+            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
+            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
+            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+        params:
+            exe = config['pipeine']['script_folder'] + 'add_user_seqs.py'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
+        log:
+            log_dir + 'cluster_all_genes_nuc/all.log'
+        benchmark:
+            benchmark_dir + 'cluster_all_genes_nuc/all.txt'
+        shell:
+            """
+            {params.exe} --out-fna {output.fna} --out-faa {output.faa} \
+               --out-txt {output.txt} --in-fna {input.fna} \
+               --in-faa {input.faa} --in-txt {input.txt} \
+               {input.fasta} 2> {log} 1>&2
+            """
+else:
+    rule add_user_seqs_SKIP:
+        """
+        Adding the user-specified genes to the collection
+        """
+        input:
+            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
+            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
+            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
+        output:
+            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
+            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
+            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
+        log:
+            log_dir + 'add_user_seqs_SKIP/all.log'
+        benchmark:
+            benchmark_dir + 'add_user_seqs_SKIP/all.txt'
+        shell:
+            """
+            cp -f {input.fna} {output.fna} 2> {log} 1>&2
+            cp -f {input.faa} {output.faa} 2>> {log} 1>&2
+            cp -f {input.txt} {output.txt} 2>> {log} 1>&2
+            """    
+                        
+rule mmseqs2_db_create:
+    """ 
+    Creating mmseqs2 database
+    """
+    input:
+        fna = config['tmp_dir'] + 'filtered_reps.fna',
+        faa = config['tmp_dir'] + 'filtered_reps.faa',
+        txt = config['tmp_dir'] + 'filtered_reps.txt'
+    output:
+        db = temp(config['tmp_dir'] + 'cluster/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'cluster/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'cluster/genes_db.index'),
+        db_h = temp(config['tmp_dir'] + 'cluster/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'cluster/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'cluster/genes_db_h.index')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_db_create/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_db_create/all.txt'
+    shell:
+        """
+        mmseqs createdb {input} {output.db} 2> {log} 1>&2
+        """
+        
+rule mmseqs2_cluster:
+    """ 
+    De-replicating genes and taking representatives for diamond query
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/genes_db',
+        db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'cluster/genes_db.index',
+        db_h = config['tmp_dir'] + 'cluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index'
+    output:
+        db = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
+                    X = range(12)),
+        db_t = temp(config['tmp_dir'] + 'cluster/clusters_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'cluster/clusters_db.index')
+    params:
+        db = config['tmp_dir'] + 'cluster/clusters_db',
+        params = config['params']['genes']['mmseqs_cluster'],
+        tmp_dir = config['tmp_dir'] + 'cluster_TMP'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        n = lambda wildcards, input, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_cluster/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_cluster/all.txt'
+    shell:
+        """
+        mkdir -p {params.tmp_dir} 2> {log}
+        mmseqs cluster {params.params} --threads {threads} \
+          {input.db} {params.db} {params.tmp_dir} 2>> {log} 1>&2
+        """
+
+rule mmseqs2_cluster_membership:
+    """ 
+    De-replicating genes and taking representatives for diamond query.
+    Output table format: cluster_rep<tab>cluster_member
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/genes_db',
+        db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'cluster/genes_db.index',
+        db_h = config['tmp_dir'] + 'cluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
+        db_clu = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
+                        X = range(12)),
+        db_clu_t = config['tmp_dir'] + 'cluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'cluster/clusters_db.index'
+    output:
+        tsv = temp(config['tmp_dir'] + 'cluster/clusters_membership.tsv')
+    params:
+        db_clu = config['tmp_dir'] + 'cluster/clusters_db'
+    threads:
+        4 
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 5
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_cluster_membership/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_cluster_membership/all.txt'
+    shell:
+        """        
+        mmseqs createtsv --threads {threads} {input.db} {input.db} \
+          {params.db_clu} {output.tsv} 2> {log} 1>&2
+        """
+        
+rule mmseqs2_cluster_rep_db:
+    """ 
+    De-replicating genes and taking representatives for diamond query
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/genes_db',
+        db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'cluster/genes_db.index',
+        db_h = config['tmp_dir'] + 'cluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
+        db_clu = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
+                        X = range(12)),
+        db_clu_t = config['tmp_dir'] + 'cluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'cluster/clusters_db.index'
+    output:
+        db = temp(config['tmp_dir'] + 'cluster/clusters_reps_db'),
+        db_t = temp(config['tmp_dir'] + 'cluster/clusters_reps_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'cluster/clusters_reps_db.index'),
+        db_h = temp(config['tmp_dir'] + 'cluster/clusters_reps_db_h')
+    params:
+        db_clu = config['tmp_dir'] + 'cluster/clusters_db'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_cluster_rep_db/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_cluster_rep_db/all.txt'
+    shell:
+        """
+        mmseqs createsubdb {params.db_clu} {input.db} {output.db} 2> {log} 1>&2
+        """
+       
+rule mmseqs2_cluster_rep_seqs:
+    """ 
+    De-replicating genes and taking representatives for diamond query
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/clusters_reps_db',
+        db_t = config['tmp_dir'] + 'cluster/clusters_reps_db.dbtype',
+        db_i = config['tmp_dir'] + 'cluster/clusters_reps_db.index',
+        db_h = config['tmp_dir'] + 'cluster/clusters_reps_db_h'
+    output:
+        fasta = temp(config['tmp_dir'] + 'cluster/clusters_reps.faa')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_cluster_rep_seqs/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_cluster_rep_seqs/all.txt'
+    shell:
+        """
+        mmseqs convert2fasta {input.db} {output.fasta} 2> {log} 1>&2
+        """
+        
