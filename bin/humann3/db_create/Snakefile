@@ -1,0 +1,72 @@
+wildcard_constraints:
+    sample="[^/]+"
+
+rule humann3_bowtie2_build:
+    """
+    Running bowtie2 build on combined, annotated genes 
+    """
+    input:
+        fna = config['tmp_dir'] + 'filtered_reps_annot.fna'
+    output:
+        touch(os.path.join(humann3_dir, 'bowtie2_build.done'))
+    params:
+        prefix = humann3_dir + 'all_genes_annot'
+    conda:
+        '../../envs/humann3.yaml'
+    threads:
+        18
+    resources:
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 3 + 6
+    log:
+        log_dir + 'humann3_bowtie2_build/all.log'
+    benchmark:
+        log_dir + 'humann3_bowtie2_build/all.txt'
+    shell:
+        """
+        bowtie2-build --threads {threads} \
+          {input.fna} {params.prefix} 2> {log} 1>&2
+
+        # check that output exists
+        OUTDIR=`dirname {params.prefix}`
+        IDX_FILES=`find $OUTDIR -maxdepth 1 -name "*.bt2*"`
+        IDX_FILES=`echo $IDX_FILES | perl -pe 's/ +/\n/g' | wc -l`
+        if [ $IDX_FILES -lt 1 ]; then
+          echo "ERROR: no bowtie2 index files found!"
+          exit 1
+        fi
+        """    
+
+def diamond_makedb_input(wildcards):
+    if skipped(config['humann_prot_seqs']):
+        return config['tmp_dir'] + 'filtered_reps_annot.faa'
+    else:
+        return config['tmp_dir'] + 'filtered_reps_updated_annot.faa'
+        
+rule humann3_diamond_makedb:
+    """
+    Running diamond makedb on combined, annotated genes 
+    """
+    input:
+        faa = diamond_makedb_input
+    output:
+        os.path.join(humann3_dir, 'all_genes_annot.dmnd')
+    params:
+        tmp_dir = config['tmp_dir']
+    conda:
+        '../../envs/humann3.yaml'
+    resources:
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+    log:
+        log_dir + 'humann3_diamond_makedb/all.log'
+    benchmark:
+        log_dir + 'humann3_diamond_makedb/all.txt'
+    shell:
+        """
+        PREF=`echo {output} | perl -pe 's/\.[^.]+$//'`
+        diamond makedb --in {input.faa} -d $PREF 2> {log} 1>&2
+        """    
+
+

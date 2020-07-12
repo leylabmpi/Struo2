@@ -19,35 +19,33 @@ def all_which_input(wildcards):
 	           read_len = config['params']['bracken_build_read_lens'])
         input_files += x
 
-    # humann3    
-    if not skipped(config['databases']['humann3_bowtie2']):
-        input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
-    if not skipped(config['databases']['humann3_diamond']):
-        input_files.append(os.path.join(humann3_dir,'all_genes_annot.dmnd'))
-    # if (not skipped(config['databases']['humann2_bowtie2']) and
-    #     not skipped(config['databases']['humann2_diamond'])):
-    #     if config['keep_intermediate'] == True:
-    #         if config['use_ancient'] == True:                
-    #             x = ancient(expand(annot_dir + 'prodigal/{sample}/annot.fna.gz',
-    #                                sample = config['samples_unique']))
-    #         else:			   
-    #             x = expand(annot_dir + 'prodigal/{sample}/annot.fna.gz',
-    #                        sample = config['samples_unique'])
-    #         input_files += x
-    #         if config['use_ancient'] == True:                	    
-    #             x = ancient(expand(annot_dir + 'prodigal/{sample}/annot.faa.gz',
-    #                                sample = config['samples_unique']))
-    #         else:
-    #             x = expand(annot_dir + 'prodigal/{sample}/annot.faa.gz',
-    #                        sample = config['samples_unique'])
-    #         input_files += x
-    # if not skipped(config['databases']['humann2_bowtie2']):
-    #     input_files.append(os.path.join(humann2_dir, 'bowtie2_build.done'))
-    # if not skipped(config['databases']['humann2_diamond']):
-    #     input_files.append(os.path.join(humann2_dir,'all_genes_annot.dmnd'))
-    # humann2
-    if not skipped(config['databases']['metaphlan3']):
-        input_files.append(config['tmp_dir'] + 'species_specific.txt')
+    # genes
+    if (not skipped(config['databases']['humann3_bowtie2']) and
+        not skipped(config['databases']['humann3_diamond'])):
+        if str(config['params']['genes']['keep_gene_info']) == 'True':
+            input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
+            input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
+            input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+
+        if str(config['params']['genes']['keep_cluster_db']) == 'True':
+            input_files.append(genes_dir + 'cluster/genes_db')
+            input_files.append(genes_dir + 'cluster/genes_db.dbtype')
+            input_files.append(genes_dir + 'cluster/genes_db.index')
+            input_files.append(genes_dir + 'cluster/genes_db_h')
+            input_files.append(genes_dir + 'cluster/genes_db_h.dbtype')
+            input_files.append(genes_dir + 'cluster/genes_db_h.index')
+            x = expand(genes_dir + 'cluster/clusters_db.{X}', X = range(12))
+            input_files += x
+            input_files.append(genes_dir + 'cluster/clusters_db.dbtype')
+            input_files.append(genes_dir + 'cluster/clusters_db.index')
+            input_files.append(genes_dir + 'cluster/clusters_db_h')
+            
+        
+        # humann3    
+        if not skipped(config['databases']['humann3_bowtie2']):
+            input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
+        if not skipped(config['databases']['humann3_diamond']):
+            input_files.append(os.path.join(humann3_dir,'all_genes_annot.dmnd'))
         
     # ret
     return input_files

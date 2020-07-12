@@ -1,12 +1,18 @@
 wildcard_constraints:
     sample="[^/]+"
 
+def which_input_batch_seqs(wildcards):
+    if not skipped(config['humann_prot_seqs']):
+        return config['tmp_dir'] + 'cluster_updated/clusters_reps_filter.faa'
+    else:
+        return config['tmp_dir'] + 'cluster/clusters_reps.faa'
+    
 rule humann3_diamond_batch_seqs:
     """
     Splitting gene fasta for distributed searching
     """
     input:
-        faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
+        faa = which_input_batch_seqs
     output:
         temp(expand(config['tmp_dir'] + \
                     'humann3_dmnd/clusters_reps.part-{splitID}.faa',
@@ -18,7 +24,7 @@ rule humann3_diamond_batch_seqs:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'humann3_diamond_batch_seqs/all.log'
     benchmark:
@@ -83,7 +89,7 @@ rule humann3_diamond_pass1:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = dmnd_start_mem
     conda:
-        '../envs/humann3.yaml'
+        '../../envs/humann3.yaml'
     log:
         log_dir + 'hm3_diamond_pass1/{splitID}.log'
     benchmark:
@@ -121,7 +127,7 @@ rule humann3_diamond_pass2:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = dmnd_start_mem
     conda:
-        '../envs/humann3.yaml'
+        '../../envs/humann3.yaml'
     log:
         log_dir + 'hm3_diamond_pass2/{splitID}.log'
     benchmark:
@@ -164,97 +170,91 @@ rule humann3_diamond_merge:
                     for line in inF:
                         outF.write(line)
 
-rule humann3_annotate_genes:
-    """
-    Use DIAMOND hits from clustered reps & index table to annotate all
-    genome-derep genes. The annotation for each cluster rep is propagated
-    to each member of the cluster.
-    """
-    input:
-        hits = config['tmp_dir'] + 'humann3_dmnd/hits.txt',
-        fna = config['tmp_dir'] + 'filtered_reps.fna',
-        faa = config['tmp_dir'] + 'filtered_reps.faa',
-        txt = config['tmp_dir'] + 'filtered_reps.txt',
-        tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv'
-    output:
-        fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
-        faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
-        tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
-    params:
-        exe = config['pipeline']['script_folder'] + 'propagate_annotations.py'
-    resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59
-    log:
-        log_dir + 'hm3_annotate_genes/all.log'
-    benchmark:
-        benchmark_dir + 'hm3_annotate_genes/all.txt'
-    shell:
+if skipped(config['humann_prot_seqs']): 
+    rule humann3_annotate_genes:
         """
-        {params.exe} --out-nuc {output.fna} --out-prot {output.faa} \
-          {input.hits} {input.fna} {input.faa} \
-          {input.txt} {input.tsv} > {output.tsv} 2> {log}
-        """                        
-
-rule humann3_bowtie2_build:
-    """
-    Running bowtie2 build on combined, annotated genes 
-    """
-    input:
-        fna = config['tmp_dir'] + 'filtered_reps_annot.fna'
-    output:
-        touch(os.path.join(humann3_dir, 'bowtie2_build.done'))
-    params:
-        prefix = humann3_dir + 'all_genes_annot'
-    conda:
-        '../envs/humann3.yaml'
-    threads:
-        18
-    resources:
-        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
-        n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 3 + 6
-    log:
-        log_dir + 'humann3_bowtie2_build/all.log'
-    benchmark:
-        log_dir + 'humann3_bowtie2_build/all.txt'
-    shell:
+        Use DIAMOND hits from clustered reps & index table to annotate all
+        genome-derep genes. The annotation for each cluster rep is propagated
+        to each member of the cluster.
         """
-        bowtie2-build --threads {threads} \
-          {input.fna} {params.prefix} 2> {log} 1>&2
-
-        # check that output exists
-        OUTDIR=`dirname {params.prefix}`
-        IDX_FILES=`find $OUTDIR -maxdepth 1 -name "*.bt2*"`
-        IDX_FILES=`echo $IDX_FILES | perl -pe 's/ +/\n/g' | wc -l`
-        if [ $IDX_FILES -lt 1 ]; then
-          echo "ERROR: no bowtie2 index files found!"
-          exit 1
-        fi
-        """    
-
-rule humann3_diamond_makedb:
-    """
-    Running diamond makedb on combined, annotated genes 
-    """
-    input:
-        faa = config['tmp_dir'] + 'filtered_reps_annot.faa'        
-    output:
-        os.path.join(humann3_dir, 'all_genes_annot.dmnd')
-    params:
-        tmp_dir = config['tmp_dir']
-    conda:
-        '../envs/humann3.yaml'
-    resources:
-        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
-    log:
-        log_dir + 'humann3_diamond_makedb/all.log'
-    benchmark:
-        log_dir + 'humann3_diamond_makedb/all.txt'
-    shell:
+        input:
+            hits = config['tmp_dir'] + 'humann3_dmnd/hits.txt',
+            fna = config['tmp_dir'] + 'filtered_reps.fna',
+            faa = config['tmp_dir'] + 'filtered_reps.faa',
+            txt = config['tmp_dir'] + 'filtered_reps.txt',
+            tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv'
+        output:
+            fna = temp(config['tmp_dir'] + 'filtered_reps_annot.fna'),
+            faa = temp(config['tmp_dir'] + 'filtered_reps_annot.faa'),
+            tsv = temp(config['tmp_dir'] + 'filtered_reps_annot.tsv')
+        params:
+            exe = config['pipeline']['script_folder'] + 'propagate_annotations.py'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 3 * 59
+        log:
+            log_dir + 'hm3_annotate_genes/all.log'
+        benchmark:
+            benchmark_dir + 'hm3_annotate_genes/all.txt'
+        shell:
+            """
+            {params.exe} \
+              --in-nuc {input.fna} \
+              --out-nuc {output.fna} \
+              --out-prot {output.faa} \          
+              {input.hits} {input.faa} \
+              {input.txt} {input.tsv} \
+              > {output.tsv} 2> {log}
+            """
+    rule humann3_annotate_genes_copy:
         """
-        PREF=`echo {output} | perl -pe 's/\.[^.]+$//'`
-        diamond makedb --in {input.faa} -d $PREF 2> {log} 1>&2
-        """    
-
-
+        """
+        input:
+            fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
+            faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
+            tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
+        output:
+            fna = config['tmp_dir'] + 'filtered_reps_annot.fna.gz',
+            faa = config['tmp_dir'] + 'filtered_reps_annot.faa.gz',
+            tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv.gz'            
+        params:
+            ionice = config['params']['ionice']
+        resources:
+            time = lambda wildcards, attempt: attempt ** 3 * 59
+        log:
+            log_dir + 'hm3_annotate_genes_copy/all.log'
+        benchmark:
+            benchmark_dir + 'hm3_annotate_genes_copy/all.txt'
+        shell:
+            """
+            ionice {param.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
+            ionice {param.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
+            ionice {param.ionice} gzip -c {input.txt} > {output.txt} 2>> {log}
+            """
+else:                            
+    rule humann3_updated_annotate_genes:
+        """
+        Merging 
+        """
+        input:
+            hits = config['tmp_dir'] + 'humann3_dmnd/hits.txt',
+            faa1 = config['tmp_dir'] + 'filtered_reps.faa',
+            txt = config['tmp_dir'] + 'seqs_merged.txt',
+            tsv = config['tmp_dir'] + 'cluster_updated/clusters_membership.tsv'
+        output:
+            faa = config['tmp_dir'] + 'filtered_reps_updated_annot.faa',
+            tsv = config['tmp_dir'] + 'filtered_reps_updated_annot.tsv'
+        params:
+            exe = config['pipeline']['script_folder'] + 'propagate_annotations.py'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 3 * 59
+        log:
+            log_dir + 'hm3_updated_annotate_genes/all.log'
+        benchmark:
+            benchmark_dir + 'hm3_updated_annotate_genes/all.txt'
+        shell:
+            """
+            {params.exe} --out-prot {output.faa} \
+              {input.hits} {input.faa} \
+              {input.txt} {input.tsv} > {output.tsv} 2> {log}
+            """
+    

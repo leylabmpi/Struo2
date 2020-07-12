@@ -20,8 +20,8 @@ tmp_dir: /ebio/abt3_scratch/
 databases:
   kraken2: Skip #Create
   bracken: Skip #Create
-  humann3_bowtie2: Skip #Create
-  humann3_diamond: Skip #Create
+  humann3_bowtie2: Create
+  humann3_diamond: Create
   metaphlan3: Create
   
 # output database name
@@ -50,7 +50,9 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
+    keep_gene_info: True
     mmseqs_cluster: --min-seq-id 0.9 -c 0.8
+    keep_cluster_db: True
   humann3:
     batches: 10
     diamond_db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref/uniref50_201901.dmnd
@@ -59,10 +61,9 @@ params:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 
 #-- If adding genes to humann database --#
-# If you have nucleotid and/or protein gene sequences formatted for humann,
+# If you have amino acid gene sequences formatted for humann,
 # provide the file paths to the fasta files below (gzip'ed).
-# These will be clustered with the genome-derived genes and queried against UniRef
-humann_nuc_seqs: Skip
+# The cluster db will be updated and the annotations will be re-propagatted
 humann_prot_seqs: Skip
 
 #-- snakemake pipeline --#

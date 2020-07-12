@@ -17,14 +17,14 @@ parser = argparse.ArgumentParser(description=desc,
                                  formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('diamond_hits', metavar='diamond_hits', type=str,
                     help='tab-delim table of diamond hits')
-parser.add_argument('genes_fasta_nuc', metavar='genes_fasta_nuc', type=str,
-                    help='Genes in nucletide fasta format')
 parser.add_argument('genes_fasta_prot', metavar='genes_fasta_prot', type=str,
                     help='Genes in amino acid fasta format')
 parser.add_argument('genes_names', metavar='genes_names', type=str,
                     help='Gene metadata such as origin genome & taxonomy')
 parser.add_argument('cluster_membership', metavar='cluster_membership', type=str,
                     help='Cluster membership of each genome')
+parser.add_argument('--in-nuc', type=str, default=None,
+                    help='Input nucleotide fasta (default: %(default)s)')
 parser.add_argument('--out-nuc', type=str, default='annotated.fna',
                     help='Output nucleotide fasta (default: %(default)s)')
 parser.add_argument('--out-prot', type=str, default='annotated.faa',
@@ -184,10 +184,11 @@ def main(args):
         
     # for each gene [fna, faa]:
     ## apply information to sequence header
-    propagate_info(args.genes_fasta_nuc, args.out_nuc, mmshp, meta,
-                   args.meta_columns, keep_unclassified=args.keep_unclassified)
     propagate_info(args.genes_fasta_prot, args.out_prot, mmshp, meta,
                    args.meta_columns, keep_unclassified=args.keep_unclassified)
+    if args.in_nuc is not None:
+        propagate_info(args.in_nuc, args.out_nuc, mmshp, meta,
+                       args.meta_columns, keep_unclassified=args.keep_unclassified)
 
     # create dict: {gene : [clusterID, dmnd-hit, gene_metadata]}
     write_table(mmshp, meta, args.meta_columns)
