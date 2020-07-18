@@ -1,6 +1,7 @@
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/samples_n10.txt
+#samples_file: tests/samples/samples_n10.txt
+samples_file: tests/samples/samples_n100.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -9,7 +10,8 @@ taxID_col: 'ncbi_species_taxid'
 taxonomy_col: 'ncbi_taxonomy'   
 
 # output location
-output_dir: tests/output_n10/
+#output_dir: tests/output_n10/
+output_dir: tests/output_n100/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -52,7 +54,9 @@ params:
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
     keep_gene_info: True
     mmseqs_cluster: --min-seq-id 0.9 -c 0.8
+    mmseqs_cluster_method: linclust         # or "cluster", which is slower
     keep_cluster_db: True
+    keep_annot_genes: True
   humann3:
     batches: 10
     diamond_db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref/uniref50_201901.dmnd
@@ -61,9 +65,10 @@ params:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 
 #-- If adding genes to humann database --#
-# If you have amino acid gene sequences formatted for humann,
+# If you have nucleotide/amino-acid gene sequences formatted for humann,
 # provide the file paths to the fasta files below (gzip'ed).
 # The cluster db will be updated and the annotations will be re-propagatted
+humann_nuc_seqs: Skip
 humann_prot_seqs: Skip
 
 #-- snakemake pipeline --#

@@ -38,18 +38,12 @@ rule humann3_bowtie2_build:
         fi
         """    
 
-def diamond_makedb_input(wildcards):
-    if skipped(config['humann_prot_seqs']):
-        return config['tmp_dir'] + 'filtered_reps_annot.faa'
-    else:
-        return config['tmp_dir'] + 'filtered_reps_updated_annot.faa'
-        
 rule humann3_diamond_makedb:
     """
     Running diamond makedb on combined, annotated genes 
     """
     input:
-        faa = diamond_makedb_input
+        faa = config['tmp_dir'] + 'filtered_reps_annot.faa'
     output:
         os.path.join(humann3_dir, 'all_genes_annot.dmnd')
     params:

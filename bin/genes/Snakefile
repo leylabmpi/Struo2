@@ -111,7 +111,7 @@ rule combine_fna:
         fna = expand(config['tmp_dir'] + 'nuc_filtered/{sample}_reps.fna',
                      sample = config['samples_unique'])
     output:
-        fna = temp(config['tmp_dir'] + 'filtered_reps.fna')
+        fna = temp(config['tmp_dir'] + 'filtered_reps_tmp.fna')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -129,7 +129,7 @@ rule combine_faa:
         faa = expand(config['tmp_dir'] + 'prot_filtered/{sample}_reps.faa',
                      sample = config['samples_unique'])
     output:
-        faa = temp(config['tmp_dir'] + 'filtered_reps.faa')
+        faa = temp(config['tmp_dir'] + 'filtered_reps_tmp.faa')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -147,7 +147,7 @@ rule combine_txt:
         txt = expand(config['tmp_dir'] + 'names_filtered/{sample}_reps.txt',
                      sample = config['samples_unique'])
     output:
-        txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+        txt = temp(config['tmp_dir'] + 'filtered_reps_tmp.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -157,71 +157,71 @@ rule combine_txt:
                     for line in inF:
                         outF.write(line)
 
-# def which_user_add_seqs(wildcards):
-#     seq_files = []
-#     if not skipped(config['humann_nuc_seqs']):
-#         seq_files.append(ancient(config['humann_nuc_seqs']))
-#     if not skipped(config['humann_prot_seqs']):
-#         seq_files.append(ancient(config['humann_prot_seqs']))
-#     return seq_files
+def which_user_add_seqs(wildcards):
+    seq_files = []
+    if not skipped(config['humann_nuc_seqs']):
+        seq_files.append(ancient(config['humann_nuc_seqs']))
+    if not skipped(config['humann_prot_seqs']):
+        seq_files.append(ancient(config['humann_prot_seqs']))
+    return seq_files
                         
-# if (not skipped(config['humann_nuc_seqs']) or
-#     not skipped(config['humann_prot_seqs'])):
-#     rule add_user_seqs:
-#         """
-#         Adding the user-specified genes to the collection
-#         """
-#         input:
-#             fasta = which_user_add_seqs,
-#             fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
-#             faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
-#             txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
-#         output:
-#             fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
-#             faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
-#             txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
-#         params:
-#             exe = config['pipeine']['script_folder'] + 'add_user_seqs.py'
-#         resources:
-#             time = lambda wildcards, attempt: attempt ** 2 * 59,
-#             mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
-#         log:
-#             log_dir + 'cluster_all_genes_nuc/all.log'
-#         benchmark:
-#             benchmark_dir + 'cluster_all_genes_nuc/all.txt'
-#         shell:
-#             """
-#             {params.exe} --out-fna {output.fna} --out-faa {output.faa} \
-#                --out-txt {output.txt} --in-fna {input.fna} \
-#                --in-faa {input.faa} --in-txt {input.txt} \
-#                {input.fasta} 2> {log} 1>&2
-#             """
-# else:
-#     rule add_user_seqs_SKIP:
-#         """
-#         Adding the user-specified genes to the collection
-#         """
-#         input:
-#             fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
-#             faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
-#             txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
-#         output:
-#             fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
-#             faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
-#             txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
-#         resources:
-#             time = lambda wildcards, attempt: attempt ** 2 * 59,
-#             mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
-#         log:
-#             log_dir + 'add_user_seqs_SKIP/all.log'
-#         benchmark:
-#             benchmark_dir + 'add_user_seqs_SKIP/all.txt'
-#         shell:
-#             """
-#             cp -f {input.fna} {output.fna} 2> {log} 1>&2
-#             cp -f {input.faa} {output.faa} 2>> {log} 1>&2
-#             cp -f {input.txt} {output.txt} 2>> {log} 1>&2
-#             """    
+if (not skipped(config['humann_nuc_seqs']) or
+    not skipped(config['humann_prot_seqs'])):
+    rule add_user_seqs:
+        """
+        Adding the user-specified genes to the collection
+        """
+        input:
+            fasta = which_user_add_seqs,
+            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
+            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
+            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
+        output:
+            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
+            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
+            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+        params:
+            exe = config['pipeine']['script_folder'] + 'add_user_seqs.py'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
+        log:
+            log_dir + 'cluster_all_genes_nuc/all.log'
+        benchmark:
+            benchmark_dir + 'cluster_all_genes_nuc/all.txt'
+        shell:
+            """
+            {params.exe} --out-fna {output.fna} --out-faa {output.faa} \
+               --out-txt {output.txt} --in-fna {input.fna} \
+               --in-faa {input.faa} --in-txt {input.txt} \
+               {input.fasta} 2> {log} 1>&2
+            """
+else:
+    rule add_user_seqs_SKIP:
+        """
+        Adding the user-specified genes to the collection
+        """
+        input:
+            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
+            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
+            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
+        output:
+            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
+            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
+            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
+        log:
+            log_dir + 'add_user_seqs_SKIP/all.log'
+        benchmark:
+            benchmark_dir + 'add_user_seqs_SKIP/all.txt'
+        shell:
+            """
+            cp -f {input.fna} {output.fna} 2> {log} 1>&2
+            cp -f {input.faa} {output.faa} 2>> {log} 1>&2
+            cp -f {input.txt} {output.txt} 2>> {log} 1>&2
+            """    
 
 rule copy_gene_info:
     """
@@ -298,13 +298,14 @@ rule mmseqs_cluster:
     params:
         db = config['tmp_dir'] + 'cluster/clusters_db',
         params = config['params']['genes']['mmseqs_cluster'],
+        cluster = config['params']['genes']['mmseqs_cluster_method'],
         tmp_dir = config['tmp_dir'] + 'cluster_TMP'
     threads:
-        12
+        18
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 60 * 48,
         n = lambda wildcards, input, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.24 * 2 + 6,0))
     conda:
         '../envs/genes.yaml'
     log:
@@ -313,9 +314,11 @@ rule mmseqs_cluster:
         benchmark_dir + 'mmseqs_cluster/all.txt'
     shell:
         """
-        mkdir -p {params.tmp_dir} 2> {log}
-        mmseqs cluster {params.params} --threads {threads} \
+        rm -rf {params.tmp_dir} 2> {log} && mkdir -p {params.tmp_dir} 2>> {log}        
+        rm -f {output.db_t} 2>> {log}
+        mmseqs {params.cluster} {params.params} --threads {threads} \
           {input.db} {params.db} {params.tmp_dir} 2>> {log} 1>&2
+        touch {output.db_h} 2>> {log}
         """
 
 rule mmseqs_cluster_membership:
@@ -473,7 +476,7 @@ rule mmseqs_copy_db:
         ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log}
         ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log}
         # cluster database
-        OUTDIR = `dirname {output.db_clu_t}`
+        OUTDIR=`dirname {output.db_clu_t}`
         ionice {params.ionice} cp -f {input.db_clu} $OUTDIR 2>> {log}
         ionice {params.ionice} cp -f {input.db_clu_t} {output.db_clu_t} 2>> {log}
         ionice {params.ionice} cp -f {input.db_clu_i} {output.db_clu_i} 2>> {log}

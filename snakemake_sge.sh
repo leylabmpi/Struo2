@@ -25,6 +25,7 @@ snakemake -f \
 	  --jobs $JOBS \
 	  --local-cores $JOBS \
 	  --printshellcmds \
+	  --max-status-checks-per-second 2 \
 	  --resources temp=$JOBS \
 	  --directory $WORKDIR \
 	  "${@:3}"

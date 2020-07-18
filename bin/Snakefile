@@ -40,7 +40,11 @@ def all_which_input(wildcards):
             input_files.append(genes_dir + 'cluster/clusters_db.index')
             input_files.append(genes_dir + 'cluster/clusters_db_h')
             
-        
+        if str(config['params']['genes']['keep_annot_genes']) == 'True':
+            input_files.append(humann3_dir + 'filtered_reps_annot.fna.gz')
+            input_files.append(humann3_dir + 'filtered_reps_annot.faa.gz')
+            input_files.append(humann3_dir + 'filtered_reps_annot.tsv.gz')
+            
         # humann3    
         if not skipped(config['databases']['humann3_bowtie2']):
             input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))

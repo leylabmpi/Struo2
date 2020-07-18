@@ -74,8 +74,6 @@ include: snake_dir + 'bin/Snakefile'
 include: snake_dir + 'bin/genes/Snakefile'
 include: snake_dir + 'bin/kraken2/Snakefile'
 include: snake_dir + 'bin/bracken/Snakefile'
-if not skipped(config['humann_prot_seqs']):
-    include: snake_dir + 'bin/humann3/db_update/Snakefile'
 include: snake_dir + 'bin/humann3/query/Snakefile'
 include: snake_dir + 'bin/humann3/db_create/Snakefile'
 include: snake_dir + 'bin/metaphlan3/Snakefile'
