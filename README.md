@@ -5,6 +5,7 @@ Struo2
 
 > "Struo" --> from the Latin: “I build” or “I gather”
 
+![](https://media.giphy.com/media/lPSMFWqKCJY5Let2v5/giphy.gif)
 
 * Version: 2.0.1
 * Authors:
@@ -13,7 +14,6 @@ Struo2
 * Maintainers:
   * Nick Youngblut <nyoungb2@gmail.com>
   * Jacobo de la Cuesta <jacobo.delacuesta@tuebingen.mpg.de>
-
 
 # Citation
 
