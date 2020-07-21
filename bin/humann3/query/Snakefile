@@ -117,7 +117,7 @@ rule humann3_diamond_pass2:
     threads:
         8
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 60 * 36,
+        time = lambda wildcards, attempt: attempt * 60 * 72,
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = dmnd_start_mem
     conda:

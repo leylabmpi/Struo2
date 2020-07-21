@@ -46,7 +46,7 @@ rule vsearch_per_genome:
     threads:
         4
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        time = lambda wildcards, attempt: attempt ** 2 * 6,
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt * 3
     conda:

@@ -52,7 +52,7 @@ rule humann3_diamond_makedb:
         '../../envs/humann3.yaml'
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+        mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12
     log:
         log_dir + 'humann3_diamond_makedb/all.log'
     benchmark:

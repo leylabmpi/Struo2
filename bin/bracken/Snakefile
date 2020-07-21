@@ -8,15 +8,15 @@ rule bracken_build:
         os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
         os.path.join(kraken2_dir, 'database{read_len}mers.kmer_distrib')
     params:
-        kmer = config['params']['bracken']['bracken_build_kmer'],
+        kmer = config['params']['bracken']['build_kmer'],
         exe = config['pipeline']['script_folder'] + 'bracken-build.py',
         read_len = lambda wildcards: wildcards.read_len,
     threads:
-        24
+        18
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 60 * 8,
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 12,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 4
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 5
     conda:
         '../envs/kraken2.yaml'
     log:
