@@ -194,7 +194,7 @@ def main(args):
     
     # creating the seq header index
     seq_idx = make_index(args.fasta1) & make_index(args.fasta2)
-    seq_idx = {x:str(uuid.uuid4()) for x in seq_idx}
+    seq_idx = {x:str(uuid.uuid4()).replace('-', '') for x in seq_idx}
     
     # filtering the fasta files
     idx = filter_fasta(args.fasta1, seq_idx,

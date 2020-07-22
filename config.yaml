@@ -1,7 +1,6 @@
 #-- I/O --#
 # file listing samples and associated data
-#samples_file: tests/samples/samples_n10.txt
-samples_file: tests/samples/samples_n100.txt
+samples_file: tests/samples/samples_n10.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -10,8 +9,7 @@ taxID_col: 'ncbi_species_taxid'
 taxonomy_col: 'ncbi_taxonomy'   
 
 # output location
-#output_dir: tests/output_n10/
-output_dir: tests/output_n100/
+output_dir: tests/output_n10/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -20,11 +18,11 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Skip #Create
-  bracken: Skip #Create
+  kraken2: Create
+  bracken: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
-  metaphlan3: Create
+  metaphlan3: Skip #Create
   
 # output database name
 db_name: GTDB-custom
@@ -32,10 +30,10 @@ db_name: GTDB-custom
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
 # Else, the intermediate files are temporarily stored in `temp_folder`
-keep_intermediate: True
 use_ancient: True
 
 #-- if custom NCBI taxdump files (or just Skip) --#
+# Used for kraken taxonomy
 names_dmp: Skip 
 nodes_dmp: Skip 
 
@@ -45,10 +43,11 @@ nodes_dmp: Skip
 params:
   ionice: -c 3
   bracken:
-    bracken_build_kmer: 35
-    bracken_build_read_lens:
+    build_kmer: 35
+    build_read_lens:
       - 100
       - 150
+    keep_intermediate: True 
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
@@ -59,7 +58,7 @@ params:
     keep_annot_genes: True
   humann3:
     batches: 10
-    diamond_db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref/uniref50_201901.dmnd
+    diamond_db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
     diamond: --evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
   metaphlan3:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
@@ -67,7 +66,7 @@ params:
 #-- If adding genes to humann database --#
 # If you have nucleotide/amino-acid gene sequences formatted for humann,
 # provide the file paths to the fasta files below (gzip'ed).
-# The cluster db will be updated and the annotations will be re-propagatted
+# These will be clustered with the rest of the genes and then annotated like the others.
 humann_nuc_seqs: Skip
 humann_prot_seqs: Skip
 

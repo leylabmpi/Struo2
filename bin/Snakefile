@@ -30,20 +30,18 @@ def all_which_input(wildcards):
             input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
             input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
             input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
-
         if str(config['params']['genes']['keep_cluster_db']) == 'True':
             input_files.append(genes_dir + 'cluster/genes_db')
             input_files.append(genes_dir + 'cluster/genes_db.dbtype')
             input_files.append(genes_dir + 'cluster/genes_db.index')
+            input_files.append(genes_dir + 'cluster/genes_db.lookup')
             input_files.append(genes_dir + 'cluster/genes_db_h')
             input_files.append(genes_dir + 'cluster/genes_db_h.dbtype')
             input_files.append(genes_dir + 'cluster/genes_db_h.index')
-            x = expand(genes_dir + 'cluster/clusters_db.{X}', X = range(12))
-            input_files += x
+            input_files += expand(genes_dir + 'cluster/clusters_db.{X}', X = range(12))
             input_files.append(genes_dir + 'cluster/clusters_db.dbtype')
             input_files.append(genes_dir + 'cluster/clusters_db.index')
-            input_files.append(genes_dir + 'cluster/clusters_db_h')
-            
+            input_files.append(genes_dir + 'cluster/clusters_db_h')            
         if str(config['params']['genes']['keep_annot_genes']) == 'True':
             input_files.append(humann3_dir + 'filtered_reps_annot.fna.gz')
             input_files.append(humann3_dir + 'filtered_reps_annot.faa.gz')

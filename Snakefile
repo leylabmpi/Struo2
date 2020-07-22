@@ -44,17 +44,16 @@ to_rm = []
 for index,row in config['samples'].iterrows():
     rowID += 1
     file_cols = [config['fasta_file_path_col']]
-    for f in file_cols:       
-    	if not os.path.isfile(str(row[f])):
+    for f in file_cols:
+        if not os.path.isfile(str(row[f])):
            msg = 'Samples table (Row {}): Cannot find file: {}; Skipping\n'
-	   sys.stderr.write(msg.format(rowID, row[f]))
-	   to_rm.append(row[config['samples_col']])
+           sys.stderr.write(msg.format(rowID, row[f]))
+           to_rm.append(row[config['samples_col']])
 sys.stderr.write('Total number of skipped rows: {}\n'.format(len(to_rm)))
 config['samples'].drop(to_rm, inplace=True)
 if config['samples'].shape[0] < 1:
     raise ValueError('No genomes remaining after filtering!')
 config['samples_unique'] = config['samples'][config['samples_col']].unique().tolist()
-
 
 ## temp_folder
 config['pipeline']['username'] = getpass.getuser()
