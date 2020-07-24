@@ -261,6 +261,7 @@ rule mmseqs_db_create:
         db_t = temp(config['tmp_dir'] + 'cluster/genes_db.dbtype'),
         db_i = temp(config['tmp_dir'] + 'cluster/genes_db.index'),
         db_l = temp(config['tmp_dir'] + 'cluster/genes_db.lookup'),
+        db_s = temp(config['tmp_dir'] + 'cluster/genes_db.source'),
         db_h = temp(config['tmp_dir'] + 'cluster/genes_db_h'),
         db_ht = temp(config['tmp_dir'] + 'cluster/genes_db_h.dbtype'),
         db_hi = temp(config['tmp_dir'] + 'cluster/genes_db_h.index')
@@ -275,11 +276,11 @@ rule mmseqs_db_create:
         benchmark_dir + 'mmseqs_db_create/all.txt'
     shell:
         """
-        mmseqs createdb {input} {output.db} 2> {log} 1>&2
+        mmseqs createdb {input.faa} {output.db} 2> {log} 1>&2
         """
-        
+
 rule mmseqs_cluster:
-    """ 
+    """
     Clustering genes and taking representatives, which will be used
     for diamond query vs UniRef
     """
@@ -287,21 +288,65 @@ rule mmseqs_cluster:
         db = config['tmp_dir'] + 'cluster/genes_db',
         db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
         db_i = config['tmp_dir'] + 'cluster/genes_db.index',
-        db_l = config['tmp_dir'] + 'cluster/genes_db.lookup',
+        db_s = config['tmp_dir'] + 'cluster/genes_db.source',
+        db_h = config['tmp_dir'] + 'cluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index'
+    output:
+        db = temp(expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
+                         X = range(18))),
+        db_t = temp(config['tmp_dir'] + 'cluster/clusters_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'cluster/clusters_db.index'),
+        db_h = temp(config['tmp_dir'] + 'cluster/clusters_db_h')
+    params:
+        db = config['tmp_dir'] + 'cluster/clusters_db',
+        params = config['params']['genes']['mmseqs_cluster'],
+        cluster = config['params']['genes']['mmseqs_cluster_method'],
+        tmp_dir = config['tmp_dir'] + 'cluster_TMP'
+    threads:
+        18
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 48,
+        n = lambda wildcards, input, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.24 * 2 + 6,0))
+    conda:
+        '../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_cluster/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_cluster/all.txt'
+    shell:
+        """
+        rm -rf {params.tmp_dir} 2> {log} && mkdir -p {params.tmp_dir} 2>> {log}
+        rm -f {output.db_t} 2>> {log}
+        mmseqs {params.cluster} {params.params} --threads {threads} \
+          {input.db} {params.db} {params.tmp_dir} 2>> {log} 1>&2
+        touch {output.db_h} 2>> {log}
+        """
+        
+rule mmseqs_cluster_membership:
+    """
+    Getting a table of which genes belong to which cluster.
+    Output table format: cluster_rep<tab>cluster_member
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/genes_db',
+        db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'cluster/genes_db.index',
         db_h = config['tmp_dir'] + 'cluster/genes_db_h',
         db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
         db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
         db_clu = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
-                        X = range(12)),
+                        X = range(18)),
         db_clu_t = config['tmp_dir'] + 'cluster/clusters_db.dbtype',
         db_clu_i = config['tmp_dir'] + 'cluster/clusters_db.index',
-        db_clu_h = config['tmp_dir'] + 'cluster/clusters_db_h'        
+        db_clu_h = config['tmp_dir'] + 'cluster/clusters_db_h'
     output:
         tsv = temp(config['tmp_dir'] + 'cluster/clusters_membership.tsv')
     params:
         db_clu = config['tmp_dir'] + 'cluster/clusters_db'
     threads:
-        4 
+        4
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 5
@@ -312,7 +357,7 @@ rule mmseqs_cluster:
     benchmark:
         benchmark_dir + 'mmseqs_cluster_membership/all.txt'
     shell:
-        """        
+        """
         mmseqs createtsv --threads {threads} {input.db} {input.db} \
           {params.db_clu} {output.tsv} 2> {log} 1>&2
         """
@@ -326,6 +371,7 @@ rule mmseqs_cluster_rep_db:
         db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
         db_i = config['tmp_dir'] + 'cluster/genes_db.index',
         db_l = config['tmp_dir'] + 'cluster/genes_db.lookup',
+        db_s = config['tmp_dir'] + 'cluster/genes_db.source',
         db_h = config['tmp_dir'] + 'cluster/genes_db_h',
         db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
         db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
@@ -391,11 +437,12 @@ rule mmseqs_copy_db:
         db_t = config['tmp_dir'] + 'cluster/genes_db.dbtype',
         db_i = config['tmp_dir'] + 'cluster/genes_db.index',
         db_l = config['tmp_dir'] + 'cluster/genes_db.lookup',
+        db_s = config['tmp_dir'] + 'cluster/genes_db.source',
         db_h = config['tmp_dir'] + 'cluster/genes_db_h',
         db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
         db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
         db_clu = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
-                        X = range(12)),
+                        X = range(18)),
         db_clu_t = config['tmp_dir'] + 'cluster/clusters_db.dbtype',
         db_clu_i = config['tmp_dir'] + 'cluster/clusters_db.index',
         db_clu_h = config['tmp_dir'] + 'cluster/clusters_db_h',
@@ -406,11 +453,12 @@ rule mmseqs_copy_db:
         db_t = genes_dir + 'cluster/genes_db.dbtype',
         db_i = genes_dir + 'cluster/genes_db.index',
         db_l = genes_dir + 'cluster/genes_db.lookup',
+        db_s = genes_dir + 'cluster/genes_db.source',
         db_h = genes_dir + 'cluster/genes_db_h',
         db_ht = genes_dir + 'cluster/genes_db_h.dbtype',
         db_hi = genes_dir + 'cluster/genes_db_h.index',
         db_clu = expand(genes_dir + 'cluster/clusters_db.{X}',
-                        X = range(12)),
+                        X = range(18)),
         db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
         db_clu_i = genes_dir + 'cluster/clusters_db.index',
         db_clu_h = genes_dir + 'cluster/clusters_db_h',
@@ -434,6 +482,7 @@ rule mmseqs_copy_db:
         ionice {params.ionice} cp -f {input.db_t} {output.db_t} 2>> {log}
         ionice {params.ionice} cp -f {input.db_i} {output.db_i} 2>> {log}
         ionice {params.ionice} cp -f {input.db_l} {output.db_l} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_s} {output.db_s} 2>> {log}
         ionice {params.ionice} cp -f {input.db_h} {output.db_h} 2>> {log}
         ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log}
         ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log}
