@@ -29,36 +29,63 @@ parser.add_argument('--out-nuc', type=str, default='annotated.fna',
                     help='Output nucleotide fasta (default: %(default)s)')
 parser.add_argument('--out-prot', type=str, default='annotated.faa',
                     help='Output amino acid fasta (default: %(default)s)')
-parser.add_argument('--dmnd-columns', type=str, default='qseqid,sseqid,evalue',
+parser.add_argument('--dmnd-columns', type=str, default='qseqid,sseqid,evalue,pident,alnlen,slen',
                     help='Diamond output columns (default: %(default)s)')      
 parser.add_argument('--meta-columns', type=str,
                     default='uuid,gene_name,domain,phylum,class,order,family,genus,species,taxID,genomeID,genome_len',
                     help='Gene metadata table columns (default: %(default)s)')
 parser.add_argument('--keep-unclassified', action='store_true', default=False,
                     help='Keep gene clusters without DIAMOND hit? (default: %(default)s)')
+parser.add_argument('--min-pident', type=float, default=50,
+                    help='Min % identity of hit (default: %(default)s)')
+parser.add_argument('--min-cov', type=float, default=80,
+                    help='Min % alignment coverage of subject sequence length (default: %(default)s)')
 parser.add_argument('--threads', type=int, default=1,
                     help='Threads used for diamond (default: %(default)s)')
 parser.add_argument('--version', action='version', version='0.0.1')
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
-def load_dmnd_hits(infile, colnames):
-    """ Loading DIAMOND hits
+def load_dmnd_hits(infile, colnames, min_pident=0, min_cov=0):
+    """ Loading query hits
     Return: {query => cluster_rep : hit => unirefID}  
     """
-    logging.info('Loading diamond hits...')
+    logging.info('Loading hits table...')
     dmnd = {}
+    skipped = {'pident' : 0, 'cov' : 0}
     idx = {x:i for i,x in enumerate(colnames.split(','))}
     with open(infile) as inF:
-        for line in inF:
+        for i,line in enumerate(inF):
             line = line.rstrip().split('\t')
             if line[0] == '':
                 continue
             if len(line) < 2:
-                raise ValueError('<2 values in diamond hit table')
+                raise ValueError('Line {}: <2 values in hits table'.format(i+1))
             else:
+                # filtering
+                ## percent identity
+                pident = 0
+                try:
+                    pident = float(line[idx['pident']])
+                except KeyError:
+                    pass
+                if pident < min_pident:
+                    skipped['pident'] += 1
+                    continue
+                ## coverage of target seq
+                cov = 0
+                try:
+                    cov = float(line[idx['slen']]) / float(line[idx['alnlen']]) * 100
+                except KeyError:
+                    pass
+                if cov < min_cov:
+                    skipped['cov'] += 1
+                    continue
+                # loading
                 qseqid = line[idx['qseqid']]
                 dmnd[qseqid] = line[idx['sseqid']]
+    logging.info('  No. of excluded hits w/ < min-pident: {}'.format(skipped['pident']))
+    logging.info('  No. of excluded hits w/ < min-cov: {}'.format(skipped['cov']))
     logging.info('  No. of annotated genes: {}'.format(len(dmnd.keys())))
     return dmnd
     
@@ -174,7 +201,8 @@ def write_table(mmshp, meta, colnames):
         
 def main(args):
     # load diamond hits
-    dmnd = load_dmnd_hits(args.diamond_hits, args.dmnd_columns)
+    dmnd = load_dmnd_hits(args.diamond_hits, args.dmnd_columns,
+                          min_pident=args.min_pident, min_cov=args.min_cov)
     # load cluster membership
     mmshp = load_cluster_mmshp(args.cluster_membership)
     mmshp = mmshp_annotate(mmshp, dmnd)

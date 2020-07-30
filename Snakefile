@@ -73,11 +73,16 @@ include: snake_dir + 'bin/Snakefile'
 include: snake_dir + 'bin/genes/Snakefile'
 include: snake_dir + 'bin/kraken2/Snakefile'
 include: snake_dir + 'bin/bracken/Snakefile'
-include: snake_dir + 'bin/humann3/query/Snakefile'
+include: snake_dir + 'bin/humann3/query_dmnd/Snakefile'
+include: snake_dir + 'bin/humann3/query_mmseqs/Snakefile'
 include: snake_dir + 'bin/humann3/db_create/Snakefile'
 include: snake_dir + 'bin/metaphlan3/Snakefile'
 
-## local rules
+
+## pipeline main
+wildcard_constraints:
+    sample="[^/]+"
+
 localrules: all
 
 rule all:

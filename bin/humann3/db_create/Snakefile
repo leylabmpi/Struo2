@@ -1,6 +1,74 @@
-wildcard_constraints:
-    sample="[^/]+"
+def which_hits(wildcards):
+    if (not skipped(config['params']['humann3']['diamond']['db']) and
+        not skipped(config['params']['humann3']['diamond']['run'])):
+        return config['tmp_dir'] + 'humann3_dmnd/hits.txt'
+    else:
+        return config['tmp_dir'] + 'mmseqs_search/hits.txt'        
 
+rule humann3_annotate_genes:
+    """
+    Use search hits from clustered reps & index table to annotate all
+    genome-derep genes. The annotation for each cluster rep is propagated
+    to each member of the cluster.
+    """
+    input:
+        hits = which_hits,
+        fna = config['tmp_dir'] + 'filtered_reps.fna',
+        faa = config['tmp_dir'] + 'filtered_reps.faa',
+        txt = config['tmp_dir'] + 'filtered_reps.txt',
+        tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv'
+    output:
+        fna = temp(config['tmp_dir'] + 'filtered_reps_annot.fna'),
+        faa = temp(config['tmp_dir'] + 'filtered_reps_annot.faa'),
+        tsv = temp(config['tmp_dir'] + 'filtered_reps_annot.tsv')
+    params:
+        exe = config['pipeline']['script_folder'] + 'propagate_annotations.py',
+        params = config['params']['humann3']['propagate_annotations']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 6 + 4
+    log:
+        log_dir + 'hm3_annotate_genes/all.log'
+    benchmark:
+        benchmark_dir + 'hm3_annotate_genes/all.txt'
+    shell:
+        """
+        {params.exe} {params.params} \
+          --in-nuc {input.fna} \
+          --out-nuc {output.fna} \
+          --out-prot {output.faa} \
+          {input.hits} {input.faa} \
+          {input.txt} {input.tsv} \
+          > {output.tsv} 2> {log}
+        """
+
+rule humann3_annotate_genes_copy:
+    """
+    Copying annotated gene files to the final directory
+    """
+    input:
+        fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
+        faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
+        tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
+    output:
+        fna = humann3_dir + 'filtered_reps_annot.fna.gz',
+        faa = humann3_dir + 'filtered_reps_annot.faa.gz',
+        tsv = humann3_dir + 'filtered_reps_annot.tsv.gz'            
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + 'hm3_annotate_genes_copy/all.log'
+    benchmark:
+        benchmark_dir + 'hm3_annotate_genes_copy/all.txt'
+    shell:
+        """
+        ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
+        ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
+        ionice {params.ionice} gzip -c {input.tsv} > {output.tsv} 2>> {log}
+        """
+    
 rule humann3_bowtie2_build:
     """
     Running bowtie2 build on combined, annotated genes 
