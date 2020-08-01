@@ -18,8 +18,8 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Skip #Create
-  bracken: Skip #Create
+  kraken2: Create
+  bracken: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
   metaphlan3: Skip #Create
@@ -42,6 +42,7 @@ nodes_dmp: Skip
 #-- software parameters --#
 # `vsearch_per_genome` = per-genome gene clustering
 # `vsearch_all` = all genes clustered (including `humann_nuc_seqs` & `humann_prot_seqs`)
+# for humann3, use either mmseqs or diamond (both will not be used)
 # for humann3::mmseqs_search::run, --num-iterations must be >=2
 params:
   ionice: -c 3
