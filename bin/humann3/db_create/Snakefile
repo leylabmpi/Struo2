@@ -113,7 +113,7 @@ rule humann3_diamond_makedb:
     input:
         faa = config['tmp_dir'] + 'filtered_reps_annot.faa'
     output:
-        os.path.join(humann3_dir, 'all_genes_annot.dmnd')
+        os.path.join(humann3_dir, 'protein_database', config['dmnd_name'])
     params:
         tmp_dir = config['tmp_dir']
     conda:

@@ -22,7 +22,8 @@ def all_which_input(wildcards):
     if not skipped(config['databases']['humann3_bowtie2']):
         input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
     if not skipped(config['databases']['humann3_diamond']):
-        input_files.append(os.path.join(humann3_dir, 'all_genes_annot.dmnd'))
+        input_files.append(os.path.join(humann3_dir, 'protein_database',
+                                        config['dmnd_name']))
     ## intermediate files
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):

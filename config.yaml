@@ -1,6 +1,6 @@
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/samples_n100.txt
+samples_file: tests/samples/samples_n10.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -9,7 +9,7 @@ taxID_col: 'ncbi_species_taxid'
 taxonomy_col: 'ncbi_taxonomy'   
 
 # output location
-output_dir: tests/output_n100/
+output_dir: tests/output_n10/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -24,8 +24,10 @@ databases:
   humann3_diamond: Create
   metaphlan3: Skip #Create
   
-# output database name
+# Name for base directory holding all created databases
 db_name: UniRef90 #GTDB-custom
+# Name of the humann3 diamond database (must match naming allowed by humann3)
+dmnd_name: uniref90_201901.dmnd
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`

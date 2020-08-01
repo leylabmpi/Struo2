@@ -147,14 +147,30 @@ def load_gene_metadata(infile, colnames):
             meta[line[0]] = line[1:]
     return meta
 
-def propagate_info(infile, outfile, mmshp, meta, colnames, keep_unclassified=True):
+def propagate_info(infile, outfile, mmshp, meta, colnames, keep_unclassified=True, seq_len_multi=1):
+    """
+    sequence header: gene_family|gene_length|taxonomy
+    gene_len = nucleotide length (hence, the seq_len_multi)
+    """
     idx = {x.lower():i for i,x in enumerate(colnames.split(',')[1:])}
     to_skip = False
     skipped = 0
     kept = 0
+    seq = {}
+    seq_header = None
     with open(infile) as inF, open(outfile, 'w') as outF:
         for line in inF:
-            if line.startswith('>'):
+            if line.startswith('>'):      # sequence header
+                # writing last seq
+                try:
+                    seq = seq[seq_header]                    
+                    seq_header = seq_header.format(len(seq.rstrip('*')) * seq_len_multi)
+                    outF.write('\n'.join([seq_header, seq]) + '\n')
+                    seq = {}
+                    seq_header = None
+                except KeyError:
+                    pass
+                # formatting for this seq
                 to_skip = False
                 uuid = line.lstrip('>').rstrip()
                 # getting sseqid 
@@ -169,22 +185,29 @@ def propagate_info(infile, outfile, mmshp, meta, colnames, keep_unclassified=Tru
                 except KeyError:
                     msg = 'Cannot find "{}" in the gene metadata'
                     raise KeyError(msg.format(uuid))
+                # skip/keep sequence?
                 if keep_unclassified is False and sseqid.startswith('unclassified'):
-                   to_skip = True
-                   skipped += 1
-                   continue
-                # formatting for humann3
-                ## gene_family|gene_length|taxonomy
-                genus = m[idx['genus']]
-                species = m[idx['species']]                
-                taxid = m[idx['taxid']]
-                species = '__'.join([species, taxid])
-                taxonomy = ';'.join([genus, species])
-                gene_id = '|'.join([sseqid, taxonomy])
-                outF.write('>' + gene_id + '\n')
-                kept += 1
-            elif to_skip is False:
-                outF.write(line)    
+                    to_skip = True
+                    skipped += 1
+                    continue
+                else:                    
+                    genus = m[idx['genus']]
+                    species = m[idx['species']]                
+                    taxid = m[idx['taxid']]
+                    species = '__'.join([species, taxid])
+                    taxonomy = ';'.join([genus, species])
+                    seq_header = '|'.join(['>' + sseqid, '{}', taxonomy])
+                    seq[seq_header] = ''
+                    kept += 1
+            elif to_skip is False:      # sequence
+                seq[seq_header] += line.rstrip()
+        # last seq
+        if to_skip is False and len(seq[seq_header]) > 0:
+            seq = seq[seq_header]
+            seq_header = seq_header.format(len(seq.rstrip('*')) * seq_len_multi)
+            outF.write('\n'.join([seq_header, seq]) + '\n')        
+
+    # status
     logging.info('File written: {}'.format(outfile))
     logging.info('  No. of seqs written: {}'.format(kept))
     if keep_unclassified is False:
@@ -213,10 +236,12 @@ def main(args):
     # for each gene [fna, faa]:
     ## apply information to sequence header
     propagate_info(args.genes_fasta_prot, args.out_prot, mmshp, meta,
-                   args.meta_columns, keep_unclassified=args.keep_unclassified)
+                   args.meta_columns, keep_unclassified=args.keep_unclassified,
+                   seq_len_multi=3)
     if args.in_nuc is not None:
         propagate_info(args.in_nuc, args.out_nuc, mmshp, meta,
-                       args.meta_columns, keep_unclassified=args.keep_unclassified)
+                       args.meta_columns, keep_unclassified=args.keep_unclassified,
+                       seq_len_multi=1)
 
     # create dict: {gene : [clusterID, dmnd-hit, gene_metadata]}
     write_table(mmshp, meta, args.meta_columns)
