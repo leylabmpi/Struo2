@@ -48,7 +48,15 @@ else:
             echo "# Downloading NCBI taxonomy to $OUTDIR" >> {log}
             {params.exe} --use-ftp --download-taxonomy --db $OUTDIR 2>> {log} 1>&2
             """
-    
+
+def kraken2_add_taxID_get_taxID(wildcards):
+    taxID = config['samples'].loc[wildcards.sample, config['taxID_col']]
+    try:
+        taxID = taxID.astype(str)
+    except AttributeError:
+        pass
+    return taxID
+            
 rule kraken2_add_taxID:
     """
     Adding a taxononmy ID to the header of each genome.
@@ -66,8 +74,7 @@ rule kraken2_add_taxID:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 6
     params:
-        taxID = lambda wildcards: \
-	  config['samples'].loc[wildcards.sample, config['taxID_col']].astype(str),
+        taxID = kraken2_add_taxID_get_taxID,
         exe = config['pipeline']['script_folder'] + 'kraken2_rename_genome.py'
     log:
         log_dir + 'kraken2_add_taxID/{sample}.log'
