@@ -59,14 +59,15 @@ def make_index(fasta):
 def format_taxonomy(tax, taxID):
     """Formatting taxonomy string
     """
-    logging.info('Taxonomy string provided {}'.format(tax))
-    logging.info('TaxID provided {}'.format(taxID))
+    logging.info('Taxonomy string provided: {}'.format(tax))
+    logging.info('TaxID provided: {}'.format(taxID))
     
     try:
         taxID = int(float(taxID.strip()))
     except ValueError:
-        msg = 'ERROR: taxID "{}" is not an integer!'
-        raise ValueError(msg)
+        msg = 'WARNING: taxID "{}" is not an integer!'
+        logging.warning(msg.format(taxID))        
+        #raise ValueError(msg)
     tax = [re.sub('[^A-Za-z0-9-_;]+', '_', x) for x in tax.split(';')]
     regex_d = re.compile(r'[Dd]__.+')
     regex_p = re.compile(r'[Pp]__.+')
