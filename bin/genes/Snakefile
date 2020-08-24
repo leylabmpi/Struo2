@@ -237,6 +237,9 @@ rule copy_gene_info:
         txt = genes_dir + 'genome_reps_filtered.txt.gz'
     params:
         ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 8
     log:
         log_dir + 'copy_gene_info/all.log'
     benchmark:

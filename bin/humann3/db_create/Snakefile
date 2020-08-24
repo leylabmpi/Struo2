@@ -26,7 +26,7 @@ rule humann3_annotate_genes:
         params = config['params']['humann3']['propagate_annotations']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 6 + 4
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
     log:
         log_dir + 'hm3_annotate_genes/all.log'
     benchmark:
@@ -82,18 +82,19 @@ rule humann3_bowtie2_build:
     conda:
         '../../envs/humann3.yaml'
     threads:
-        18
+        12
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 3 + 6
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 8,
+        lg_idx = lambda wildcards, attempt: '--large-index' if attempt > 1 else ''
     log:
         log_dir + 'humann3_bowtie2_build/all.log'
     benchmark:
         log_dir + 'humann3_bowtie2_build/all.txt'
     shell:
         """
-        bowtie2-build --threads {threads} \
+        bowtie2-build --threads {threads} {resources.lg_idx} \
           {input.fna} {params.prefix} 2> {log} 1>&2
 
         # check that output exists

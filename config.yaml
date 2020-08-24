@@ -5,8 +5,8 @@ samples_file: tests/samples/samples_n10.txt
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
 fasta_file_path_col: 'fasta_file_path'
-taxID_col: 'ncbi_species_taxid'    
-taxonomy_col: 'ncbi_taxonomy'   
+taxID_col: 'ncbi_species_taxid'    # or 'gtdb_taxid'
+taxonomy_col: 'ncbi_taxonomy'      # or 'gtdb_taxonomy'
 
 # output location
 output_dir: tests/output_n10/
