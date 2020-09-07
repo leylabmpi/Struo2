@@ -1,38 +1,3 @@
-wildcard_constraints:
-    sample="[^/]+"
-    
-rule humann3_diamond_batch_seqs:
-    """
-    Splitting gene fasta for distributed searching
-    """
-    input:
-        faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
-    output:
-        temp(expand(config['tmp_dir'] + \
-                    'humann3_dmnd/clusters_reps.part-{splitID}.faa',
-	            splitID=config['params']['humann3']['splits']))
-    params:
-        n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + 'humann3_dmnd'
-    resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 10
-    conda:
-        '../../envs/genes.yaml'
-    log:
-        log_dir + 'humann3_diamond_batch_seqs/all.log'
-    benchmark:
-        benchmark_dir + 'humann3_diamond_batch_seqs/all.txt'
-    shell:
-        """
-        mkdir -p {params.out_dir} 2>> {log}
-
-        fasta-splitter \
-          --n-parts {params.n_splits} \
-          --out-dir {params.out_dir} \
-          {input} 2>> {log} 1>&2
-        """
-
 rule humann3_diamond_db_copy:
     """
     Copying the database to the temp directory
@@ -53,7 +18,45 @@ rule humann3_diamond_db_copy:
     shell:
         """
         ionice {params.ionice} cp -f {input} {output} 2> {log} 1>&2 
-        """    
+        """ 
+
+rule humann3_diamond_batch_seqs:
+    """
+    Splitting gene fasta for distributed searching
+    """
+    input:
+        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
+    output:
+        faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
+        splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
+                           'humann3_dmnd/clusters_reps.part-{splitID}.faa',
+	                   splitID=config['params']['humann3']['splits']))
+    params:
+        ionice = config['params']['ionice'],         
+        n_splits = config['params']['humann3']['batches'],
+	out_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 10
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'humann3_diamond_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
+    benchmark:
+        benchmark_dir + 'humann3_diamond_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
+    shell:
+        """
+        echo "# Uncompressing fasta..." > {log}
+        mkdir -p `dirname {output.faa}` 2>> {log}
+        ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
+
+        echo "# Splitting fasta..." >> {log}
+        mkdir -p {params.out_dir} 2>> {log}
+        fasta-splitter \
+          --n-parts {params.n_splits} \
+          --out-dir {params.out_dir} \
+          {output.faa} 2>> {log} 1>&2
+        """
 
 def dmnd_start_mem(wildcards, attempt, threads=12):
     """Estimating the baseline memory to use for jobs, given the diamond database size
@@ -68,14 +71,14 @@ rule humann3_diamond_pass1:
     Annotating genes via diamond search of UniRef db
     """
     input:
-        faa = config['tmp_dir'] + 'humann3_dmnd/clusters_reps.part-{splitID}.faa',
+        faa = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/clusters_reps.part-{splitID}.faa',
 	dmnd_db = config['tmp_dir'] + 'humann3_dmnd/humann3_dmnd_db.dmnd'
     output:
-        hits = temp(config['tmp_dir'] + 'humann3_dmnd/hits_pass1/{splitID}.txt'),
-        unaln = temp(config['tmp_dir'] + 'humann3_dmnd/unaln/{splitID}.faa')
+        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits_pass1/{splitID}.txt'),
+        unaln = temp(config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/unaln/{splitID}.faa')
     params:
         params = config['params']['humann3']['diamond']['run'],
-        tmp_dir = config['tmp_dir'] + 'humann3_dmnd_TMP/{splitID}/'
+        tmp_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd_TMP/{splitID}/'
     threads:
         8
     resources:
@@ -85,9 +88,9 @@ rule humann3_diamond_pass1:
     conda:
         '../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass1/{splitID}.log'
+        log_dir + 'hm3_diamond_pass1/' + config['db_name'] + '{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass1/{splitID}.txt'
+        benchmark_dir + 'hm3_diamond_pass1/' + config['db_name'] + '{splitID}.txt'
     shell:
         """
         TMPDIR="{params.tmp_dir}"
@@ -107,13 +110,13 @@ rule humann3_diamond_pass2:
     Annotating genes via diamond search of UniRef db
     """
     input:
-        faa = config['tmp_dir'] + 'humann3_dmnd/unaln/{splitID}.faa',
+        faa = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/unaln/{splitID}.faa',
 	dmnd_db = config['tmp_dir'] + 'humann3_dmnd/humann3_dmnd_db.dmnd'
     output:
-        hits = temp(config['tmp_dir'] + 'humann3_dmnd/hits_pass2/{splitID}.txt')
+        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits_pass2/{splitID}.txt')
     params:
         params = config['params']['humann3']['diamond']['run'],
-        tmp_dir = config['tmp_dir'] + 'humann3_dmnd_TMP/{splitID}/'
+        tmp_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd_TMP/{splitID}/'
     threads:
         8
     resources:
@@ -123,9 +126,9 @@ rule humann3_diamond_pass2:
     conda:
         '../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass2/{splitID}.log'
+        log_dir + 'hm3_diamond_pass2/' + config['db_name'] + '{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass2/{splitID}.txt'
+        benchmark_dir + 'hm3_diamond_pass2/' + config['db_name'] + '{splitID}.txt'
     shell:
         """
         NSEQ=`seqkit seq -n {input.faa} | wc -l 2> {log}`
@@ -151,12 +154,14 @@ rule humann3_diamond_merge:
     Merging the results
     """
     input:
-        hits1 = expand(config['tmp_dir'] + 'humann3_dmnd/hits_pass1/{splitID}.txt',
+        hits1 = expand(config['tmp_dir'] + config['db_name'] + \
+                       'humann3_dmnd/hits_pass1/{splitID}.txt',
 	               splitID=config['params']['humann3']['splits']),
-        hits2 = expand(config['tmp_dir'] + 'humann3_dmnd/hits_pass2/{splitID}.txt',
+        hits2 = expand(config['tmp_dir'] + config['db_name'] + \
+                       'humann3_dmnd/hits_pass2/{splitID}.txt',
 	               splitID=config['params']['humann3']['splits'])
     output:
-        hits = temp(config['tmp_dir'] + 'humann3_dmnd/hits.txt')
+        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     run:

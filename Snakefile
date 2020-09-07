@@ -26,6 +26,7 @@ configfile: 'config.yaml'
 
 ## outdir
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'
+config['db_name'] = config['db_name'].rstrip('/') + '/'
 
 ## Samples table
 if not os.path.isfile(config['samples_file']):
@@ -70,13 +71,21 @@ config['params']['humann3']['splits'] = \
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
 include: snake_dir + 'bin/Snakefile'
-include: snake_dir + 'bin/genes/Snakefile'
-include: snake_dir + 'bin/kraken2/Snakefile'
-include: snake_dir + 'bin/bracken/Snakefile'
-include: snake_dir + 'bin/humann3/query_dmnd/Snakefile'
-include: snake_dir + 'bin/humann3/query_mmseqs/Snakefile'
-include: snake_dir + 'bin/humann3/db_create/Snakefile'
-include: snake_dir + 'bin/metaphlan3/Snakefile'
+if not skipped(config['databases']['genes']):
+    include: snake_dir + 'bin/genes/Snakefile'
+else:
+    print('\33[33mSkipping creation of genes database; assuming the database already exist!\x1b[0m')
+if not skipped(config['databases']['kraken2']):
+    include: snake_dir + 'bin/kraken2/Snakefile'
+    if not skipped(config['databases']['bracken']):
+        include: snake_dir + 'bin/bracken/Snakefile'
+if not skipped(config['databases']['humann3_bowtie2']) and \
+   not skipped(config['databases']['humann3_diamond']):
+    include: snake_dir + 'bin/humann3/query_dmnd/Snakefile'
+    include: snake_dir + 'bin/humann3/query_mmseqs/Snakefile'
+    include: snake_dir + 'bin/humann3/db_create/Snakefile'
+if not skipped(config['databases']['metaphlan3']):
+    include: snake_dir + 'bin/metaphlan3/Snakefile'
 
 
 ## pipeline main

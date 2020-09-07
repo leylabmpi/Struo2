@@ -1,9 +1,9 @@
 def which_hits(wildcards):
     if (not skipped(config['params']['humann3']['diamond']['db']) and
         not skipped(config['params']['humann3']['diamond']['run'])):
-        return config['tmp_dir'] + 'humann3_dmnd/hits.txt'
+        return config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt'
     else:
-        return config['tmp_dir'] + 'mmseqs_search/hits.txt'        
+        return config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt'        
 
 rule humann3_annotate_genes:
     """
@@ -28,9 +28,9 @@ rule humann3_annotate_genes:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
     log:
-        log_dir + 'hm3_annotate_genes/all.log'
+        log_dir + 'hm3_annotate_genes/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes/all.txt'
+        benchmark_dir + 'hm3_annotate_genes/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """
         {params.exe} {params.params} \
@@ -59,9 +59,9 @@ rule humann3_annotate_genes_copy:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'hm3_annotate_genes_copy/all.log'
+        log_dir + 'hm3_annotate_genes_copy/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes_copy/all.txt'
+        benchmark_dir + 'hm3_annotate_genes_copy/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """
         ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
@@ -89,9 +89,9 @@ rule humann3_bowtie2_build:
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 8,
         lg_idx = lambda wildcards, attempt: '--large-index' if attempt > 1 else ''
     log:
-        log_dir + 'humann3_bowtie2_build/all.log'
+        log_dir + 'humann3_bowtie2_build/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        log_dir + 'humann3_bowtie2_build/all.txt'
+        benchmark_dir + 'humann3_bowtie2_build/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """
         bowtie2-build --threads {threads} {resources.lg_idx} \
@@ -123,9 +123,9 @@ rule humann3_diamond_makedb:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12
     log:
-        log_dir + 'humann3_diamond_makedb/all.log'
+        log_dir + 'humann3_diamond_makedb/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        log_dir + 'humann3_diamond_makedb/all.txt'
+        benchmark_dir + 'humann3_diamond_makedb/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """
         PREF=`echo {output} | perl -pe 's/\.[^.]+$//'`

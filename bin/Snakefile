@@ -12,11 +12,11 @@ def all_which_input(wildcards):
         input_files.append(os.path.join(kraken2_dir, 'taxo.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
 
-    # bracken
-    if not skipped(config['databases']['bracken']):
-    	x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
-	           read_len = config['params']['bracken']['build_read_lens'])
-        input_files += x
+        # bracken
+        if not skipped(config['databases']['bracken']):
+    	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
+	               read_len = config['params']['bracken']['build_read_lens'])
+            input_files += x
         
     # humann3
     if not skipped(config['databases']['humann3_bowtie2']):
@@ -24,7 +24,7 @@ def all_which_input(wildcards):
     if not skipped(config['databases']['humann3_diamond']):
         input_files.append(os.path.join(humann3_dir, 'protein_database',
                                         config['dmnd_name']))
-    ## intermediate files
+    ## humann3 intermediate files
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):
         if str(config['params']['genes']['keep_gene_info']) == 'True':

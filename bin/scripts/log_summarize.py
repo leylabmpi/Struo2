@@ -195,6 +195,8 @@ def load_qacct(acct_file, max_lines = 100000):
     for i,line in enumerate(output.decode().split('\n')):
         if i > max_lines:
             break
+        if line.startswith('#') or line.rstrip() == '':
+            continue
         line = line.split(':')
         try:
             # jobID : [exit_status, ru_wallclock, ru_utime, cpu, mem, io]

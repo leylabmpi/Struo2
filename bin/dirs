@@ -1,5 +1,3 @@
-import os
-
 genes_dir = os.path.join(config['output_dir'], 'genes').rstrip('/') + '/'
 kraken2_dir = os.path.join(config['output_dir'], 'kraken2', config['db_name']).rstrip('/') + '/'
 bracken_dir = os.path.join(config['output_dir'], 'bracken', config['db_name']).rstrip('/') + '/'

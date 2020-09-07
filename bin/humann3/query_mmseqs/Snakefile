@@ -1,5 +1,5 @@
 rule mmseqs_search_target_db_copy:
-    """Copying database to temp directory
+    """Copying target database (eg., mmseqs-formatted UniRef database) to temp directory
     """
     input:
         db = ancient(config['params']['humann3']['mmseqs_search']['db']),
@@ -83,31 +83,37 @@ rule mmmseqs_search_fasta_split:
     Splitting gene fasta for distributed searching
     """
     input:
-        faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
+        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
     output:
-        temp(expand(config['tmp_dir'] + \
-                    'mmseqs_search/clusters_reps.part-{splitID}.faa',
-	            splitID=config['params']['humann3']['splits']))
+        faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
+        splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
+                           'mmseqs_search/clusters_reps.part-{splitID}.faa',
+	                   splitID=config['params']['humann3']['splits']))
     params:
+        ionice = config['params']['ionice'],
         n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + 'mmseqs_search'
+	out_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
     conda:
         '../../envs/genes.yaml'
     log:
-        log_dir + 'mmseqs_search_batch_seqs/all.log'
+        log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        benchmark_dir + 'mmseqs_search_batch_seqs/all.txt'
+        benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
-        """
-        mkdir -p {params.out_dir} 2>> {log}
+        """    
+        echo "# Uncompressing fasta..." > {log}
+        mkdir -p `dirname {output.faa}` 2>> {log}
+        ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
 
+        echo "# Splitting fasta..." >> {log}
+        mkdir -p {params.out_dir} 2>> {log}
         fasta-splitter \
           --n-parts {params.n_splits} \
           --out-dir {params.out_dir} \
-          {input} 2>> {log} 1>&2
+          {output.faa} 2>> {log} 1>&2
         """
         
 rule mmseqs_search_create_db:
@@ -115,25 +121,25 @@ rule mmseqs_search_create_db:
     Creating mmseqs database for query sequences
     """
     input:
-        config['tmp_dir'] + 'mmseqs_search/clusters_reps.part-{splitID}.faa'
+        config['tmp_dir'] + config['db_name'] + 'mmseqs_search/clusters_reps.part-{splitID}.faa'
     output:
-        db = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db'),
-        db_t = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.dbtype'),
-        db_i = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.index'),
-        db_l = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.lookup'),
-        db_s = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.source'),
-        db_h = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h'),
-        db_ht = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype'),
-        db_hi = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.index')        
+        db = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db'),
+        db_t = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.index'),
+        db_l = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.lookup'),
+        db_s = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.source'),
+        db_h = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h'),
+        db_ht = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.index')        
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
     conda:
         '../../envs/genes.yaml'
     log:
-        log_dir + 'mmseqs_search_create_db/seqs{splitID}.log'
+        log_dir + 'mmseqs_search_create_db/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
-        benchmark_dir + 'mmseqs_search_create_db/seqs{splitID}.txt'
+        benchmark_dir + 'mmseqs_search_create_db/' + config['db_name'] + 'seqs{splitID}.txt'
     shell:
         """
         mmseqs createdb {input} {output.db} 2> {log} 1>&2
@@ -153,14 +159,14 @@ rule mmseqs_search:
     """
     input:
         # query
-        qdb = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db',
-        qdb_t = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.dbtype',
-        qdb_i = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.index',
-        qdb_l = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.lookup',
-        qdb_s = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.source',
-        qdb_h = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h',
-        qdb_ht = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype',
-        qdb_hi = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.index',
+        qdb = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db',
+        qdb_t = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.dbtype',
+        qdb_i = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.index',
+        qdb_l = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.lookup',
+        qdb_s = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.source',
+        qdb_h = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h',
+        qdb_ht = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype',
+        qdb_hi = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.index',
         # target
         tdb = config['tmp_dir'] + 'mmseqs_search_db/db',
         tdb_t = config['tmp_dir'] + 'mmseqs_search_db/db.dbtype',
@@ -169,13 +175,13 @@ rule mmseqs_search:
         tdb_ht = config['tmp_dir'] + 'mmseqs_search_db/db_h.dbtype',  
         tdb_hi = config['tmp_dir'] + 'mmseqs_search_db/db_h.index',
     output:
-        db = temp(config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db'),
-        db_t = temp(config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db.dbtype'),
-        db_i = temp(config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db.index')
+        db = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db'),
+        db_t = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db.index')
     params:
         params = config['params']['humann3']['mmseqs_search']['run'],
-        output_db = config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db',
-        tmp_dir = config['tmp_dir'] + 'mmseqs_search_TMP{splitID}'
+        output_db = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db',
+        tmp_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search_TMP{splitID}'
     threads:
         8
     resources:
@@ -187,9 +193,9 @@ rule mmseqs_search:
     conda:
         '../../envs/genes.yaml'
     log:
-        log_dir + 'mmseqs_search/seqs{splitID}.log'
+        log_dir + 'mmseqs_search/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
-        benchmark_dir + 'mmseqs_search/seqs{splitID}.txt'
+        benchmark_dir + 'mmseqs_search/' + config['db_name'] + 'seqs{splitID}.txt'
     shell:
         """
         rm -f {output.db} {output.db_t} {output.db_i} 2> {log}
@@ -218,14 +224,14 @@ rule mmseqs_search_convertalis:
     """
     input:
         # query
-        qdb = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db',
-        qdb_t = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.dbtype',
-        qdb_i = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.index',
-        qdb_l = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.lookup',
-        qdb_s = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.source',
-        qdb_h = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h',
-        qdb_ht = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype',
-        qdb_hi = config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db_h.index',
+        qdb = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db',
+        qdb_t = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.dbtype',
+        qdb_i = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.index',
+        qdb_l = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.lookup',
+        qdb_s = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.source',
+        qdb_h = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h',
+        qdb_ht = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.dbtype',
+        qdb_hi = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db_h.index',
         # target
         tdb = config['tmp_dir'] + 'mmseqs_search_db/db',
         tdb_t = config['tmp_dir'] + 'mmseqs_search_db/db.dbtype',
@@ -234,13 +240,13 @@ rule mmseqs_search_convertalis:
         tdb_ht = config['tmp_dir'] + 'mmseqs_search_db/db_h.dbtype',  
         tdb_hi = config['tmp_dir'] + 'mmseqs_search_db/db_h.index',
         # results
-        rdb = config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db',
-        rdb_t = config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db.dbtype',
-        rdb_i = config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db.index',
+        rdb = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db',
+        rdb_t = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db.dbtype',
+        rdb_i = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db.index',
     output:
-        temp(config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}.tsv')
+        temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}.tsv')
     params:
-        results_db = config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}_db'
+        results_db = config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits_seqs{splitID}_db'
     threads:
         4
     resources:
@@ -250,9 +256,9 @@ rule mmseqs_search_convertalis:
     conda:
         '../../envs/genes.yaml'
     log:
-        log_dir + 'mmseqs_search_convertalis/seqs{splitID}.log'
+        log_dir + 'mmseqs_search_convertalis/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
-        benchmark_dir + 'mmseqs_search_convertalis/seqs{splitID}.txt'
+        benchmark_dir + 'mmseqs_search_convertalis/' + config['db_name'] + 'seqs{splitID}.txt'
     shell:
         """
         mmseqs convertalis --threads {threads} \
@@ -260,14 +266,6 @@ rule mmseqs_search_convertalis:
           {input.qdb} {input.tdb} {params.results_db} \
           {output} 2> {log} 1>&2
         """
-
-#        tdbi = config['tmp_dir'] + 'mmseqs_search_db/db.idx',
-#        tdbi_t = config['tmp_dir'] + 'mmseqs_search_db/db.idx.dbtype',
-#        tdbi_i = config['tmp_dir'] + 'mmseqs_search_db/db.idx.index',
-        
-#        rdb = expand(config['tmp_dir'] + 'mmseqs_search/hits_seqs{{splitID}}_db.{X}',
-#                     X = range(8)),
-
         
 localrules: mmseqs_search_merge
         
@@ -276,10 +274,11 @@ rule mmseqs_search_merge:
     Merging the results
     """
     input:
-        hits = expand(config['tmp_dir'] + 'mmseqs_search/hits_seqs{splitID}.tsv',
-	       splitID=config['params']['humann3']['splits'])
+        hits = expand(config['tmp_dir'] + config['db_name'] + \
+                      'mmseqs_search/hits_seqs{splitID}.tsv',
+	              splitID=config['params']['humann3']['splits'])
     output:
-        hits = temp(config['tmp_dir'] + 'mmseqs_search/hits.txt')
+        hits = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     run:
