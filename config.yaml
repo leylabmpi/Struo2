@@ -20,6 +20,7 @@ tmp_dir: /ebio/abt3_scratch/
 databases:
   kraken2: Create
   bracken: Create
+  genes: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
   metaphlan3: Skip #Create

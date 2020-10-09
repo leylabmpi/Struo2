@@ -1,0 +1,3 @@
+[submodule "ll_pipeline_utils"]
+	path = ll_pipeline_utils
+	url = git@gitlab.tuebingen.mpg.de:leylabmpi/pipelines/ll_pipeline_utils.git
