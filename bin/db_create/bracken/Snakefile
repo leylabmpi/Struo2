@@ -3,7 +3,8 @@ rule bracken_build:
     Build braken database from kraken2 database
     """
     input:
-        kraken2_db = kraken2_dir + 'hash.k2d'
+        kraken2_db = kraken2_dir + 'hash.k2d',
+        rm_done = kraken2_dir + 'tmp_db_rm.done'
     output:
         krk = kraken2_dir + 'database{read_len}mers.kraken',
         krkd = kraken2_dir + 'database{read_len}mers.kmer_distrib'

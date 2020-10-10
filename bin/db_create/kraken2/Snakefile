@@ -100,7 +100,7 @@ rule kraken2_build_add:
         nodes = config['tmp_dir'] + 'kraken2/taxonomy/nodes.dmp',
         names = config['tmp_dir'] + 'kraken2/taxonomy/names.dmp'
     output:
-        temp(config['tmp_dir'] + 'kraken2/added/{sample}.done')
+        done = temp(config['tmp_dir'] + 'kraken2/added/{sample}.done')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 6
@@ -116,7 +116,7 @@ rule kraken2_build_add:
         DB=`dirname $DB`
 
         kraken2-build --db $DB --add-to-library {input.fasta}  2> {log} 1>&2
-        touch {output} 2>> {log}
+        touch {output.done} 2>> {log}
         """
     
 rule kraken2_build:
@@ -189,3 +189,24 @@ rule kraken2_db_copy:
         fi
         """
     
+rule kraken2_tmp_db_rm:
+    """
+    Removing temporary kraken2 db directory
+    """
+    input:
+        hash_tmp = config['tmp_dir'] + 'kraken2/hash.k2d',
+        hash = kraken2_dir + 'hash.k2d',
+	opts = kraken2_dir + 'opts.k2d',
+	taxo = kraken2_dir + 'taxo.k2d',
+	map  = kraken2_dir + 'seqid2taxid.map'
+    output:
+        done = kraken2_dir + 'tmp_db_rm.done'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + 'kraken2_tmp_db_rm/all.log'
+    shell:
+        """
+        rm -rf `dirname {input.hash_tmp}` 2> {log} 1>&2
+        touch {output.done} 2>> {log}
+        """
