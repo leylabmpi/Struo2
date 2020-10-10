@@ -10,6 +10,7 @@ tmp/
 .envrc
 ._*
 misc/
+archive/
 screenlog.*
 bin/scripts/metaphlan2/databases/
 .ipynb_checkpoints/

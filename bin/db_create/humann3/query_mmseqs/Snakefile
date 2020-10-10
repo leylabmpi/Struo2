@@ -207,16 +207,6 @@ rule mmseqs_search:
           touch {output.db}
         fi
         """
-
-        # tdbi = config['tmp_dir'] + 'mmseqs_search_db/db.idx',
-        # tdbi_t = config['tmp_dir'] + 'mmseqs_search_db/db.idx.dbtype',
-        # tdbi_i = config['tmp_dir'] + 'mmseqs_search_db/db.idx.index'
-
-        
-#        mem_gb_pt = mmseqs_db_index_mem,
-#        mem_gb = lambda wildcards, attempt, threads: \
-#                   int(mmseqs_db_index_mem(wildcards, attempt, threads) * threads * 0.8)
-
         
 rule mmseqs_search_convertalis:
     """

@@ -1,0 +1,176 @@
+rule kraken2_cp_to_tmp:
+    """
+    Copying an existing kraken database 
+    """
+    input:
+        lib = ancient(config['kraken2_db']['library']),
+        tax = ancient(config['kraken2_db']['taxonomy'])
+    output:
+        lib = temp(directory(config['tmp_dir'] + 'db_update/kraken2/library/')),
+        tax = temp(directory(config['tmp_dir'] + 'db_update/kraken2/taxonomy/')),
+        nodes = temp(config['tmp_dir'] + 'db_update/kraken2/taxonomy/nodes.dmp'),
+        names = temp(config['tmp_dir'] + 'db_update/kraken2/taxonomy/names.dmp')
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + 'db_update/kraken2_cp_to_tmp/all.log'
+    benchmark:
+        benchmark_dir + 'db_update/kraken2_cp_to_tmp/all.txt'
+    shell:
+        """
+        rm -rf {output.lib} 2> {log}
+        rm -rf {output.tax} 2>> {log}
+        ionice {params.ionice} cp -rf {input.lib} {output.lib} 2>> {log}
+        ionice {params.ionice} cp -rf {input.tax} {output.tax} 2>> {log}
+        """
+    
+def kraken2_add_taxID_get_taxID(wildcards):
+    """
+    Getting genome taxID from the user input table
+    """
+    taxID = config['samples'].loc[wildcards.sample, config['taxID_col']]
+    try:
+        taxID = taxID.astype(str)
+    except AttributeError:
+        pass
+    return taxID
+            
+rule kraken2_add_taxID:
+    """
+    Adding a taxononmy ID to the header of each genome.
+    Assuming the taxID is in the samples table.
+    Writing edited genome to temp dir.
+
+    Format: `kraken:taxid|<taxID>|<seqID>`
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']]
+    output:
+        temp(config['tmp_dir'] + 'db_update/genomes/{sample}.fna')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 6
+    params:
+        taxID = kraken2_add_taxID_get_taxID,
+        exe = config['pipeline']['script_folder'] + 'kraken2_rename_genome.py'
+    log:
+        log_dir + 'db_update/kraken2_add_taxID/{sample}.log'
+    benchmark:
+        benchmark_dir + 'db_update/kraken2_add_taxID/{sample}.txt'
+    shell:
+        """
+        {params.exe} {input.fasta} {params.taxID} > {output} 2> {log}
+        """
+
+localrules: kraken2_build_add
+
+rule kraken2_build_add:
+    """
+    Adding genome fasta files to the kraken database.
+    Using the --add-to-library flag
+    """
+    input:
+        lib = config['tmp_dir'] + 'db_update/kraken2/library/',
+        tax = config['tmp_dir'] + 'db_update/kraken2/taxonomy/',
+        fasta = config['tmp_dir'] + 'db_update/genomes/{sample}.fna',
+        nodes = config['tmp_dir'] + 'db_update/kraken2/taxonomy/nodes.dmp',
+        names = config['tmp_dir'] + 'db_update/kraken2/taxonomy/names.dmp'
+    output:
+        temp(config['tmp_dir'] + 'db_update/kraken2/added/{sample}.done')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 6
+    conda:
+        '../../envs/kraken2.yaml'
+    log:
+        log_dir + 'db_update/kraken2_build_add/{sample}.log'
+    benchmark:
+        benchmark_dir + 'db_update/kraken2_build_add/{sample}.txt'
+    shell:
+        """
+        DB=`dirname {input.names}`
+        DB=`dirname $DB`
+
+        kraken2-build --db $DB --add-to-library {input.fasta}  2> {log} 1>&2
+        touch {output} 2>> {log}
+        """
+    
+rule kraken2_build:
+    """
+    Building the kraken database
+    """
+    input:
+        expand(config['tmp_dir'] + 'db_update/kraken2/added/{sample}.done',
+	       sample = config['samples_unique'])
+    output:
+        hash = temp(config['tmp_dir'] + 'db_update/kraken2/hash.k2d'),
+	opts = temp(config['tmp_dir'] + 'db_update/kraken2/opts.k2d'),
+	map  = temp(config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'),
+	taxo = temp(config['tmp_dir'] + 'db_update/kraken2/taxo.k2d')
+    threads:
+        18
+    resources:
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 4
+    conda:
+        '../../envs/kraken2.yaml'
+    log:
+        log_dir + 'db_update/kraken2_build/all.log'
+    benchmark:
+        benchmark_dir + 'db_update/kraken2_build/all.txt'
+    shell:
+        """
+        DB=`dirname {output.hash}`
+        kraken2-build --build --threads {threads} --db $DB 2> {log} 1>&2
+        """
+    
+rule kraken2_db_copy:
+    """
+    Building the kraken database
+    """
+    input:
+        lib = config['tmp_dir'] + 'db_update/kraken2/library/',
+        tax = config['tmp_dir'] + 'db_update/kraken2/taxonomy/',
+        nodes = config['tmp_dir'] + 'db_update/kraken2/taxonomy/nodes.dmp',
+        names = config['tmp_dir'] + 'db_update/kraken2/taxonomy/names.dmp',
+        hash = config['tmp_dir'] + 'db_update/kraken2/hash.k2d',
+	opts = config['tmp_dir'] + 'db_update/kraken2/opts.k2d',
+	taxo = config['tmp_dir'] + 'db_update/kraken2/taxo.k2d',
+	map  = config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'
+    output:
+        hash = kraken2_dir + 'hash.k2d',
+	opts = kraken2_dir + 'opts.k2d',
+	taxo = kraken2_dir + 'taxo.k2d',
+	map  = kraken2_dir + 'seqid2taxid.map'
+    params:
+        keep = config['keep_intermediate'],
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    conda:
+        '../../envs/kraken2.yaml'
+    log:
+        log_dir + 'db_update/kraken2_db_copy/all.log'
+    benchmark:
+        benchmark_dir + 'db_update/kraken2_db_copy/all.txt'
+    shell:
+        """
+        if [ "{params.keep}" == "True" ]; then
+          echo "# copying entire kraken db" > {log}
+          DIR1=`dirname {input.hash}`
+          DIR2=`dirname {output.hash}`
+          rm -rf $DIR2 2>> {log} 1>&2
+          ionice {params.ionice} cp -rf $DIR1 $DIR2 2>> {log} 1>&2
+        else
+          echo "# copying just built kraken index files" > {log}
+          ionice {params.ionice} cp -f {input.hash} {output.hash} 2>> {log} 1>&2
+          ionice {params.ionice} cp -f {input.opts} {output.opts} 2>> {log} 1>&2
+          ionice {params.ionice} cp -f {input.map} {output.map} 2>> {log} 1>&2
+          ionice {params.ionice} cp -f {input.taxo} {output.taxo} 2>> {log} 1>&2
+        fi
+        """
+    

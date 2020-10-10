@@ -19,13 +19,12 @@ JOBS=$2
 # snakemake call
 WORKDIR=`pwd`
 snakemake -f \
-	  --profile sge \
+	  --profile bin/ll_pipeline_utils/profiles/sge/ \
 	  --use-conda \
 	  --configfile $CONFIG \
 	  --jobs $JOBS \
 	  --local-cores $JOBS \
 	  --printshellcmds \
-	  --max-status-checks-per-second 2 \
 	  --resources temp=$JOBS \
 	  --directory $WORKDIR \
 	  "${@:3}"

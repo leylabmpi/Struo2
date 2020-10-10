@@ -1,6 +1,6 @@
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/samples_GTDBr89_n10.txt
+samples_file: tests/samples/samples_GTDBr89_n5.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -8,13 +8,18 @@ fasta_file_path_col: 'fasta_file_path'
 taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
+# IF updating kraken2 database
+kraken2_db:
+  library: tests/output_GTDBr89_n10/kraken2/UniRef90/library/
+  taxonomy: tests/output_GTDBr89_n10/kraken2/UniRef90/taxonomy/
+
 # output location
 output_dir: tests/output_GTDBr89_n10/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
 
-#-- databases to create --#
+#-- databases to update --#
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
@@ -26,14 +31,10 @@ databases:
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
-db_name: UniRef90 #GTDB-custom
+db_name: UniRef90_updated
 # Name of the humann3 diamond database (must match naming allowed by humann3)
 dmnd_name: uniref90_201901.dmnd
 
-#-- if custom NCBI taxdump files (or just Skip) --#
-# Used for kraken taxonomy
-names_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
-nodes_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
@@ -82,4 +83,4 @@ pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
   name: Struo2
-  config: create
+  config: update
