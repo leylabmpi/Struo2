@@ -1,6 +1,3 @@
-wildcard_constraints:
-    sample="[^/]+"
-
 rule prodigal:
     """
     Running prodigal on each genome
@@ -19,7 +16,7 @@ rule prodigal:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8 + 8
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'prodigal/{sample}.log'
     benchmark:
@@ -50,7 +47,7 @@ rule vsearch_per_genome:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt * 3
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'vsearch_per_genome/{sample}.log'
     benchmark:
@@ -88,7 +85,7 @@ rule filter_gene_seqs:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 8
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'filter_gene_seqs/{sample}.log'
     benchmark:
@@ -111,7 +108,7 @@ rule combine_fna:
         fna = expand(config['tmp_dir'] + 'nuc_filtered/{sample}_reps.fna',
                      sample = config['samples_unique'])
     output:
-        fna = temp(config['tmp_dir'] + 'filtered_reps_tmp.fna')
+        fna = temp(config['tmp_dir'] + 'filtered_reps.fna')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -129,7 +126,7 @@ rule combine_faa:
         faa = expand(config['tmp_dir'] + 'prot_filtered/{sample}_reps.faa',
                      sample = config['samples_unique'])
     output:
-        faa = temp(config['tmp_dir'] + 'filtered_reps_tmp.faa')
+        faa = temp(config['tmp_dir'] + 'filtered_reps.faa')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -147,7 +144,7 @@ rule combine_txt:
         txt = expand(config['tmp_dir'] + 'names_filtered/{sample}_reps.txt',
                      sample = config['samples_unique'])
     output:
-        txt = temp(config['tmp_dir'] + 'filtered_reps_tmp.txt')
+        txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
     run:
@@ -156,72 +153,6 @@ rule combine_txt:
                 with open(F) as inF:
                     for line in inF:
                         outF.write(line)
-
-def which_user_add_seqs(wildcards):
-    seq_files = []
-    if not skipped(config['humann_nuc_seqs']):
-        seq_files.append(ancient(config['humann_nuc_seqs']))
-    if not skipped(config['humann_prot_seqs']):
-        seq_files.append(ancient(config['humann_prot_seqs']))
-    return seq_files
-                        
-if (not skipped(config['humann_nuc_seqs']) or
-    not skipped(config['humann_prot_seqs'])):
-    rule add_user_seqs:
-        """
-        Adding the user-specified genes to the collection
-        """
-        input:
-            fasta = which_user_add_seqs,
-            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
-            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
-            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
-        output:
-            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
-            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
-            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
-        params:
-            exe = config['pipeine']['script_folder'] + 'add_user_seqs.py'
-        resources:
-            time = lambda wildcards, attempt: attempt ** 2 * 59,
-            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
-        log:
-            log_dir + 'cluster_all_genes_nuc/all.log'
-        benchmark:
-            benchmark_dir + 'cluster_all_genes_nuc/all.txt'
-        shell:
-            """
-            {params.exe} --out-fna {output.fna} --out-faa {output.faa} \
-               --out-txt {output.txt} --in-fna {input.fna} \
-               --in-faa {input.faa} --in-txt {input.txt} \
-               {input.fasta} 2> {log} 1>&2
-            """
-else:
-    rule add_user_seqs_SKIP:
-        """
-        Adding the user-specified genes to the collection
-        """
-        input:
-            fna = config['tmp_dir'] + 'filtered_reps_tmp.fna',
-            faa = config['tmp_dir'] + 'filtered_reps_tmp.faa',
-            txt = config['tmp_dir'] + 'filtered_reps_tmp.txt'
-        output:
-            fna = temp(config['tmp_dir'] + 'filtered_reps.fna'),
-            faa = temp(config['tmp_dir'] + 'filtered_reps.faa'),
-            txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
-        resources:
-            time = lambda wildcards, attempt: attempt ** 2 * 59,
-            mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
-        log:
-            log_dir + 'add_user_seqs_SKIP/all.log'
-        benchmark:
-            benchmark_dir + 'add_user_seqs_SKIP/all.txt'
-        shell:
-            """
-            cp -f {input.fna} {output.fna} 2> {log} 1>&2
-            cp -f {input.faa} {output.faa} 2>> {log} 1>&2
-            cp -f {input.txt} {output.txt} 2>> {log} 1>&2
-            """    
 
 rule copy_gene_info:
     """
@@ -272,7 +203,7 @@ rule mmseqs_db_create:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_db_create/all.log'
     benchmark:
@@ -319,7 +250,7 @@ rule mmseqs_cluster:
         n = lambda wildcards, input, attempt, threads: threads,
         mem_gb_pt = mmseqs_cluster_mem
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_cluster/all.log'
     benchmark:
@@ -360,7 +291,7 @@ rule mmseqs_cluster_membership:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 5
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_cluster_membership/all.log'
     benchmark:
@@ -400,7 +331,7 @@ rule mmseqs_cluster_rep_db:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_cluster_rep_db/all.log'
     benchmark:
@@ -425,7 +356,7 @@ rule mmseqs_cluster_rep_seqs:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs2_cluster_rep_seqs/all.log'
     benchmark:
@@ -458,14 +389,14 @@ rule mmseqs_copy_db:
         tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv',
         faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
     output:
-        db = genes_dir + 'cluster/genes_db',
-        db_t = genes_dir + 'cluster/genes_db.dbtype',
-        db_i = genes_dir + 'cluster/genes_db.index',
-        db_l = genes_dir + 'cluster/genes_db.lookup',
-        db_s = genes_dir + 'cluster/genes_db.source',
-        db_h = genes_dir + 'cluster/genes_db_h',
-        db_ht = genes_dir + 'cluster/genes_db_h.dbtype',
-        db_hi = genes_dir + 'cluster/genes_db_h.index',
+        db = genes_dir + 'genes_db',
+        db_t = genes_dir + 'genes_db.dbtype',
+        db_i = genes_dir + 'genes_db.index',
+        db_l = genes_dir + 'genes_db.lookup',
+        db_s = genes_dir + 'genes_db.source',
+        db_h = genes_dir + 'genes_db_h',
+        db_ht = genes_dir + 'genes_db_h.dbtype',
+        db_hi = genes_dir + 'genes_db_h.index',
         db_clu = expand(genes_dir + 'cluster/clusters_db.{X}',
                         X = range(12)),
         db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
@@ -479,7 +410,7 @@ rule mmseqs_copy_db:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 6
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_db_copy/all.log'
     benchmark:
@@ -507,3 +438,19 @@ rule mmseqs_copy_db:
         ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
         """
         
+rule mmseqs_tmp_db_rm:
+    """
+    Removing the mmseqs temp database
+    """
+    input:
+        db = config['tmp_dir'] + 'cluster/genes_db'
+    output:        
+        done = genes_dir + 'tmp_db_rm.done'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + 'mmseqs_tmp_db_rm/all.log'
+    shell:
+        """
+        rm -rf `dirname {input.db}` 2> {log} 1>&2
+        """

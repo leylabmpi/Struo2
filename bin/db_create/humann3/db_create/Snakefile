@@ -12,6 +12,7 @@ rule humann3_annotate_genes:
     to each member of the cluster.
     """
     input:
+        rm_done = genes_dir + 'tmp_db_rm.done',
         hits = which_hits,
         fna = config['tmp_dir'] + 'filtered_reps.fna',
         faa = config['tmp_dir'] + 'filtered_reps.faa',

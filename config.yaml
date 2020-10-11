@@ -18,9 +18,9 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Create
-  bracken: Create
-  genes: Skip #Create
+  kraken2: Skip #Create
+  bracken: Skip #Create
+  genes: Create
   humann3_bowtie2: Skip #Create
   humann3_diamond: Skip #Create
   metaphlan3: Skip #Create

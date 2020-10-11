@@ -1,0 +1,364 @@
+# updating existing cluster with new gene sequences 
+
+rule mmseqs_copy_genes_to_temp:
+    """
+    Copying existing mmseqs cluster db to temp dir
+    """
+    input:
+        db = ancient(config['genes_db']['genes'])
+    output:
+        db = temp(config['tmp_dir'] + 'db_update/genes/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/genes/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/genes/genes_db.index'),
+        db_l = temp(config['tmp_dir'] + 'db_update/genes/genes_db.lookup'),
+        db_s = temp(config['tmp_dir'] + 'db_update/genes/genes_db.source'),
+        db_h = temp(config['tmp_dir'] + 'db_update/genes/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'db_update/genes/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'db_update/genes/genes_db_h.index')
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_copy_to_temp/all.log'
+    shell:
+        """
+        OUTDIR=`dirname {output.db}`
+        rm -rf $OUTDIR 2> {log}
+        ionice {params.ionice} cp -rf {input.db} $OUTDIR 2>> {log} 1>&2 
+        """
+
+rule mmseqs_copy_clust_to_temp:
+    """
+    Copying existing mmseqs cluster db to temp dir
+    """
+    input:
+        db = ancient(config['genes_db']['cluster'])
+    output:
+        db_clu = temp(expand(config['tmp_dir'] + 'db_update/cluster/clusters_db.{X}',
+                             X = range(12))),
+        db_clu_t = temp(config['tmp_dir'] + 'db_update/cluster/clusters_db.dbtype'),
+        db_clu_i = temp(config['tmp_dir'] + 'db_update/cluster/clusters_db.index'),
+        db_clu_h = temp(config['tmp_dir'] + 'db_update/cluster/clusters_db_h')
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_copy_to_temp/all.log'
+    shell:
+        """
+        OUTDIR=`dirname {output.db_clu_t}`
+        rm -rf $OUTDIR 2> {log}
+        ionice {params.ionice} cp -rf {input.db} $OUTDIR 2>> {log} 1>&2 
+        """
+
+rule mmseqs_concat_dbs:
+    """
+    Combining new & original genes, because mmseqs is dumb
+    """
+    input:        
+        # new genes
+        ndb = config['tmp_dir'] + 'db_update/new_genes/genes_db',
+        ndb_t = config['tmp_dir'] + 'db_update/new_genes/genes_db.dbtype',
+        ndb_i = config['tmp_dir'] + 'db_update/new_genes/genes_db.index',
+        ndb_l = config['tmp_dir'] + 'db_update/new_genes/genes_db.lookup',
+        ndb_s = config['tmp_dir'] + 'db_update/new_genes/genes_db.source',
+        ndb_h = config['tmp_dir'] + 'db_update/new_genes/genes_db_h',
+        ndb_ht = config['tmp_dir'] + 'db_update/new_genes/genes_db_h.dbtype',
+        ndb_hi = config['tmp_dir'] + 'db_update/new_genes/genes_db_h.index',
+        # original genes
+        odb = config['tmp_dir'] + 'db_update/genes/genes_db',
+        odb_t = config['tmp_dir'] + 'db_update/genes/genes_db.dbtype',
+        odb_i = config['tmp_dir'] + 'db_update/genes/genes_db.index',
+        odb_s = config['tmp_dir'] + 'db_update/genes/genes_db.source',
+        odb_h = config['tmp_dir'] + 'db_update/genes/genes_db_h',
+        odb_ht = config['tmp_dir'] + 'db_update/genes/genes_db_h.dbtype',
+        odb_hi = config['tmp_dir'] + 'db_update/genes/genes_db_h.index'
+    output:
+        # all genes
+        cdb = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db'),
+        cdb_t = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.dbtype'),
+        cdb_i = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.index'),
+        cdb_l = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.lookup'),
+        cdb_s = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.source'),
+        cdb_h = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h'),
+        cdb_ht = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h.dbtype'),
+        cdb_hi = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h.index')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 7
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_concat_dbs/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_concat_db/all.txt'
+    shell:
+        """
+        mmseqs concatdbs {input.odb} {input.ndb} {output.cdb} 2> {log} 1>&2
+        mmseqs concatdbs {input.odb_h} {input.ndb_h} {output.cdb_h} 2>> {log} 1>&2
+        """        
+            
+rule mmseqs_cluster_update:
+    """
+    Updating cluster db
+    """
+    input:
+        # all genes
+        db = config['tmp_dir'] + 'db_update/all_genes/genes_db',
+        db_t = config['tmp_dir'] + 'db_update/all_genes/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'db_update/all_genes/genes_db.index',
+        db_l = config['tmp_dir'] + 'db_update/all_genes/genes_db.lookup',
+        db_s = config['tmp_dir'] + 'db_update/all_genes/genes_db.source',
+        db_h = config['tmp_dir'] + 'db_update/all_genes/genes_db_h',
+        db_ht = config['tmp_dir'] + 'db_update/all_genes/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'db_update/all_genes/genes_db_h.index',
+        # original genes
+        odb = config['tmp_dir'] + 'db_update/genes/genes_db',
+        odb_t = config['tmp_dir'] + 'db_update/genes/genes_db.dbtype',
+        odb_i = config['tmp_dir'] + 'db_update/genes/genes_db.index',
+        odb_s = config['tmp_dir'] + 'db_update/genes/genes_db.source',
+        odb_h = config['tmp_dir'] + 'db_update/genes/genes_db_h',
+        odb_ht = config['tmp_dir'] + 'db_update/genes/genes_db_h.dbtype',
+        odb_hi = config['tmp_dir'] + 'db_update/genes/genes_db_h.index',
+        # original clusters
+        db_clu = expand(config['tmp_dir'] + 'db_update/cluster/clusters_db.{X}',
+                        X = range(12)),
+        db_clu_t = config['tmp_dir'] + 'db_update/cluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'db_update/cluster/clusters_db.index',
+        db_clu_h = config['tmp_dir'] + 'db_update/cluster/clusters_db_h'        
+    output:
+        # genes
+        db = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db.index'),
+        db_s = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db.source'),
+        db_l = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db.lookup'),
+        db_h = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.index'),
+        # clusters
+        db_clu = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_db'),
+        db_clu_t = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_db.dbtype'),
+        db_clu_i = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_db.index')
+    params:
+        params = config['params']['genes']['mmseqs_cluster_update'],
+        tmp_dir = config['tmp_dir'] + 'cluster_update_TMP'
+    threads:
+        12
+    resources:
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 48,
+        n = lambda wildcards, input, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 3,
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_cluster_update/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_cluster_update/all.txt'
+    shell:
+        """
+        rm -rf {params.tmp_dir} 2> {log} && mkdir -p {params.tmp_dir} 2>> {log}
+        IN_CLU=`echo "{input.db_clu_t}" | perl -pe 's/\.dbtype//'`
+        mmseqs clusterupdate {params.params} --threads {threads} \
+          {input.odb} {input.db} $IN_CLU \
+          {output.db} {output.db_clu} \
+          {params.tmp_dir} 2>> {log} 1>&2
+        rm -rf {params.tmp_dir} 2>> {log}
+        """
+        
+rule mmseqs_cluster_membership:
+    """
+    Getting a table of which genes belong to which cluster.
+    Output table format: cluster_rep<tab>cluster_member
+    """
+    input:
+        # genes
+        db = config['tmp_dir'] + 'db_update/Ucluster/genes_db',
+        db_t = config['tmp_dir'] + 'db_update/Ucluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'db_update/Ucluster/genes_db.index',
+        db_s = config['tmp_dir'] + 'db_update/Ucluster/genes_db.source',
+        db_l = config['tmp_dir'] + 'db_update/Ucluster/genes_db.lookup',
+        db_h = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.index',
+        # clusters
+        db_clu = config['tmp_dir'] + 'db_update/Ucluster/clusters_db',
+        db_clu_t = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.index'
+    output:
+        tsv = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_membership.tsv')
+    threads:
+        4
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 5
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_cluster_membership/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_cluster_membership/all.txt'
+    shell:
+        """
+        mmseqs createtsv --threads {threads} {input.db} {input.db} \
+          {input.db_clu} {output.tsv} 2> {log} 1>&2
+        """
+        
+rule mmseqs_cluster_rep_db:
+    """ 
+    Creating an mmseqs database of 1 representative for each cluster.
+    """
+    input:
+        # genes
+        db = config['tmp_dir'] + 'db_update/Ucluster/genes_db',
+        db_t = config['tmp_dir'] + 'db_update/Ucluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'db_update/Ucluster/genes_db.index',
+        db_s = config['tmp_dir'] + 'db_update/Ucluster/genes_db.source',
+        db_l = config['tmp_dir'] + 'db_update/Ucluster/genes_db.lookup',
+        db_h = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.index',
+        # clusters
+        db_clu = config['tmp_dir'] + 'db_update/Ucluster/clusters_db',
+        db_clu_t = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.index'
+    output:
+        db = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db.index'),
+        db_h = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db_h')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_cluster_rep_db/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_cluster_rep_db/all.txt'
+    shell:
+        """
+        mmseqs createsubdb {input.db_clu} {input.db} {output.db} 2> {log} 1>&2
+        """
+       
+rule mmseqs_cluster_rep_seqs:
+    """ 
+    Creating fasta flat file for representative sequence database
+    """
+    input:
+        db = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db',
+        db_t = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db.dbtype',
+        db_i = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db.index',
+        db_h = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db_h'
+    output:
+        fasta = temp(config['tmp_dir'] + 'db_update/Ucluster/clusters_reps.faa')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 12
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs2_cluster_rep_seqs/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs2_cluster_rep_seqs/all.txt'
+    shell:
+        """
+        mmseqs convert2fasta {input.db} {output.fasta} 2> {log} 1>&2
+        """
+        
+rule mmseqs_copy_db:
+    """
+    Copying the database and cluster database to the final directory.
+    The database can be used to create an updated version with new
+    user-provided sequences.
+    """
+    input:
+        # genes
+        db = config['tmp_dir'] + 'db_update/Ucluster/genes_db',
+        db_t = config['tmp_dir'] + 'db_update/Ucluster/genes_db.dbtype',
+        db_i = config['tmp_dir'] + 'db_update/Ucluster/genes_db.index',
+        db_s = config['tmp_dir'] + 'db_update/Ucluster/genes_db.source',
+        db_l = config['tmp_dir'] + 'db_update/Ucluster/genes_db.lookup',
+        db_h = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h',
+        db_ht = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.dbtype',
+        db_hi = config['tmp_dir'] + 'db_update/Ucluster/genes_db_h.index',
+        # clusters
+        db_clu = config['tmp_dir'] + 'db_update/Ucluster/clusters_db',
+        db_clu_t = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.dbtype',
+        db_clu_i = config['tmp_dir'] + 'db_update/Ucluster/clusters_db.index',
+        # flat files
+        tsv = config['tmp_dir'] + 'db_update/Ucluster/clusters_membership.tsv',
+        faa = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps.faa'
+    output:
+        # genes
+        db = genes_dir + 'cluster/genes_db',
+        db_t = genes_dir + 'cluster/genes_db.dbtype',
+        db_i = genes_dir + 'cluster/genes_db.index',
+        db_l = genes_dir + 'cluster/genes_db.lookup',
+        db_s = genes_dir + 'cluster/genes_db.source',
+        db_h = genes_dir + 'cluster/genes_db_h',
+        db_ht = genes_dir + 'cluster/genes_db_h.dbtype',
+        db_hi = genes_dir + 'cluster/genes_db_h.index',
+        # clusters
+        db_clu = genes_dir + 'cluster/clusters_db',
+        db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
+        db_clu_i = genes_dir + 'cluster/clusters_db.index',
+        # flat files
+        tsv = genes_dir + 'cluster/clusters_membership.tsv',
+        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 6
+    conda:
+        '../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_db_copy/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_db_copy/all.txt'
+    shell:
+        """        
+        # genes database
+        ionice {params.ionice} cp -f {input.db} {output.db} 2> {log}
+        ionice {params.ionice} cp -f {input.db_t} {output.db_t} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_i} {output.db_i} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_l} {output.db_l} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_s} {output.db_s} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_h} {output.db_h} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log}
+        # cluster database
+        ionice {params.ionice} cp -f {input.db_clu} {output.db_clu} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_clu_t} {output.db_clu_t} 2>> {log}
+        ionice {params.ionice} cp -f {input.db_clu_i} {output.db_clu_i} 2>> {log}
+        # cluster membership
+        ionice {params.ionice} cp -f {input.tsv} {output.tsv} 2>> {log}
+        # cluster representatives
+        ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
+        """
+
+# TODO: add back rule below
+        
+# rule mmseqs_tmp_db_rm:
+#     """
+#     Removing the mmseqs temp database
+#     """
+#     input:
+#         db = config['tmp_dir'] + 'cluster/genes_db'
+#     output:        
+#         done = genes_dir + 'tmp_db_rm.done'
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 3 * 59
+#     log:
+#         log_dir + 'mmseqs_tmp_db_rm/all.log'
+#     shell:
+#         """
+#         rm -rf `dirname {input.db}` 2> {log} 1>&2
+#         """

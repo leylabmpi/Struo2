@@ -1,0 +1,216 @@
+rule prodigal:
+    """
+    Running prodigal on each genome
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']]
+    output:
+        fna = temp(config['tmp_dir'] + 'db_update/prodigal/{sample}.fna'),
+        faa = temp(config['tmp_dir'] + 'db_update/prodigal/{sample}.faa'),
+        gbk = temp(config['tmp_dir'] + 'db_update/prodigal/{sample}.gbk')
+    params:
+        params = config['params']['genes']['prodigal']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8 + 8
+    conda:
+        '../../../envs/genes.yaml'
+    log:
+        log_dir + 'prodigal/{sample}.log'
+    benchmark:
+        benchmark_dir + 'prodigal/{sample}.txt'
+    shell:
+        """
+        gunzip -c {input.fasta} | \
+          prodigal {params.params} \
+          -o {output.gbk} -d {output.fna} -a {output.faa} \
+          2> {log} 1>&2
+        """    
+
+rule vsearch_per_genome:
+    """
+    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    """
+    input:
+        fna = config['tmp_dir'] + 'db_update/prodigal/{sample}.fna',
+        faa = config['tmp_dir'] + 'db_update/prodigal/{sample}.faa'
+    output:
+        reps = temp(config['tmp_dir'] + 'db_update/vsearch/{sample}_reps.fna')
+    params:
+        params = config['params']['genes']['vsearch_per_genome']
+    threads:
+        4
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 3
+    conda:
+        '../../../envs/genes.yaml'
+    log:
+        log_dir + 'vsearch_per_genome/{sample}.log'
+    benchmark:
+        benchmark_dir + 'vsearch_per_genome/{sample}.txt'
+    shell:
+        """
+        vsearch {params.params} \
+          --threads {threads} \
+          --cluster_fast {input.fna} \
+          --centroids {output.reps} \
+          2> {log} 1>&2
+        """
+        
+rule filter_gene_seqs:
+    """
+    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    Renaming as [seq_name]|gene_length|taxonomy
+    """
+    input:
+        fasta = lambda wildcards: \
+	  config['samples'].loc[wildcards.sample, config['fasta_file_path_col']],
+        reps = config['tmp_dir'] + 'db_update/vsearch/{sample}_reps.fna',
+        faa = config['tmp_dir'] + 'db_update/prodigal/{sample}.faa'
+    output:
+        fna = temp(config['tmp_dir'] + 'db_update/nuc_filtered/{sample}_reps.fna'),
+        faa = temp(config['tmp_dir'] + 'db_update/prot_filtered/{sample}_reps.faa'),
+        txt = temp(config['tmp_dir'] + 'db_update/names_filtered/{sample}_reps.txt')
+    params:
+        exe = config['pipeline']['script_folder'] + 'filter_seqs.py',
+        tax = lambda wildcards: \
+                config['samples'].loc[wildcards.sample, config['taxonomy_col']],
+        taxID = lambda wildcards: \
+	          config['samples'].loc[wildcards.sample, config['taxID_col']]
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 8
+    conda:
+        '../../../envs/genes.yaml'
+    log:
+        log_dir + 'filter_gene_seqs/{sample}.log'
+    benchmark:
+        benchmark_dir + 'filter_gene_seqs/{sample}.txt'
+    shell:
+        """        
+        {params.exe} --taxonomy "{params.tax}" \
+           --taxID {params.taxID} \
+           --genome-file {input.fasta} \
+           {input.reps} {input.faa} \
+           {output.fna} {output.faa} \
+           > {output.txt} 2> {log}
+        """        
+                
+rule combine_fna:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        fna = expand(config['tmp_dir'] + 'db_update/nuc_filtered/{sample}_reps.fna',
+                     sample = config['samples_unique'])
+    output:
+        fna = temp(config['tmp_dir'] + 'db_update/filtered_reps.fna')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.fna, 'w') as outF:
+            for F in input.fna:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+rule combine_faa:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        faa = expand(config['tmp_dir'] + 'db_update/prot_filtered/{sample}_reps.faa',
+                     sample = config['samples_unique'])
+    output:
+        faa = temp(config['tmp_dir'] + 'db_update/filtered_reps.faa')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.faa, 'w') as outF:
+            for F in input.faa:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+rule combine_txt:
+    """
+    For all genes of all genomes, combining into 1 collection
+    """
+    input:
+        txt = expand(config['tmp_dir'] + \
+                     'db_update/names_filtered/{sample}_reps.txt',
+                     sample = config['samples_unique'])
+    output:
+        txt = temp(config['tmp_dir'] + 'db_update/filtered_reps.txt')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    run:
+        with open(output.txt, 'w') as outF:
+            for F in input.txt:
+                with open(F) as inF:
+                    for line in inF:
+                        outF.write(line)
+
+rule copy_gene_info:
+    """
+    Copying gene info to final directory
+    """
+    input:
+        fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
+        faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
+        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt'
+    output:
+        fna = genes_dir + 'genome_reps_filtered.fna.gz',
+        faa = genes_dir + 'genome_reps_filtered.faa.gz',
+        txt = genes_dir + 'genome_reps_filtered.txt.gz'
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 8
+    log:
+        log_dir + 'copy_gene_info/all.log'
+    benchmark:
+        benchmark_dir + 'copy_gene_info/all.txt'
+    shell:
+        """
+        ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
+        ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
+        ionice {params.ionice} gzip -c {input.txt} > {output.txt} 2>> {log}
+        """
+        
+rule mmseqs_db_create:
+    """ 
+    Creating mmseqs2 database that will be used for clustering
+    """
+    input:
+        fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
+        faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
+        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt'
+    output:
+        db = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.index'),
+        db_l = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.lookup'),
+        db_s = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.source'),
+        db_h = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.index')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
+    conda:
+        '../../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_db_create/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_db_create/all.txt'
+    shell:
+        """
+        mmseqs createdb {input.faa} {output.db} 2> {log} 1>&2
+        """
+

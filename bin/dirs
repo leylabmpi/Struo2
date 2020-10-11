@@ -1,4 +1,4 @@
-genes_dir = os.path.join(config['output_dir'], 'genes').rstrip('/') + '/'
+genes_dir = os.path.join(config['output_dir'], 'genes', config['db_name']).rstrip('/') + '/'
 kraken2_dir = os.path.join(config['output_dir'], 'kraken2', config['db_name']).rstrip('/') + '/'
 bracken_dir = os.path.join(config['output_dir'], 'bracken', config['db_name']).rstrip('/') + '/'
 humann3_dir = os.path.join(config['output_dir'], 'humann3', config['db_name']).rstrip('/') + '/'

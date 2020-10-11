@@ -1,3 +1,14 @@
+#-- databases to update --#
+# Replace "Create" with "Skip" to skip creation of any of these
+# Note that braken relies on the kraken2 database
+databases:
+  kraken2: Skip #Create
+  bracken: Skip #Create
+  genes: Create
+  humann3_bowtie2: Skip #Create
+  humann3_diamond: Skip #Create
+  metaphlan3: Skip #Create
+
 #-- I/O --#
 # file listing samples and associated data
 samples_file: tests/samples/samples_GTDBr89_n5.txt
@@ -8,27 +19,22 @@ fasta_file_path_col: 'fasta_file_path'
 taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
-# IF updating kraken2 database
+# Saved databases
 kraken2_db:
   library: tests/output_GTDBr89_n10/kraken2/UniRef90/library/
   taxonomy: tests/output_GTDBr89_n10/kraken2/UniRef90/taxonomy/
-
+genes_db:
+  genes: tests/output_GTDBr89_n10/genes/UniRef90/
+  cluster: tests/output_GTDBr89_n10/genes/UniRef90/cluster/
+humann_db:
+  rep_hits: tests/output_GTDBr89_n10/genes/UniRef90/mmseqs_search/hits.txt.gz
+  
 # output location
 output_dir: tests/output_GTDBr89_n10/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
 
-#-- databases to update --#
-# Replace "Create" with "Skip" to skip creation of any of these
-# Note that braken relies on the kraken2 database
-databases:
-  kraken2: Create
-  bracken: Create
-  genes: Skip #Create
-  humann3_bowtie2: Skip #Create
-  humann3_diamond: Skip #Create
-  metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
 db_name: UniRef90_updated
@@ -56,8 +62,7 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
-    mmseqs_cluster: --min-seq-id 0.9 -c 0.8
-    mmseqs_cluster_method: linclust         # or "cluster", which is slower
+    mmseqs_cluster_update: --min-seq-id 0.9 -s 4.0 
   humann3:
     batches: 10
     mmseqs_search:

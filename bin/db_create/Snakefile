@@ -68,52 +68,68 @@ def all_which_input(wildcards):
     
     # kraken2
     if not skipped(config['databases']['kraken2']):
-        #if str(config['params']['bracken']['keep_intermediate']) == 'True':
-        #    x = expand(kraken2_dir + 'added/{sample}.done',
-        #               sample = config['samples_unique'])
-        #    input_files += x
         input_files.append(os.path.join(kraken2_dir, 'hash.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'opts.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'taxo.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
-
         # bracken
         if not skipped(config['databases']['bracken']):
     	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
 	               read_len = config['params']['bracken']['build_read_lens'])
             input_files += x
-            
-    # humann3
-    if not skipped(config['databases']['humann3_bowtie2']):
-        input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
-    if not skipped(config['databases']['humann3_diamond']):
-        input_files.append(os.path.join(humann3_dir, 'protein_database',
-                                        config['dmnd_name']))
-    ## humann3 intermediate files
-    if (not skipped(config['databases']['humann3_bowtie2']) and
-        not skipped(config['databases']['humann3_diamond'])):
-        if str(config['params']['genes']['keep_gene_info']) == 'True':
-            input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
-            input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
-            input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
-        if str(config['params']['genes']['keep_cluster_db']) == 'True':
-            input_files.append(genes_dir + 'cluster/genes_db')
-            input_files.append(genes_dir + 'cluster/genes_db.dbtype')
-            input_files.append(genes_dir + 'cluster/genes_db.index')
-            input_files.append(genes_dir + 'cluster/genes_db.lookup')
-            input_files.append(genes_dir + 'cluster/genes_db.source')
-            input_files.append(genes_dir + 'cluster/genes_db_h')
-            input_files.append(genes_dir + 'cluster/genes_db_h.dbtype')
-            input_files.append(genes_dir + 'cluster/genes_db_h.index')
+    # genes
+    if not skipped(config['databases']['genes']):
+        input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+        if str(config['keep_intermediate']) == 'True':
+            # mmseqs gene database
+            input_files.append(genes_dir + 'genes_db')
+            input_files.append(genes_dir + 'genes_db.dbtype')
+            input_files.append(genes_dir + 'genes_db.index')
+            input_files.append(genes_dir + 'genes_db.lookup')
+            input_files.append(genes_dir + 'genes_db.source')
+            input_files.append(genes_dir + 'genes_db_h')
+            input_files.append(genes_dir + 'genes_db_h.dbtype')
+            input_files.append(genes_dir + 'genes_db_h.index')
+            ## mmseqs cluster database
             input_files += expand(genes_dir + 'cluster/clusters_db.{X}',
                                   X = range(12))
             input_files.append(genes_dir + 'cluster/clusters_db.dbtype')
             input_files.append(genes_dir + 'cluster/clusters_db.index')
             input_files.append(genes_dir + 'cluster/clusters_db_h')            
-        if str(config['params']['genes']['keep_annot_genes']) == 'True':
-            input_files.append(humann3_dir + 'filtered_reps_annot.fna.gz')
-            input_files.append(humann3_dir + 'filtered_reps_annot.faa.gz')
-            input_files.append(humann3_dir + 'filtered_reps_annot.tsv.gz')
+                        
+    # humann3
+    # if not skipped(config['databases']['humann3_bowtie2']):
+    #     input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
+    # if not skipped(config['databases']['humann3_diamond']):
+    #     input_files.append(os.path.join(humann3_dir, 'protein_database',
+    #                                     config['dmnd_name']))
+    # ## humann3 intermediate files
+    # if (not skipped(config['databases']['humann3_bowtie2']) and
+    #     not skipped(config['databases']['humann3_diamond'])):
+    #     if str(config['params']['genes']['keep_gene_info']) == 'True':
+    #         input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
+    #         input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
+    #         input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+    #     if str(config['params']['genes']['keep_cluster_db']) == 'True':
+    #         input_files.append(genes_dir + 'cluster/genes_db')
+    #         input_files.append(genes_dir + 'cluster/genes_db.dbtype')
+    #         input_files.append(genes_dir + 'cluster/genes_db.index')
+    #         input_files.append(genes_dir + 'cluster/genes_db.lookup')
+    #         input_files.append(genes_dir + 'cluster/genes_db.source')
+    #         input_files.append(genes_dir + 'cluster/genes_db_h')
+    #         input_files.append(genes_dir + 'cluster/genes_db_h.dbtype')
+    #         input_files.append(genes_dir + 'cluster/genes_db_h.index')
+    #         input_files += expand(genes_dir + 'cluster/clusters_db.{X}',
+    #                               X = range(12))
+    #         input_files.append(genes_dir + 'cluster/clusters_db.dbtype')
+    #         input_files.append(genes_dir + 'cluster/clusters_db.index')
+    #         input_files.append(genes_dir + 'cluster/clusters_db_h')            
+    #     if str(config['params']['genes']['keep_annot_genes']) == 'True':
+    #         input_files.append(humann3_dir + 'filtered_reps_annot.fna.gz')
+    #         input_files.append(humann3_dir + 'filtered_reps_annot.faa.gz')
+    #         input_files.append(humann3_dir + 'filtered_reps_annot.tsv.gz')
                     
     # ret
     return input_files

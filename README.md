@@ -47,10 +47,6 @@ Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mp
   * GTDB taxonomy/taxIDs used
     * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
   
-# Tutorial
-
-For a step-by-step example of how to prepare and execute Struo, see the notebook in the `./tutorial/` folder
-
 # Description
 
 ## Struo’s workflow
@@ -105,6 +101,7 @@ Example:
 ./genome_download.R -o genomes -p 8 gtdb-r89_bac-arc.tsv > genomes.txt
 
 # Note: the output of ./genome_download.R can be directly used for running the `Struo` pipeline (see below)
+# Note: genomes must be gzip'd for input to Struo2
 ```
 
 ### User-provided databases
@@ -301,12 +298,18 @@ match anything in the NCBI!
 
 
 # TODO
+* allow easy updating of genes
+  * gene annotation of new genomes
+  * vsearch de-rep
+  * appending genes to existing gene reps
+* allow easy updating of gene clusters
+  * `mmseqs clusterupdate`
+    * (existing cluster db) + (db of new fasta seqs)
+      * input: new genome seqs or just user-provided seqs
+      * if user-provided seqs, must provide table of:
+        * gene_uuid, gene_taxonomy, gene_taxid
 
-* Create a diamond DB using `diamond >=0.9` so that users can run humann2 with
-the most up-to-date version of diamond
-  * Note this will require creating an updated UniRef50 db
-* Add support for humann3
-* Create databases for GTDBr90
+* allow for non-gzip genome input (prodigal)
 * Create [metaphlan3 marker database](https://github.com/biobakery/MetaPhlAn/wiki/MetaPhlAn-3.0#customizing-the-database)
   * [issue about creating the DB](https://github.com/biobakery/MetaPhlAn/issues/103)
   * Get taxonomy of the genomes (provided by GTDB in the metadata)

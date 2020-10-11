@@ -44,16 +44,13 @@ config['params']['humann3']['splits'] = \
 ## including modular snakefiles
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
-#if not skipped(config['databases']['genes']):
-#    include: snake_dir + 'bin/db_create/genes/Snakefile'
-#else:
-#    m = '\33[33mSkipping creation of genes database;'
-#    m += ' assuming the database already exist!\x1b[0m'
-#    print(m)
 if not skipped(config['databases']['kraken2']):
     include: snake_dir + 'bin/db_update/kraken2/Snakefile'
     if not skipped(config['databases']['bracken']):
         include: snake_dir + 'bin/db_update/bracken/Snakefile'
+if not skipped(config['databases']['genes']):
+    include: snake_dir + 'bin/db_update/genes/from_genomes/Snakefile'
+    include: snake_dir + 'bin/db_update/genes/Snakefile'
 #if not skipped(config['databases']['humann3_bowtie2']) and \
 #   not skipped(config['databases']['humann3_diamond']):
 #    include: snake_dir + 'bin/db_create/humann3/query_dmnd/Snakefile'
@@ -77,7 +74,34 @@ def all_which_input(wildcards):
     	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
 	               read_len = config['params']['bracken']['build_read_lens'])
             input_files += x
-                                
+
+    # genes
+    if not skipped(config['databases']['genes']):
+        # updated genomes rep genes
+        input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+        # updated mmseqs cluster db
+        ## genes
+        input_files.append(genes_dir + 'cluster/genes_db')
+        input_files.append(genes_dir + 'cluster/genes_db.dbtype')
+        input_files.append(genes_dir + 'cluster/genes_db.index')
+        input_files.append(genes_dir + 'cluster/genes_db.lookup')
+        input_files.append(genes_dir + 'cluster/genes_db.source')
+        input_files.append(genes_dir + 'cluster/genes_db_h')
+        input_files.append(genes_dir + 'cluster/genes_db_h.dbtype')
+        input_files.append(genes_dir + 'cluster/genes_db_h.index')
+        ## clusters
+        input_files.append(genes_dir + 'cluster/clusters_db')
+        input_files.append(genes_dir + 'cluster/clusters_db.dbtype')
+        input_files.append(genes_dir + 'cluster/clusters_db.index')
+        ## flat files
+        input_files.append(genes_dir + 'cluster/clusters_membership.tsv')
+        input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')
+
+    # humann annotations
+    
+        
     # ret
     return input_files
 
