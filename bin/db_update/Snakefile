@@ -44,13 +44,22 @@ config['params']['humann3']['splits'] = \
 ## including modular snakefiles
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
+### Adding genomes to kraken/bracken (user cannot provide gene list)
 if not skipped(config['databases']['kraken2']):
-    include: snake_dir + 'bin/db_update/kraken2/Snakefile'
-    if not skipped(config['databases']['bracken']):
-        include: snake_dir + 'bin/db_update/bracken/Snakefile'
+    if not skipped(config['humann_prot_seqs']):
+        print('\33[33mGene list provided; skipping kraken/bracken DB update\x1b[0m')
+    else:
+        include: snake_dir + 'bin/db_update/kraken2/Snakefile'
+        if not skipped(config['databases']['bracken']):
+            include: snake_dir + 'bin/db_update/bracken/Snakefile'
+### Adding genes to genes_db (user can provide genomes or gene list)        
 if not skipped(config['databases']['genes']):
-    include: snake_dir + 'bin/db_update/genes/from_genomes/Snakefile'
+    if not skipped(config['humann_prot_seqs']):
+        include: snake_dir + 'bin/db_update/genes/gene_list/Snakefile'
+    else:
+        include: snake_dir + 'bin/db_update/genes/from_genomes/Snakefile'
     include: snake_dir + 'bin/db_update/genes/Snakefile'
+### Annotating additional genes for humannn (gene db used)
 #if not skipped(config['databases']['humann3_bowtie2']) and \
 #   not skipped(config['databases']['humann3_diamond']):
 #    include: snake_dir + 'bin/db_create/humann3/query_dmnd/Snakefile'
@@ -68,7 +77,6 @@ def all_which_input(wildcards):
         input_files.append(os.path.join(kraken2_dir, 'opts.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'taxo.k2d'))
         input_files.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
-
         # bracken
         if not skipped(config['databases']['bracken']):
     	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),

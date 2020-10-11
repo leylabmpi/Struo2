@@ -1,0 +1,30 @@
+# if the user provides a set of genes
+
+rule mmseqs_db_create:
+    """ 
+    Creating mmseqs2 database that will be used for clustering
+    """
+    input:
+        faa = ancient(config['humann_prot_seqs'])
+    output:
+        db = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.index'),
+        db_l = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.lookup'),
+        db_s = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.source'),
+        db_h = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.index')
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
+    conda:
+        '../../../envs/genes.yaml'
+    log:
+        log_dir + 'mmseqs_db_create/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_db_create/all.txt'
+    shell:
+        """
+        mmseqs createdb {input.faa} {output.db} 2> {log} 1>&2
+        """
