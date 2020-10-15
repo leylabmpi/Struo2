@@ -2,18 +2,20 @@
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: #Create
-  bracken: #Create
+  kraken2: Skip #Create
+  bracken: Skip #Create
   genes: Create
   humann3_bowtie2: Skip #Create
   humann3_diamond: Skip #Create
   metaphlan3: Skip #Create
 
-#-- I/O --#
+#-- Input --#
 #--- If just a set of gene sequences to add ---#
 # If you have nucleotide/amino-acid gene sequences formatted for humann
-humann_prot_seqs: tests/data/clusters_rep-seqs.faa.gz
-humann_nuc_seqs: tests/data/clusters_rep-seqs.fna.gz
+new_genes:
+  amino_acid: Skip #tests/data/clusters_rep-seqs.faa.gz
+  nucleotide: tests/data/clusters_rep-seqs.fna.gz
+  metadata: tests/data/clusters_rep-seqs.txt.gz
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
@@ -25,28 +27,35 @@ fasta_file_path_col: 'fasta_file_path'
 taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
-# Saved databases
+# Saved databases that will be updated
 kraken2_db:
-  library: tests/output_GTDBr89_n10/kraken2/UniRef90/library/
-  taxonomy: tests/output_GTDBr89_n10/kraken2/UniRef90/taxonomy/
+  library:  tests/output_GTDBr89_n10/kraken2/UniRef50/library/
+  taxonomy: tests/output_GTDBr89_n10/kraken2/UniRef50/taxonomy/
 genes_db:
-  genes: tests/output_GTDBr89_n10/genes/UniRef90/
-  cluster: tests/output_GTDBr89_n10/genes/UniRef90/cluster/
+  genes:
+    mmseqs_db:   tests/output_GTDBr89_n10/genes/UniRef50/genes_db.tar.gz
+    amino_acid:  tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.faa.gz
+    nucleotide:  tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.fna.gz
+    metadata:    tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.txt.gz
+  cluster:
+    mmseqs_db:   tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_db.tar.gz
 humann_db:
-  rep_hits: tests/output_GTDBr89_n10/genes/UniRef90/mmseqs_search/hits.txt.gz
-  
+  gene_db:       tests/output_GTDBr89_n10/genes/UniRef50/genes_db.tar.gz
+  gene_metadata: tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.txt.gz
+  cluster_db:    tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_db.tar.gz
+  query_hits:    tests/output_GTDBr89_n10/humann3/UniRef50/hits.txt.gz
+
+#-- Output --#
 # output location
 output_dir: tests/output_GTDBr89_n10/
 
+# Name for base directory holding all created databases
+db_name: UniRef50_updated_from-genomes
+# Name of the humann3 diamond database (must match naming allowed by humann3)
+dmnd_name: uniref50_201901.dmnd
+
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
-
-  
-# Name for base directory holding all created databases
-db_name: UniRef90_updated
-# Name of the humann3 diamond database (must match naming allowed by humann3)
-dmnd_name: uniref90_201901.dmnd
-
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
@@ -72,12 +81,12 @@ params:
   humann3:
     batches: 10
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/UniRef90
+      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/UniRef50
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
-    #diamond:
-    #  db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
-    #  run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
+    diamond:
+      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
+      run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 0.9
   metaphlan3:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1

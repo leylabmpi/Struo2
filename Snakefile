@@ -10,8 +10,12 @@ import subprocess
 from distutils.spawn import find_executable
 import pandas as pd
 
-## load
+# load
 configfile: 'config.yaml'
+
+# general functions
+def ssw(x, *args, **kwargs):
+    sys.stderr.write(x, *args, **kwargs)
 
 # setup
 ## pipeline utils
@@ -32,6 +36,7 @@ config['pipeline']['snakemake_folder'] = \
     os.path.abspath(config['pipeline']['snakemake_folder']) + '/'
 
 ## db create or update?
+include: snake_dir + 'bin/Snakefile'
 if config['pipeline']['config'] == 'create':
     include: snake_dir + 'bin/db_create/Snakefile'
 elif config['pipeline']['config'] == 'update':

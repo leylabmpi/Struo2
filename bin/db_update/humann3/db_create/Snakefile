@@ -1,3 +1,13 @@
+def which_hits(wildcards):
+    """
+    Selecting whether to use `diamond blastp` or `mmseqs search` results
+    """
+    if (not skipped(config['params']['humann3']['diamond']['db']) and
+        not skipped(config['params']['humann3']['diamond']['run'])):
+        return config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt'
+    else:
+        return config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt'        
+
 rule humann3_annotate_genes:
     """
     Use search hits from clustered reps & index table to annotate all
@@ -5,8 +15,7 @@ rule humann3_annotate_genes:
     to each member of the cluster.
     """
     input:
-        hits = config['tmp_dir'] + config['db_name'] + 'humann3_search/hits.txt',
-        tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv',
+        hits = which_hits,
         fna = config['tmp_dir'] + 'filtered_reps.fna',
         faa = config['tmp_dir'] + 'filtered_reps.faa',
         txt = config['tmp_dir'] + 'filtered_reps.txt'
@@ -40,7 +49,7 @@ rule humann3_annotate_hits_copy:
     Copying query hits (diamond or mmseqs) to the final output directory 
     """
     input:
-        hits = config['tmp_dir'] + config['db_name'] + 'humann3_search/hits.txt'
+        hits = which_hits
     output:
         hits = humann3_dir + 'annotation_hits.gz'
     params:
@@ -92,7 +101,7 @@ rule humann3_bowtie2_build:
     params:
         prefix = humann3_dir + 'all_genes_annot'
     conda:
-        '../../../envs/humann3.yaml'
+        '../../envs/humann3.yaml'
     threads:
         12
     resources:
@@ -130,7 +139,7 @@ rule humann3_diamond_makedb:
     params:
         tmp_dir = config['tmp_dir']
     conda:
-        '../../../envs/humann3.yaml'
+        '../../envs/humann3.yaml'
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12

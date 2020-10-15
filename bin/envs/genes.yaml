@@ -4,6 +4,7 @@ dependencies:
 - pigz
 - python=3
 - numpy
+- bioconda::seqkit
 - bioconda::fasta-splitter
 - bioconda::vsearch
 - bioconda::prodigal

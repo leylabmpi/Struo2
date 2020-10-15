@@ -100,7 +100,7 @@ rule filter_gene_seqs:
            > {output.txt} 2> {log}
         """        
                 
-rule combine_fna:
+rule genes_combine_fna:
     """
     For all genes of all genomes, combining into 1 collection
     """
@@ -109,16 +109,18 @@ rule combine_fna:
                      sample = config['samples_unique'])
     output:
         fna = temp(config['tmp_dir'] + 'filtered_reps.fna')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    run:
-        with open(output.fna, 'w') as outF:
-            for F in input.fna:
-                with open(F) as inF:
-                    for line in inF:
-                        outF.write(line)
+    log:
+        log_dir + 'genes_combine_fna/all.log'
+    shell:
+        """
+        {params.exe} {input.fna} > {output.fna} 2> {log}
+        """
 
-rule combine_faa:
+rule genes_combine_faa:
     """
     For all genes of all genomes, combining into 1 collection
     """
@@ -127,16 +129,18 @@ rule combine_faa:
                      sample = config['samples_unique'])
     output:
         faa = temp(config['tmp_dir'] + 'filtered_reps.faa')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    run:
-        with open(output.faa, 'w') as outF:
-            for F in input.faa:
-                with open(F) as inF:
-                    for line in inF:
-                        outF.write(line)
+    log:
+        log_dir + 'genes_combine_faa/all.log'
+    shell:
+        """
+        {params.exe} {input.faa} > {output.faa} 2> {log}
+        """
 
-rule combine_txt:
+rule genes_combine_txt:
     """
     For all genes of all genomes, combining into 1 collection
     """
@@ -145,14 +149,16 @@ rule combine_txt:
                      sample = config['samples_unique'])
     output:
         txt = temp(config['tmp_dir'] + 'filtered_reps.txt')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    run:
-        with open(output.txt, 'w') as outF:
-            for F in input.txt:
-                with open(F) as inF:
-                    for line in inF:
-                        outF.write(line)
+    log:
+        log_dir + 'genes_combine_txt/all.log'
+    shell:
+        """
+        {params.exe} {input.txt} > {output.txt} 2> {log}
+        """
 
 rule copy_gene_info:
     """
@@ -233,6 +239,7 @@ rule mmseqs_cluster:
         db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
         db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index'
     output:
+        dbx = temp(config['tmp_dir'] + 'cluster/clusters_db'),
         db = temp(expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
                          X = range(12))),
         db_t = temp(config['tmp_dir'] + 'cluster/clusters_db.dbtype'),
@@ -261,7 +268,7 @@ rule mmseqs_cluster:
         rm -f {output.db_t} 2>> {log}
         mmseqs {params.cluster} {params.params} --threads {threads} \
           {input.db} {params.db} {params.tmp_dir} 2>> {log} 1>&2
-        touch {output.db_h} 2>> {log}
+        touch {output.dbx} {output.db_h} 2>> {log}
         """
         
 rule mmseqs_cluster_membership:
@@ -381,6 +388,7 @@ rule mmseqs_copy_db:
         db_h = config['tmp_dir'] + 'cluster/genes_db_h',
         db_ht = config['tmp_dir'] + 'cluster/genes_db_h.dbtype',
         db_hi = config['tmp_dir'] + 'cluster/genes_db_h.index',
+        db_clux = config['tmp_dir'] + 'cluster/clusters_db',
         db_clu = expand(config['tmp_dir'] + 'cluster/clusters_db.{X}',
                         X = range(12)),
         db_clu_t = config['tmp_dir'] + 'cluster/clusters_db.dbtype',
@@ -389,20 +397,19 @@ rule mmseqs_copy_db:
         tsv = config['tmp_dir'] + 'cluster/clusters_membership.tsv',
         faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
     output:
-        db = genes_dir + 'genes_db',
-        db_t = genes_dir + 'genes_db.dbtype',
-        db_i = genes_dir + 'genes_db.index',
-        db_l = genes_dir + 'genes_db.lookup',
-        db_s = genes_dir + 'genes_db.source',
-        db_h = genes_dir + 'genes_db_h',
-        db_ht = genes_dir + 'genes_db_h.dbtype',
-        db_hi = genes_dir + 'genes_db_h.index',
-        db_clu = expand(genes_dir + 'cluster/clusters_db.{X}',
-                        X = range(12)),
-        db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
-        db_clu_i = genes_dir + 'cluster/clusters_db.index',
-        db_clu_h = genes_dir + 'cluster/clusters_db_h',
-        tsv = genes_dir + 'cluster/clusters_membership.tsv',
+        db = genes_dir + 'genes_db.tar.gz',
+#        db_t = genes_dir + 'genes_db.dbtype',
+#        db_i = genes_dir + 'genes_db.index',
+#        db_l = genes_dir + 'genes_db.lookup',
+#        db_s = genes_dir + 'genes_db.source',
+#        db_h = genes_dir + 'genes_db_h',
+#        db_ht = genes_dir + 'genes_db_h.dbtype',
+#        db_hi = genes_dir + 'genes_db_h.index',
+        db_clu = genes_dir + 'cluster/clusters_db.tar.gz',
+#        db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
+#        db_clu_i = genes_dir + 'cluster/clusters_db.index',
+#        db_clu_h = genes_dir + 'cluster/clusters_db_h',
+        tsv = genes_dir + 'cluster/clusters_membership.tsv.gz',
         faa = genes_dir + 'cluster/clusters_reps.faa.gz'
     params:
         ionice = config['params']['ionice']
@@ -417,40 +424,32 @@ rule mmseqs_copy_db:
         benchmark_dir + 'mmseqs_db_copy/all.txt'
     shell:
         """        
-        # genes database
-        ionice {params.ionice} cp -f {input.db} {output.db} 2> {log}
-        ionice {params.ionice} cp -f {input.db_t} {output.db_t} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_i} {output.db_i} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_l} {output.db_l} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_s} {output.db_s} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_h} {output.db_h} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log}
-        # cluster database
-        OUTDIR=`dirname {output.db_clu_t}`
-        ionice {params.ionice} cp -f {input.db_clu} $OUTDIR 2>> {log}
-        ionice {params.ionice} cp -f {input.db_clu_t} {output.db_clu_t} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_clu_i} {output.db_clu_i} 2>> {log}
-        ionice {params.ionice} cp -f {input.db_clu_h} {output.db_clu_h} 2>> {log}
+        # genes database (tarball)
+        ionice {params.ionice} tar -czvf {output.db} {input.db} {input.db_t} {input.db_i} \
+          {input.db_l} {input.db_s} {input.db_h} {input.db_ht} {input.db_hi} 2> {log} 1>&2
+        # cluster database (tarball)
+        ionice {params.ionice} tar -czvf {output.db_clu} {input.db_clux} \
+           {input.db_clu} {input.db_clu_t} {input.db_clu_i} {input.db_clu_h} \
+           2>> {log} 1>&2
         # cluster membership
-        ionice {params.ionice} cp -f {input.tsv} {output.tsv} 2>> {log}
+        ionice {params.ionice} gzip -c {input.tsv} > {output.tsv} 2>> {log}
         # cluster representatives
         ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
         """
-        
-rule mmseqs_tmp_db_rm:
-    """
-    Removing the mmseqs temp database
-    """
-    input:
-        db = config['tmp_dir'] + 'cluster/genes_db'
-    output:        
-        done = genes_dir + 'tmp_db_rm.done'
-    resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59
-    log:
-        log_dir + 'mmseqs_tmp_db_rm/all.log'
-    shell:
-        """
-        rm -rf `dirname {input.db}` 2> {log} 1>&2
-        """
+
+# rule mmseqs_tmp_db_rm:
+#     """
+#     Removing the mmseqs temp database
+#     """
+#     input:
+#         db = config['tmp_dir'] + 'cluster/genes_db'
+#     output:        
+#         done = genes_dir + 'tmp_db_rm.done'
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 3 * 59
+#     log:
+#         log_dir + 'mmseqs_tmp_db_rm/all.log'
+#     shell:
+#         """
+#         rm -rf `dirname {input.db}` 2> {log} 1>&2
+#         """

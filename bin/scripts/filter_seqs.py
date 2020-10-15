@@ -13,6 +13,20 @@ Filtering 2 fasta files down to the intersection of their sequencines.
 The sequence headers must perfectly match.
 If any duplicate headers, only the first will be selected.
 
+Output columns:
+* seq UUID
+* seq original name
+* domain
+* phylum
+* class
+* order
+* family
+* genus
+* species
+* taxid
+* genome ID
+* genome length
+
 Output written to STDOUT.
 """
 parser = argparse.ArgumentParser(description=desc,

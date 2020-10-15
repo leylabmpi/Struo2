@@ -1,20 +1,126 @@
 # if the user provides a set of genes
+# TODO: rename sequences with UUIDs
+# TODO: update
+#    ├── genome_reps_filtered.faa.gz
+#    ├── genome_reps_filtered.fna.gz
+#    └── genome_reps_filtered.txt.gz
+#  seq metadata:
+#    seq_UUID            (generated)
+#    original seq name   (from fasta)
+#    Domain => Species   (user-provided)
+#    TaxID               (user-provided)
+#    genome name         (NA)
+#    genome length       (NA)
+
+
+rule genes_combine_fna:
+    """
+    For all genes of all genomes, combining into 1 collection.
+    Also including original genes.
+    """
+    input:
+        fna1 = config['tmp_dir'] + 'db_update/orig.fna',    # original
+        fna2 = config['new_genes']['nucleotide']            # new 
+    output:
+        fna = temp(config['tmp_dir'] + 'db_update/filtered_reps.fna')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    log:
+        log_dir + 'genes_combine_fna/all.log'
+    shell:
+        """
+        {params.exe} {input.fna1} {input.fna2} > {output.fna} 2> {log}
+        """
+
+rule genes_combine_faa:
+    """
+    For all genes of all genomes, combining into 1 collection.
+    Also including original genes.
+    """
+    input:
+        faa1 = config['tmp_dir'] + 'db_update/orig.faa',    # original
+        faa2 = config['new_genes']['amino_acid']            # new 
+    output:
+        faa = temp(config['tmp_dir'] + 'db_update/filtered_reps.faa')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    log:
+        log_dir + 'genes_combine_faa/all.log'
+    shell:
+        """
+        {params.exe} {input.faa1} {input.faa2} > {output.faa} 2> {log}
+        """
+
+rule genes_combine_txt:
+    """
+    For all genes of all genomes, combining into 1 collection.
+    Also including original genes.
+    """
+    input:
+        txt1 = config['tmp_dir'] + 'db_update/orig.txt',  # original
+        txt2 = config['new_genes']['metadata']            # new 
+    output:
+        txt = temp(config['tmp_dir'] + 'db_update/filtered_reps.txt')
+    params:
+        exe = config['pipeline']['script_folder'] + 'cat_files.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 59
+    log:
+        log_dir + 'genes_combine_txt/all.log'
+    shell:
+        """
+        {params.exe} {input.txt1} {input.txt2} > {output.txt} 2> {log}
+        """
+
+rule copy_gene_info:
+    """
+    Copying gene info to final directory
+    Also including original genes.    
+    """
+    input:
+        fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
+        faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
+        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt'
+    output:
+        fna = genes_dir + 'genome_reps_filtered.fna.gz',
+        faa = genes_dir + 'genome_reps_filtered.faa.gz',
+        txt = genes_dir + 'genome_reps_filtered.txt.gz'
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 8
+    log:
+        log_dir + 'copy_gene_info/all.log'
+    benchmark:
+        benchmark_dir + 'copy_gene_info/all.txt'
+    shell:
+        """
+        ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
+        ionice {params.ionice} gzip -c {input.faa} > {output.faa} 2>> {log}
+        ionice {params.ionice} gzip -c {input.txt} > {output.txt} 2>> {log}
+        """
 
 rule mmseqs_db_create:
     """ 
-    Creating mmseqs2 database that will be used for clustering
+    Creating mmseqs2 database that will be used for clustering.
+    Using all genes (original and new).
     """
     input:
-        faa = ancient(config['humann_prot_seqs'])
+        faa = config['tmp_dir'] + 'db_update/filtered_reps.faa'
     output:
-        db = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db'),
-        db_t = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.dbtype'),
-        db_i = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.index'),
-        db_l = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.lookup'),
-        db_s = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db.source'),
-        db_h = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h'),
-        db_ht = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.dbtype'),
-        db_hi = temp(config['tmp_dir'] + 'db_update/new_genes/genes_db_h.index')
+        db = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db'),
+        db_t = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.dbtype'),
+        db_i = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.index'),
+        db_l = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.lookup'),
+        db_s = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db.source'),
+        db_h = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h'),
+        db_ht = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h.dbtype'),
+        db_hi = temp(config['tmp_dir'] + 'db_update/all_genes/genes_db_h.index')
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20

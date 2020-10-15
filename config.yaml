@@ -18,17 +18,17 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Skip #Create
-  bracken: Skip #Create
+  kraken2: Create
+  bracken: Create
   genes: Create
   humann3_bowtie2: Skip #Create
   humann3_diamond: Skip #Create
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
-db_name: UniRef90 #GTDB-custom
+db_name: UniRef50 #GTDB-custom
 # Name of the humann3 diamond database (must match naming allowed by humann3)
-dmnd_name: uniref90_201901.dmnd
+dmnd_name: uniref50_201901.dmnd
 
 #-- if custom NCBI taxdump files (or just Skip) --#
 # Used for kraken taxonomy
@@ -60,12 +60,12 @@ params:
   humann3:
     batches: 10
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/UniRef90
+      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03_Bacteroidetes/UniRef50_Bacteroidetes
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
-    #diamond:
-    #  db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
-    #  run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
+    diamond:
+      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
+      run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 0.9
   metaphlan3:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
