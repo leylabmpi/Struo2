@@ -13,9 +13,9 @@ databases:
 #--- If just a set of gene sequences to add ---#
 # If you have nucleotide/amino-acid gene sequences formatted for humann
 new_genes:
-  amino_acid: Skip #tests/data/clusters_rep-seqs.faa.gz
-  nucleotide: tests/data/clusters_rep-seqs.fna.gz
-  metadata: tests/data/clusters_rep-seqs.txt.gz
+  amino_acid: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
+  nucleotide: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
+  metadata: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.txt.gz
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
@@ -50,7 +50,7 @@ humann_db:
 output_dir: tests/output_GTDBr89_n10/
 
 # Name for base directory holding all created databases
-db_name: UniRef50_updated_from-genomes
+db_name: UniRef50_updated_from-list
 # Name of the humann3 diamond database (must match naming allowed by humann3)
 dmnd_name: uniref50_201901.dmnd
 

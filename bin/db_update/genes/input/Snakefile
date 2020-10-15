@@ -1,31 +1,70 @@
-# TODO: add more checks on input
-
 localrules: genes_check_input
 
-rule genes_check_input:
-    """
-    Checking that input is formatted correctly.
-    """
-    input:
-        fna = config['genes_db']['genes']['nucleotide'],
-        faa = config['genes_db']['genes']['amino_acid'],
-        txt = config['genes_db']['genes']['metadata']
-    output:
-        fna = temp(config['tmp_dir'] + 'db_update/orig.fna'),
-        faa = temp(config['tmp_dir'] + 'db_update/orig.faa'),
-        txt = temp(config['tmp_dir'] + 'db_update/orig.txt')
-    params:
-        ionice = config['params']['ionice'],
-        exe = config['pipeline']['script_folder'] + 'cat_files.py'
-    conda:
-        '../../../envs/genes.yaml'
-    resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 59
-    log:
-        log_dir + 'genes_check_input/all.log'
-    shell:
+if skipped(config['new_genes']['nucleotide']):
+    rule genes_check_input:
         """
-        ionice {params.ionice} seqkit seq -v {input.fna} > {output.fna} 2> {log}
-        ionice {params.ionice} seqkit seq -v {input.faa} > {output.faa} 2>> {log}
-        ionice {params.ionice} {params.exe} {input.txt} > {output.txt} 2>> {log}
+        Checking that input is formatted correctly.
         """
+        input:
+            faa = config['genes_db']['genes']['amino_acid'],
+            txt = config['genes_db']['genes']['metadata']
+        output:
+            fna = temp(config['tmp_dir'] + 'db_update/orig.fna'),
+            faa = temp(config['tmp_dir'] + 'db_update/orig.faa'),
+            txt = temp(config['tmp_dir'] + 'db_update/orig.txt'),
+            done = genes_dir + 'genes_input.check.done'
+        params:
+            ionice = config['params']['ionice'],
+            exe1 = config['pipeline']['script_folder'] + 'cat_files.py',
+            exe2 = config['pipeline']['script_folder'] + 'check_gene_info.py'
+        conda:
+            '../../../envs/genes.yaml'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59
+        log:
+            log_dir + 'genes_check_input/all.log'
+        shell:
+            """
+            # copy
+            touch {output.fna} 2> {log} 1>&2
+            ionice {params.ionice} seqkit seq -v {input.faa} > {output.faa} 2>> {log}
+            ionice {params.ionice} {params.exe1} {input.txt} > {output.txt} 2>> {log}
+            # check on data content
+            {params.exe2} {input.faa} {input.txt} 2>> {log} 1>&2
+            touch {output.done} 2>> {log}        
+            """    
+else:
+    rule genes_check_input:
+        """
+        Checking that input is formatted correctly.
+        """
+        input:
+            fna = config['genes_db']['genes']['nucleotide'],
+            faa = config['genes_db']['genes']['amino_acid'],
+            txt = config['genes_db']['genes']['metadata']
+        output:
+            fna = temp(config['tmp_dir'] + 'db_update/orig.fna'),
+            faa = temp(config['tmp_dir'] + 'db_update/orig.faa'),
+            txt = temp(config['tmp_dir'] + 'db_update/orig.txt'),
+            done = genes_dir + 'genes_input.check.done'
+        params:
+            ionice = config['params']['ionice'],
+            exe1 = config['pipeline']['script_folder'] + 'cat_files.py',
+            exe2 = config['pipeline']['script_folder'] + 'check_gene_info.py'
+        conda:
+            '../../../envs/genes.yaml'
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59
+        log:
+            log_dir + 'genes_check_input/all.log'
+        shell:
+            """
+            # copy
+            ionice {params.ionice} seqkit seq -v {input.fna} > {output.fna} 2> {log}
+            ionice {params.ionice} seqkit seq -v {input.faa} > {output.faa} 2>> {log}
+            ionice {params.ionice} {params.exe1} {input.txt} > {output.txt} 2>> {log}
+            # check on data content
+            {params.exe2} -n {input.fna} {input.faa} {input.txt} 2>> {log} 1>&2
+            touch {output.done} 2>> {log}        
+            """
+    

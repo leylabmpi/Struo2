@@ -1,6 +1,7 @@
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/samples_GTDBr89_n10.txt
+#samples_file: tests/samples/samples_GTDBr89_n10.txt
+samples_file: tests/samples/samples_GTDBr89_n5.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -9,7 +10,8 @@ taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
 # output location
-output_dir: tests/output_GTDBr89_n10/
+#output_dir: tests/output_GTDBr89_n10/
+output_dir: tests/output_GTDBr89_n5/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/

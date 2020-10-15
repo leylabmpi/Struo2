@@ -157,10 +157,10 @@ rule genes_combine_txt:
         log_dir + 'genes_combine_txt/all.log'
     shell:
         """
-        {params.exe} {input.txt} > {output.txt} 2> {log}
+        {params.exe} --header {input.txt} > {output.txt} 2> {log}
         """
 
-rule copy_gene_info:
+rule check_gene_info:
     """
     Copying gene info to final directory
     """
@@ -168,6 +168,32 @@ rule copy_gene_info:
         fna = config['tmp_dir'] + 'filtered_reps.fna',
         faa = config['tmp_dir'] + 'filtered_reps.faa',
         txt = config['tmp_dir'] + 'filtered_reps.txt'
+    output:
+        done = genes_dir + 'genome_reps_filtered.check.done'
+    params:
+        exe = config['pipeline']['script_folder'] + 'check_gene_info.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 8
+    log:
+        log_dir + 'check_gene_info/all.log'
+    benchmark:
+        benchmark_dir + 'check_gene_info/all.txt'
+    shell:
+        """
+        {params.exe} -n {input.fna} {input.faa} {input.txt} 2> {log} 1>&2
+        touch {output.done} 2>> {log}
+        """    
+        
+rule copy_gene_info:
+    """
+    Copying gene info to final directory
+    """
+    input:
+        fna = config['tmp_dir'] + 'filtered_reps.fna',
+        faa = config['tmp_dir'] + 'filtered_reps.faa',
+        txt = config['tmp_dir'] + 'filtered_reps.txt',
+        done = genes_dir + 'genome_reps_filtered.check.done'
     output:
         fna = genes_dir + 'genome_reps_filtered.fna.gz',
         faa = genes_dir + 'genome_reps_filtered.faa.gz',
@@ -398,17 +424,7 @@ rule mmseqs_copy_db:
         faa = config['tmp_dir'] + 'cluster/clusters_reps.faa'
     output:
         db = genes_dir + 'genes_db.tar.gz',
-#        db_t = genes_dir + 'genes_db.dbtype',
-#        db_i = genes_dir + 'genes_db.index',
-#        db_l = genes_dir + 'genes_db.lookup',
-#        db_s = genes_dir + 'genes_db.source',
-#        db_h = genes_dir + 'genes_db_h',
-#        db_ht = genes_dir + 'genes_db_h.dbtype',
-#        db_hi = genes_dir + 'genes_db_h.index',
         db_clu = genes_dir + 'cluster/clusters_db.tar.gz',
-#        db_clu_t = genes_dir + 'cluster/clusters_db.dbtype',
-#        db_clu_i = genes_dir + 'cluster/clusters_db.index',
-#        db_clu_h = genes_dir + 'cluster/clusters_db_h',
         tsv = genes_dir + 'cluster/clusters_membership.tsv.gz',
         faa = genes_dir + 'cluster/clusters_reps.faa.gz'
     params:

@@ -164,7 +164,7 @@ rule genes_combine_txt:
         log_dir + 'genes_combine_txt/all.log'
     shell:
         """
-        {params.exe} {input.txt1} {input.txt2} > {output.txt} 2> {log}
+        {params.exe} --header {input.txt1} {input.txt2} > {output.txt} 2> {log}
         """
         
 rule copy_gene_info:

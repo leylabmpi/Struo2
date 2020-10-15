@@ -1,18 +1,3 @@
-# if the user provides a set of genes
-# TODO: rename sequences with UUIDs
-# TODO: update
-#    ├── genome_reps_filtered.faa.gz
-#    ├── genome_reps_filtered.fna.gz
-#    └── genome_reps_filtered.txt.gz
-#  seq metadata:
-#    seq_UUID            (generated)
-#    original seq name   (from fasta)
-#    Domain => Species   (user-provided)
-#    TaxID               (user-provided)
-#    genome name         (NA)
-#    genome length       (NA)
-
-
 rule genes_combine_fna:
     """
     For all genes of all genomes, combining into 1 collection.
@@ -73,9 +58,33 @@ rule genes_combine_txt:
         log_dir + 'genes_combine_txt/all.log'
     shell:
         """
-        {params.exe} {input.txt1} {input.txt2} > {output.txt} 2> {log}
+        {params.exe} --header {input.txt1} {input.txt2} > {output.txt} 2> {log}
         """
 
+rule check_gene_info:
+    """
+    Copying gene info to final directory
+    """
+    input:
+        faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
+        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt'
+    output:
+        done = genes_dir + 'genome_reps_filtered.check.done'
+    params:
+        exe = config['pipeline']['script_folder'] + 'check_gene_info.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 8
+    log:
+        log_dir + 'check_gene_info/all.log'
+    benchmark:
+        benchmark_dir + 'check_gene_info/all.txt'
+    shell:
+        """
+        {params.exe} {input.faa} {input.txt} 2> {log} 1>&2
+        touch {output.done} 2>> {log}
+        """    
+        
 rule copy_gene_info:
     """
     Copying gene info to final directory
@@ -84,7 +93,8 @@ rule copy_gene_info:
     input:
         fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
         faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
-        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt'
+        txt = config['tmp_dir'] + 'db_update/filtered_reps.txt',
+        done = genes_dir + 'genome_reps_filtered.check.done'
     output:
         fna = genes_dir + 'genome_reps_filtered.fna.gz',
         faa = genes_dir + 'genome_reps_filtered.faa.gz',

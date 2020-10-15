@@ -178,6 +178,10 @@ def idx_overlap(idx1, idx2, verbose=True):
     return idx
 
 def write_name_idx(idx, tax, genome_id, genome_len):
+    header = ['seq_uuid', 'seq_orig_name', 'domain', 'phylum',
+              'class', 'order', 'family', 'genus', 'species',
+              'taxid', 'genome_name', 'genome_length_bp']
+    print('\t'.join(header))
     for k,v in idx.items():
         print('\t'.join([v, k] + tax + [genome_id, str(genome_len)]))        
 
