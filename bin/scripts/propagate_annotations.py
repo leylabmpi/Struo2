@@ -7,9 +7,9 @@ import logging
 import argparse
 from pprint import pprint
 
-desc = 'Propagating all DIAMOND-based annotations to all genes in each mmseqs cluster'
+desc = 'Propagating all BLAST-table-formatted annotations to all genes in each mmseqs cluster'
 epi = """DESCRIPTION:
-Taking DIAMOND hits of gene cluster reps to a UniRef DB and applying them
+Taking DIAMOND/mmseqs hits of gene cluster reps to a UniRef DB and applying them
 to each member of the cluster.
 """
 parser = argparse.ArgumentParser(description=desc,
@@ -46,16 +46,24 @@ parser.add_argument('--version', action='version', version='0.0.1')
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+def _open(infile):
+    if infile.endswith('.gz'):
+        return gzip.open(infile, 'rb')
+    else:
+        return open(infile)
+
 def load_dmnd_hits(infile, colnames, min_pident=0, min_cov=0):
     """ Loading query hits
     Return: {query => cluster_rep : hit => unirefID}  
     """
-    logging.info('Loading hits table...')
+    logging.info('Loading hits table...')    
     dmnd = {}
     skipped = {'pident' : 0, 'cov' : 0}
     idx = {x:i for i,x in enumerate(colnames.split(','))}
-    with open(infile) as inF:
+    with _open(infile) as inF:
         for i,line in enumerate(inF):
+            if infile.endswith('.gz'):
+                line = line.decode('utf-8')
             line = line.rstrip().split('\t')
             if line[0] == '':
                 continue
@@ -95,8 +103,10 @@ def load_cluster_mmshp(infile):
     """
     logging.info('Loading cluster membership...')
     mmshp = {}    
-    with open(infile) as inF:
+    with _open(infile) as inF:
         for line in inF:
+            if infile.endswith('.gz'):
+                line = line.decode('utf-8')
             line = line.rstrip().split('\t')  # [member,clusterID]
             if line[0] == '':
                 continue
@@ -133,8 +143,10 @@ def load_gene_metadata(infile, colnames):
     logging.info('Loading gene metadata...')
     colnames = colnames.split(',')
     meta = {}            
-    with open(infile) as inF:
+    with _open(infile) as inF:
         for line in inF:
+            if infile.endswith('.gz'):
+                line = line.decode('utf-8')
             line = line.rstrip().split('\t')
             if line[0] == '':
                 continue
@@ -158,8 +170,10 @@ def propagate_info(infile, outfile, mmshp, meta, colnames, keep_unclassified=Tru
     kept = 0
     seq = {}
     seq_header = None
-    with open(infile) as inF, open(outfile, 'w') as outF:
+    with _open(infile) as inF, open(outfile, 'w') as outF:
         for line in inF:
+            if infile.endswith('.gz'):
+                line = line.decode('utf-8')
             if line.startswith('>'):      # sequence header
                 # writing last seq
                 try:

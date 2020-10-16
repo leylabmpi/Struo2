@@ -1,3 +1,20 @@
+rule humann_which_to_query:
+    """
+    Determining which gene clusters need querying versus those that have already been queried
+    """
+    input:
+        hits = 'tests/output_GTDBr89_n10/humann3/UniRef50/hits.txt.gz'
+        mem = genes_dir + 'cluster/clusters_membership.tsv.gz',
+        genes_dir + 'cluster/clusters_reps.faa.gz'
+    output:
+        
+    params:
+    log:
+        log_dir + 'humann_which_to_query/{}.log'.format(config['db_name'].rstrip('/'))
+    shell:
+        
+
+
 rule humann_query_fasta_split:
     """
     Splitting gene fasta for distributed searching

@@ -1,7 +1,7 @@
 #-- I/O --#
 # file listing samples and associated data
-#samples_file: tests/samples/samples_GTDBr89_n10.txt
-samples_file: tests/samples/samples_GTDBr89_n5.txt
+samples_file: tests/samples/samples_GTDBr89_n10.txt
+#samples_file: tests/samples/samples_GTDBr89_n5.txt
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -10,8 +10,8 @@ taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
 # output location
-#output_dir: tests/output_GTDBr89_n10/
-output_dir: tests/output_GTDBr89_n5/
+output_dir: tests/output_GTDBr89_n10/
+#output_dir: tests/output_GTDBr89_n5/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -20,11 +20,11 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Create
-  bracken: Create
-  genes: Create
-  humann3_bowtie2: Skip #Create
-  humann3_diamond: Skip #Create
+  kraken2: Skip #Create
+  bracken: Skip #Create
+  genes: Skip #Create
+  humann3_bowtie2: Create
+  humann3_diamond: Create
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases

@@ -37,9 +37,9 @@ def all_which_input(wildcards):
         # annotation hits
         input_files.append(humann3_dir + 'annotation_hits.gz')
         ## annotated genes (all)
-        input_files.append(humann3_dir + 'filtered_reps_annot.fna.gz')
-        input_files.append(humann3_dir + 'filtered_reps_annot.faa.gz')
-        input_files.append(humann3_dir + 'filtered_reps_annot.tsv.gz')
+        input_files.append(humann3_dir + 'genome_reps_filtered_annot.fna.gz')
+        input_files.append(humann3_dir + 'genome_reps_filtered_annot.faa.gz')
+        input_files.append(humann3_dir + 'genome_reps_filtered_annot.tsv.gz')
     ## databases
     if not skipped(config['databases']['humann3_bowtie2']):
         input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))

@@ -1,4 +1,35 @@
-rule humann3_search_batch_seqs:
+rule humann3_copy_input:
+    """
+    Splitting gene fasta for distributed searching
+    """
+    input:
+        faa_c = genes_dir + 'cluster/clusters_reps.faa.gz',
+        mem_c = genes_dir + 'cluster/clusters_membership.tsv.gz',
+        fna = genes_dir + 'genome_reps_filtered.fna.gz',
+        faa = genes_dir + 'genome_reps_filtered.faa.gz',
+        txt = genes_dir + 'genome_reps_filtered.txt.gz'
+    output:
+        faa_c = temp(config['tmp_dir'] + 'humann3/clusters_reps.faa.gz'),
+        mem_c = temp(config['tmp_dir'] + 'humann3/clusters_membership.tsv.gz'),
+        fna = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.fna.gz'),
+        faa = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.faa.gz'),
+        txt = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.txt.gz')
+    params:
+        ionice = config['params']['ionice']
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59
+    log:
+        log_dir + 'humann3_copy_input/{}.log'.format(config['db_name'].rstrip('/'))
+    shell:
+        """
+        ionice {params.ionice} cp -f {input.faa_c} {output.faa_c} 2> {log} 1>&2
+        ionice {params.ionice} cp -f {input.mem_c} {output.mem_c} 2>> {log} 1>&2
+        ionice {params.ionice} cp -f {input.faa} {output.faa} 2>> {log} 1>&2
+        ionice {params.ionice} cp -f {input.fna} {output.fna} 2>> {log} 1>&2
+        ionice {params.ionice} cp -f {input.txt} {output.txt} 2>> {log} 1>&2
+        """
+
+rule humann3_batch_seqs:
     """
     Splitting gene fasta for distributed searching
     """
@@ -19,9 +50,9 @@ rule humann3_search_batch_seqs:
     conda:
         '../../../envs/genes.yaml'
     log:
-        log_dir + 'humann3_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
-        benchmark_dir + 'humann3_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'humann3_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """
         echo "# Uncompressing fasta..." > {log}

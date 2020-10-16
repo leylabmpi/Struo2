@@ -179,7 +179,7 @@ localrules: mmseqs_search_merge
         
 rule mmseqs_search_merge:
     """
-    Merging the results of all splits
+    Merging the results of all splits (all query hits)
     """
     input:
         hits = expand(config['tmp_dir'] + config['db_name'] + \
