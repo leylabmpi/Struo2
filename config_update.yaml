@@ -4,9 +4,9 @@
 databases:
   kraken2: Skip #Create
   bracken: Skip #Create
-  genes: Create
-  humann3_bowtie2: Skip #Create
-  humann3_diamond: Skip #Create
+  genes: Skip #Create
+  humann3_bowtie2: Create
+  humann3_diamond: Create
   metaphlan3: Skip #Create
 
 #-- Input --#
@@ -40,10 +40,11 @@ genes_db:
   cluster:
     mmseqs_db:   tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_db.tar.gz
 humann_db:
-  gene_db:       tests/output_GTDBr89_n10/genes/UniRef50/genes_db.tar.gz
-  gene_metadata: tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.txt.gz
-  cluster_db:    tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_db.tar.gz
-  query_hits:    tests/output_GTDBr89_n10/humann3/UniRef50/hits.txt.gz
+  query:
+    hits: tests/output_GTDBr89_n10/humann3/UniRef50/annotation_hits.gz
+  cluster:
+    reps: tests/output_GTDBr89_n10/genes/UniRef50_updated_from-genomes/cluster/clusters_reps.faa.gz
+    membership: tests/output_GTDBr89_n10/genes/UniRef50_updated_from-genomes/cluster/clusters_membership.tsv.gz
 
 #-- Output --#
 # output location
@@ -81,7 +82,7 @@ params:
   humann3:
     batches: 10
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/UniRef50
+      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03_Bacteroidetes/UniRef50_Bacteroidetes
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
     diamond:

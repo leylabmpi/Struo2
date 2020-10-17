@@ -1,56 +1,56 @@
-rule humann_which_to_query:
+rule humann3_which_to_query:
     """
-    Determining which gene clusters need querying versus those that have already been queried
+    Selecting which of the cluster reps need to be queried, given the existing query hits.
     """
     input:
-        hits = 'tests/output_GTDBr89_n10/humann3/UniRef50/hits.txt.gz'
-        mem = genes_dir + 'cluster/clusters_membership.tsv.gz',
-        genes_dir + 'cluster/clusters_reps.faa.gz'
+        mem_c = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_membership.tsv',
+        hit_c = config['tmp_dir'] + config['db_name'] + 'humann3/query_hits.txt',        
+        faa_c = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps.faa'
     output:
-        
+        faa = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.faa'
     params:
+        exe = config['pipeline']['script_folder'] + 'filter_cluster_reps.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 10
     log:
-        log_dir + 'humann_which_to_query/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_which_to_query/{}.log'.format(config['db_name'].rstrip('/'))
     shell:
+        """
+        {params.exe} {input.mem_c} {input.hit_c} {input.faa_c} > {output.faa} 2> {log}
+        """
         
-
-
 rule humann_query_fasta_split:
     """
     Splitting gene fasta for distributed searching
     """
     input:
-        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
+        faa = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.faa'
     output:
-        faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
         splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
-                           'mmseqs_search/clusters_reps.part-{splitID}.faa',
+                           'humann3/clusters_reps_filt.part-{splitID}.faa',
 	                   splitID=config['params']['humann3']['splits']))
     params:
         ionice = config['params']['ionice'],
         n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search'
+	out_dir = config['tmp_dir'] + config['db_name'] + 'humann3'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
     conda:
-        '../../envs/genes.yaml'
+        '../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
     benchmark:
         benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
     shell:
         """    
-        echo "# Uncompressing fasta..." > {log}
-        mkdir -p `dirname {output.faa}` 2>> {log}
-        ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
-
         echo "# Splitting fasta..." >> {log}
         mkdir -p {params.out_dir} 2>> {log}
         fasta-splitter \
           --n-parts {params.n_splits} \
           --out-dir {params.out_dir} \
-          {output.faa} 2>> {log} 1>&2
+          {input.faa} 2>> {log} 1>&2
         """
         
 # rule humann3_diamond_batch_seqs:

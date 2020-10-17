@@ -1,0 +1,17 @@
+# input
+if not skipped(config['databases']['genes']):
+    print('\33[36m  * Using updated genes database\x1b[0m')
+    include: snake_dir + 'bin/db_update/humann3/input_from_genes/Snakefile'
+else:
+    print('\33[36m  * Using user-provided gene set\x1b[0m')     
+    include: snake_dir + 'bin/db_update/humann3/input_from_user/Snakefile'
+include: snake_dir + 'bin/db_update/humann3/prepare_query/Snakefile'
+# query
+if not skipped(config['params']['humann3']['mmseqs_search']):
+    print('\33[36m  * Annotating via "mmseqs search"\x1b[0m')     
+    include: snake_dir + 'bin/db_update/humann3/query_mmseqs/Snakefile'
+else:
+    print('\33[36m  * Annotating via "diamond blastp"\x1b[0m')     
+    include: snake_dir + 'bin/db_update/humann3/query_dmnd/Snakefile'
+# db create
+include: snake_dir + 'bin/db_update/humann3/db_create/Snakefile'

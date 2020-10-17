@@ -11,9 +11,9 @@ rule humann3_annotate_genes:
         faa = config['tmp_dir'] + 'humann3/genome_reps_filtered.faa.gz',
         txt = config['tmp_dir'] + 'humann3/genome_reps_filtered.txt.gz'
     output:
-        fna = temp(config['tmp_dir'] + 'genome_reps_filtered_annot.fna'),
-        faa = temp(config['tmp_dir'] + 'genome_reps_filtered_annot.faa'),
-        tsv = temp(config['tmp_dir'] + 'genome_reps_filtered_annot.tsv'),
+        fna = temp(config['tmp_dir'] + 'genome_reps_filt_annot.fna'),
+        faa = temp(config['tmp_dir'] + 'genome_reps_filt_annot.faa'),
+        tsv = temp(config['tmp_dir'] + 'genome_reps_filt_annot.tsv'),
     params:
         exe = config['pipeline']['script_folder'] + 'propagate_annotations.py',
         params = config['params']['humann3']['propagate_annotations']
@@ -59,13 +59,13 @@ rule humann3_annotate_genes_copy:
     Copying annotated gene files to the final directory
     """
     input:
-        fna = config['tmp_dir'] + 'genome_reps_filtered_annot.fna',
-        faa = config['tmp_dir'] + 'genome_reps_filtered_annot.faa',
-        tsv = config['tmp_dir'] + 'genome_reps_filtered_annot.tsv'
+        fna = config['tmp_dir'] + 'genome_reps_filt_annot.fna',
+        faa = config['tmp_dir'] + 'genome_reps_filt_annot.faa',
+        tsv = config['tmp_dir'] + 'genome_reps_filt_annot.tsv'
     output:
-        fna = humann3_dir + 'genome_reps_filtered_annot.fna.gz',
-        faa = humann3_dir + 'genome_reps_filtered_annot.faa.gz',
-        tsv = humann3_dir + 'genome_reps_filtered_annot.tsv.gz'            
+        fna = humann3_dir + 'genome_reps_filt_annot.fna.gz',
+        faa = humann3_dir + 'genome_reps_filt_annot.faa.gz',
+        tsv = humann3_dir + 'genome_reps_filt_annot.tsv.gz'            
     params:
         ionice = config['params']['ionice']
     resources:
@@ -86,7 +86,7 @@ rule humann3_bowtie2_build:
     Running bowtie2 build on combined, annotated genes 
     """
     input:
-        fna = config['tmp_dir'] + 'genome_reps_filtered_annot.fna'
+        fna = config['tmp_dir'] + 'genome_reps_filt_annot.fna'
     output:
         touch(os.path.join(humann3_dir, 'bowtie2_build.done'))
     params:
@@ -124,7 +124,7 @@ rule humann3_diamond_makedb:
     Running diamond makedb on combined, annotated genes 
     """
     input:
-        faa = config['tmp_dir'] + 'genome_reps_filtered_annot.faa'
+        faa = config['tmp_dir'] + 'genome_reps_filt_annot.faa'
     output:
         os.path.join(humann3_dir, 'protein_database', config['dmnd_name'])
     params:

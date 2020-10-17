@@ -2,7 +2,7 @@ rule mmseqs_search_target_db_copy:
     """Copying target database (eg., mmseqs-formatted UniRef database) to temp directory
     """
     input:
-        db = ancient(config['params']['humann3']['mmseqs_search']['db']),
+        db = config['params']['humann3']['mmseqs_search']['db'],
         db_t = ancient(config['params']['humann3']['mmseqs_search']['db'] + '.dbtype'),
         db_i = ancient(config['params']['humann3']['mmseqs_search']['db'] + '.index'),
         db_h = ancient(config['params']['humann3']['mmseqs_search']['db'] + '_h'),
@@ -78,50 +78,50 @@ rule mmseqs_search_target_db_copy:
 #           {input.db} $TMPDIR 2> {log} 1>&2
 #         """
         
-rule mmmseqs_search_fasta_split:
-    """
-    Splitting gene fasta for distributed searching
-    """
-    input:
-        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
-    output:
-        faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
-        splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
-                           'mmseqs_search/clusters_reps.part-{splitID}.faa',
-	                   splitID=config['params']['humann3']['splits']))
-    params:
-        ionice = config['params']['ionice'],
-        n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search'
-    resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 10
-    conda:
-        '../../envs/genes.yaml'
-    log:
-        log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
-    benchmark:
-        benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
-    shell:
-        """    
-        echo "# Uncompressing fasta..." > {log}
-        mkdir -p `dirname {output.faa}` 2>> {log}
-        ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
+# rule mmmseqs_search_fasta_split:
+#     """
+#     Splitting gene fasta for distributed searching
+#     """
+#     input:
+#         faa = genes_dir + 'cluster/clusters_reps.faa.gz'
+#     output:
+#         faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
+#         splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
+#                            'mmseqs_search/clusters_reps.part-{splitID}.faa',
+# 	                   splitID=config['params']['humann3']['splits']))
+#     params:
+#         ionice = config['params']['ionice'],
+#         n_splits = config['params']['humann3']['batches'],
+# 	out_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search'
+#     resources:
+#         time = lambda wildcards, attempt: attempt ** 3 * 59,
+#         mem_gb_pt = lambda wildcards, attempt: attempt * 10
+#     conda:
+#         '../../../envs/genes.yaml'
+#     log:
+#         log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
+#     benchmark:
+#         benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
+#     shell:
+#         """    
+#         echo "# Uncompressing fasta..." > {log}
+#         mkdir -p `dirname {output.faa}` 2>> {log}
+#         ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
 
-        echo "# Splitting fasta..." >> {log}
-        mkdir -p {params.out_dir} 2>> {log}
-        fasta-splitter \
-          --n-parts {params.n_splits} \
-          --out-dir {params.out_dir} \
-          {output.faa} 2>> {log} 1>&2
-        """
+#         echo "# Splitting fasta..." >> {log}
+#         mkdir -p {params.out_dir} 2>> {log}
+#         fasta-splitter \
+#           --n-parts {params.n_splits} \
+#           --out-dir {params.out_dir} \
+#           {output.faa} 2>> {log} 1>&2
+#         """
         
 rule mmseqs_search_create_db:
     """
     Creating mmseqs database for query sequences
     """
     input:
-        config['tmp_dir'] + config['db_name'] + 'mmseqs_search/clusters_reps.part-{splitID}.faa'
+        config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.part-{splitID}.faa'
     output:
         db = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db'),
         db_t = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/seqs{splitID}_db.dbtype'),
@@ -135,7 +135,7 @@ rule mmseqs_search_create_db:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
     conda:
-        '../../envs/genes.yaml'
+        '../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search_create_db/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
@@ -191,7 +191,7 @@ rule mmseqs_search:
         mem_gb = lambda wildcards, attempt, threads: \
                    int(mmseqs_search_mem(wildcards, attempt, threads) * threads * 0.8)
     conda:
-        '../../envs/genes.yaml'
+        '../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
@@ -244,7 +244,7 @@ rule mmseqs_search_convertalis:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 4
     conda:
-        '../../envs/genes.yaml'
+        '../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search_convertalis/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
@@ -261,19 +261,21 @@ localrules: mmseqs_search_merge
         
 rule mmseqs_search_merge:
     """
-    Merging the results of all splits
+    Merging the results of all splits.
+    Also including all original hits (prior to db update).
     """
     input:
+        hits_orig = config['tmp_dir'] + config['db_name'] + 'humann3/query_hits.txt',  
         hits = expand(config['tmp_dir'] + config['db_name'] + \
                       'mmseqs_search/hits_seqs{splitID}.tsv',
 	              splitID=config['params']['humann3']['splits'])
     output:
-        hits = temp(config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt')
+        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     run:
         with open(output.hits, 'w') as outF:
-            for F in input.hits:
+            for F in [input.hits_orig] + input.hits:
                 with open(F) as inF:
                     for line in inF:
                         outF.write(line)

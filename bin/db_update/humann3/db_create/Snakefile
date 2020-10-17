@@ -1,12 +1,18 @@
-def which_hits(wildcards):
-    """
-    Selecting whether to use `diamond blastp` or `mmseqs search` results
-    """
-    if (not skipped(config['params']['humann3']['diamond']['db']) and
-        not skipped(config['params']['humann3']['diamond']['run'])):
-        return config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt'
+# def which_hits(wildcards):
+#     """
+#     Selecting whether to use `diamond blastp` or `mmseqs search` results
+#     """
+#     if (not skipped(config['params']['humann3']['diamond']['db']) and
+#         not skipped(config['params']['humann3']['diamond']['run'])):
+#         return config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt'
+#     else:
+#         return config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt'        
+
+def which_membership(wildcards):
+    if not skipped(config['databases']['genes']):
+        return genes_dir + 'cluster/clusters_membership.tsv.gz'
     else:
-        return config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt'        
+        return config['humann_db']['cluster']['membership']
 
 rule humann3_annotate_genes:
     """
@@ -15,14 +21,15 @@ rule humann3_annotate_genes:
     to each member of the cluster.
     """
     input:
-        hits = which_hits,
-        fna = config['tmp_dir'] + 'filtered_reps.fna',
-        faa = config['tmp_dir'] + 'filtered_reps.faa',
-        txt = config['tmp_dir'] + 'filtered_reps.txt'
+        hits = config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt',
+        fna = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.fna',
+        faa = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.faa',
+        txt = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.txt',
+        tsv = which_membership
     output:
-        fna = temp(config['tmp_dir'] + 'filtered_reps_annot.fna'),
-        faa = temp(config['tmp_dir'] + 'filtered_reps_annot.faa'),
-        tsv = temp(config['tmp_dir'] + 'filtered_reps_annot.tsv'),
+        fna = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna'),
+        faa = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa'),
+        tsv = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.tsv'),
     params:
         exe = config['pipeline']['script_folder'] + 'propagate_annotations.py',
         params = config['params']['humann3']['propagate_annotations']
@@ -49,7 +56,7 @@ rule humann3_annotate_hits_copy:
     Copying query hits (diamond or mmseqs) to the final output directory 
     """
     input:
-        hits = which_hits
+        hits = config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt'
     output:
         hits = humann3_dir + 'annotation_hits.gz'
     params:
@@ -68,13 +75,13 @@ rule humann3_annotate_genes_copy:
     Copying annotated gene files to the final directory
     """
     input:
-        fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
-        faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
-        tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
+        fna = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna',
+        faa = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa',
+        tsv = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.tsv'
     output:
-        fna = humann3_dir + 'filtered_reps_annot.fna.gz',
-        faa = humann3_dir + 'filtered_reps_annot.faa.gz',
-        tsv = humann3_dir + 'filtered_reps_annot.tsv.gz'            
+        fna = humann3_dir + 'genome_reps_filt_annot.fna.gz',
+        faa = humann3_dir + 'genome_reps_filt_annot.faa.gz',
+        tsv = humann3_dir + 'genome_reps_filt_annot.tsv.gz'            
     params:
         ionice = config['params']['ionice']
     resources:
@@ -95,13 +102,13 @@ rule humann3_bowtie2_build:
     Running bowtie2 build on combined, annotated genes 
     """
     input:
-        fna = config['tmp_dir'] + 'filtered_reps_annot.fna'
+        fna = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna'
     output:
         touch(os.path.join(humann3_dir, 'bowtie2_build.done'))
     params:
         prefix = humann3_dir + 'all_genes_annot'
     conda:
-        '../../envs/humann3.yaml'
+        '../../../envs/humann3.yaml'
     threads:
         12
     resources:
@@ -133,13 +140,13 @@ rule humann3_diamond_makedb:
     Running diamond makedb on combined, annotated genes 
     """
     input:
-        faa = config['tmp_dir'] + 'filtered_reps_annot.faa'
+        faa = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa'
     output:
         os.path.join(humann3_dir, 'protein_database', config['dmnd_name'])
     params:
         tmp_dir = config['tmp_dir']
     conda:
-        '../../envs/humann3.yaml'
+        '../../../envs/humann3.yaml'
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12

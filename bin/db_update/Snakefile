@@ -55,17 +55,63 @@ if not skipped(config['databases']['kraken2']):
         if not skipped(config['databases']['bracken']):
             print('\33[36m* Updating bracken database\x1b[0m')        
             include: snake_dir + 'bin/db_update/bracken/Snakefile'
+### Updating genes db
 if not skipped(config['databases']['genes']):
     print('\33[36m* Updating genes database\x1b[0m')
     include: snake_dir + 'bin/db_update/genes/Snakefile'
+### updating humann databases
+if not skipped(config['databases']['humann3_bowtie2']) and \
+   not skipped(config['databases']['humann3_diamond']):
+    print('\33[36m* Updating humann database\x1b[0m')
+    include: snake_dir + 'bin/db_update/humann3/Snakefile'
     
-            ### Annotating additional genes for humannn (gene db used)
-#if not skipped(config['databases']['humann3_bowtie2']) and \
-#   not skipped(config['databases']['humann3_diamond']):
-#    include: snake_dir + 'bin/db_create/humann3/query_dmnd/Snakefile'
-#    include: snake_dir + 'bin/db_create/humann3/query_mmseqs/Snakefile'
-#    include: snake_dir + 'bin/db_create/humann3/db_create/Snakefile'
-#if not skipped(config['databases']['metaphlan3']):
-#    include: snake_dir + 'bin/db_create/metaphlan3/Snakefile'
-
-
+def all_which_input(wildcards):
+    """
+    The final output files for both db_create & db_update
+    """
+    input_files = []
+    
+    # kraken2
+    if not skipped(config['databases']['kraken2']):
+        input_files.append(os.path.join(kraken2_dir, 'hash.k2d'))
+        input_files.append(os.path.join(kraken2_dir, 'opts.k2d'))
+        input_files.append(os.path.join(kraken2_dir, 'taxo.k2d'))
+        input_files.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
+        # bracken
+        if not skipped(config['databases']['bracken']):
+    	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
+	               read_len = config['params']['bracken']['build_read_lens'])
+            input_files += x
+    # genes
+    if not skipped(config['databases']['genes']):
+        input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
+        input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+        if str(config['keep_intermediate']) == 'True':
+            # mmseqs gene database
+            input_files.append(genes_dir + 'genes_db.tar.gz')
+            ## mmseqs cluster database
+            input_files.append(genes_dir + 'cluster/clusters_db.tar.gz')
+            ## cluster membership info
+            input_files.append(genes_dir + 'cluster/clusters_membership.tsv.gz')
+            ## cluster rep sequences
+            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')
+                                    
+    # humann3
+    if (not skipped(config['databases']['humann3_bowtie2']) and
+        not skipped(config['databases']['humann3_diamond'])):
+        # annotation hits
+        input_files.append(humann3_dir + 'annotation_hits.gz')
+        ## annotated genes (all)
+        input_files.append(humann3_dir + 'genome_reps_filt_annot.fna.gz')
+        input_files.append(humann3_dir + 'genome_reps_filt_annot.faa.gz')
+        input_files.append(humann3_dir + 'genome_reps_filt_annot.tsv.gz')
+        ## databases
+        if not skipped(config['databases']['humann3_bowtie2']):
+            input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
+        if not skipped(config['databases']['humann3_diamond']):
+            input_files.append(os.path.join(humann3_dir, 'protein_database',
+                                            config['dmnd_name']))
+    
+    # ret
+    return input_files
