@@ -7,13 +7,12 @@ Struo2
 
 ![](https://media.giphy.com/media/lPSMFWqKCJY5Let2v5/giphy.gif)
 
-* Version: 2.0.2
+* Version: 2.0.3
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
   * Jacobo de la Cuesta <jacobo.delacuesta@tuebingen.mpg.de>
 * Maintainers:
   * Nick Youngblut <nyoungb2@gmail.com>
-  * Jacobo de la Cuesta <jacobo.delacuesta@tuebingen.mpg.de>
 
 # Citation
 
@@ -29,8 +28,18 @@ Bioinformatics , November.
 # Changes from Version 1
 
 * All coding sequences from all genomes are now clustered prior to annotation
-(DIAMOND hits to UniRef), and then the UniRef IDs are propagated to each member
-of each cluster. This can greatly cut down on the amount of DIAMOND computation.
+  (hits to UniRef), and then the UniRef IDs are propagated to each member
+  of each cluster.
+* By default `mmseqs search` is used for annotation instead of `DIAMOND blastp`
+  * `mmseqs search` can be a bit faster and more sensitive than DIAMOND
+    * see [Steinegger and Soeding 2017](https://www.nature.com/articles/nbt.3988)
+* Metadata is saved for each gene in the database (e.g., taxonomy)
+* Each database can be updated incrementally
+  * Intermediate files are saved for faster database reconstruction
+  * For the databse of all genes, `mmseqs clusterupdate` is used to add to the
+    existing cluster database.
+  * For humann3, only clusters lacking an annotation (to UniRef by default)
+    are queried, which can save a great deal of time.
 
 # Pre-built custom databases
 
@@ -61,7 +70,7 @@ Struo's workflow encompasses the steps from genome download to database construc
 To download the pipeline, clone the Git repository:
 
 ```
-git clone git@github.com:leylabmpi/Struo.git 
+git clone git@github.com:leylabmpi/struo2.git 
 ```
 
 ### conda env setup
@@ -80,7 +89,7 @@ git clone git@github.com:leylabmpi/Struo.git
 
 ### UniRef diamond database(s)
 
-You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef90).
+You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef50).
 See the "Download a translated search database" section of the
 [humann3 docs](https://github.com/biobakery/biobakery/wiki/humann3#welcome-to-the-humann-30-tutorial)
 
