@@ -21,9 +21,37 @@ from networkx.algorithms.shortest_paths.unweighted import bidirectional_shortest
 
 desc = 'Converting NCBI taxonomy to GTDB taxonomy'
 epi = """DESCRIPTION:
-Using the GTDB metadata table, which contains both NCBI and GTDB taxIDs
-to convert NCBI taxonomy to GTDB taxonomy. 
+Using the GTDB metadata table (which contains both NCBI and GTDB taxonomies)
+to map taxonomic classifications between the 2 taxonomies.
 
+For example, determine GTDB equivalent of the NCBI taxonomic classifications:
+* Bacillus
+* Xanthomonas oryzae
+* Burkholderiaceae
+
+Algorithm:
+* Read in GTDB metadata (bac and/or arc)
+* Convert NCBI & GTDB taxonomies of each entry to a directed acyclic graph (DAG)
+  * "accession" used for iips of each taxonomy tree
+* Read in taxonomy queries (a file w/ 1 entry per line)
+* For each query:
+  * Found in reference taxonomy (hit/no-hit)?
+  * If in reference taxonomy, get all tips (all accessions) for that node in the DAG
+  * For all tips, get LCA in target taxonomy (if NCBI queries, then GTDB is target)
+    * Only <= (--max-tips) used to save on time. Tips are subsampled randomly.
+    * "fuzzy" LCAs allowed, in which only >= (--fraction) of the tips must have that LCA
+  * If no match in reference taxonomy or no LCA that is >= (--fraction), then the 
+    target LCA is "unclassified"
+
+Output table columns:
+  * ncbi_taxonomy
+    * NCBI taxonomy name
+  * gtdb_taxonomy
+    * GTDB taxonomy name
+  * lca_frac
+    * Fraction of tips with that LCA
+  * target_tax_level
+    * The taxonomic level of the target (eg., genus or species)
 """
 parser = argparse.ArgumentParser(description=desc,
                                  epilog=epi,
@@ -39,8 +67,6 @@ parser.add_argument('-f', '--fraction', type=float, default=0.9,
                     help='Homogeneity of LCA (fraction) in order to be used (Default: %(default)s)')
 parser.add_argument('-m', '--max-tips', type=int, default=100,
                     help='Max no. of tips used for LCA determination. If more, subsampling w/out replacement (Default: %(default)s)')
-#parser.add_argument('-M', '--max-tax', type=str, default='family',
-#                    help='Coursest taxonomic level of query that is allowed (Default: %(default)s)')
 parser.add_argument('-p', '--procs', type=int, default=1,
                     help='No. of parallel processes (Default: %(default)s)')
 parser.add_argument('-v', '--verbose', action='store_true', default=False,
