@@ -19,7 +19,7 @@ from networkx.algorithms.dag import descendants
 from networkx.algorithms.lowest_common_ancestors import lowest_common_ancestor
 from networkx.algorithms.shortest_paths.unweighted import bidirectional_shortest_path
 
-desc = 'Converting NCBI taxonomy to GTDB taxonomy'
+desc = 'Converting between NCBI & GTDB taxonomies'
 epi = """DESCRIPTION:
 Using the GTDB metadata table (which contains both NCBI and GTDB taxonomies)
 to map taxonomic classifications between the 2 taxonomies.
@@ -186,7 +186,8 @@ def lca_many_nodes(G, nodes, lca_frac=1.0):
             except KeyError:
                 T[i][node] = 1
     # from tip to root, which passess LCA cutoff?
-    for i in range(len(T))[::-1]:
+    ## note: species is lowest possible level
+    for i in range(len(T)-1)[::-1]:
         lca = lca_frac_pass(T[i], lca_frac)
         if lca[0] is not None:
             return lca + [hierarchy[i]]
