@@ -1,8 +1,9 @@
-# updating existing cluster with new gene sequences 
+#-- updating existing cluster with new gene sequences --#
 
 rule mmseqs_copy_genes_to_temp:
     """
-    Uncompressing original (pre-existing) mmseqs genes db
+    Uncompressing original (pre-existing) mmseqs genes db.
+    Assuming that the database is a tarball.
     """
     input:
         db = config['genes_db']['genes']['mmseqs_db']
@@ -33,7 +34,8 @@ rule mmseqs_copy_genes_to_temp:
 
 rule mmseqs_copy_clust_to_temp:
     """
-    Uncompressing mmseqs cluster db to temp dir
+    Uncompressing mmseqs cluster db to temp dir.
+    Assuming that the database is a tarball.
     """
     input:
         db = config['genes_db']['cluster']['mmseqs_db']
@@ -60,7 +62,7 @@ rule mmseqs_copy_clust_to_temp:
             
 rule mmseqs_cluster_update:
     """
-    Updating cluster db.
+    Updating cluster db via 'mmseqs clusterupdate`.
     Note that cluster_db.* files make be required but are not tracked!
     """
     input:
@@ -204,7 +206,7 @@ rule mmseqs_cluster_rep_db:
        
 rule mmseqs_cluster_rep_seqs:
     """ 
-    Creating fasta flat file for representative sequence database
+    Creating fasta flat file for representative sequence database (amino acid)
     """
     input:
         db = config['tmp_dir'] + 'db_update/Ucluster/clusters_reps_db',

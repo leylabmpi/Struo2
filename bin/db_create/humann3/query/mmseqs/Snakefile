@@ -1,5 +1,6 @@
 rule mmseqs_search_target_db_copy:
-    """Copying target database (eg., mmseqs-formatted UniRef database) to temp directory
+    """
+    Copying target database (eg., mmseqs-formatted UniRef database) to temp directory
     """
     input:
        db = ancient(config['params']['humann3']['mmseqs_search']['target_db']),
@@ -53,7 +54,7 @@ rule mmseqs_search_create_query_db:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 8
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search_create_query_db/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
@@ -109,7 +110,7 @@ rule mmseqs_search:
         mem_gb = lambda wildcards, attempt, threads: \
                    int(mmseqs_search_mem(wildcards, attempt, threads) * threads * 0.8)
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:
@@ -162,7 +163,7 @@ rule mmseqs_search_convertalis:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 4
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_search_convertalis/' + config['db_name'] + 'seqs{splitID}.log'
     benchmark:

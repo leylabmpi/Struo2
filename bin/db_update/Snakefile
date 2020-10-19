@@ -1,3 +1,6 @@
+#-- database update workflow --#
+
+# input processing
 ## outdir
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'
 config['db_name'] = config['db_name'].rstrip('/') + '/'
@@ -64,13 +67,13 @@ if not skipped(config['databases']['humann3_bowtie2']) and \
    not skipped(config['databases']['humann3_diamond']):
     print('\33[36m* Updating humann database\x1b[0m')
     include: snake_dir + 'bin/db_update/humann3/Snakefile'
-    
+
+# final output files 
 def all_which_input(wildcards):
     """
     The final output files for both db_create & db_update
     """
-    input_files = []
-    
+    input_files = []    
     # kraken2
     if not skipped(config['databases']['kraken2']):
         input_files.append(os.path.join(kraken2_dir, 'hash.k2d'))
@@ -95,8 +98,7 @@ def all_which_input(wildcards):
             ## cluster membership info
             input_files.append(genes_dir + 'cluster/clusters_membership.tsv.gz')
             ## cluster rep sequences
-            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')
-                                    
+            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')                                    
     # humann3
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):

@@ -1,6 +1,7 @@
 rule bracken_build:
     """
-    Build braken database from kraken2 database
+    Build braken database(s) from kraken2 database.
+    One database to user-selected read lengths.
     """
     input:
         kraken2_db = kraken2_dir + 'hash.k2d',

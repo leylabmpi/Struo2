@@ -1,0 +1,8 @@
+#-- humann database creation workflow --#
+
+# preparing of input sequences
+include: snake_dir + 'bin/db_create/humann3/prepare_query/Snakefile'
+# gene annotation
+include: snake_dir + 'bin/db_create/humann3/query/Snakefile'
+# creating the humann database
+include: snake_dir + 'bin/db_create/humann3/db_create/Snakefile'

@@ -1,13 +1,6 @@
-### Adding genes to genes_db (user can provide genomes or gene list)        
+#-- gene database update workflow --#
+
+# Adding genes to genes_db (user can provide genomes or gene list)
 include: snake_dir + 'bin/db_update/genes/input/Snakefile'
-if (not skipped(config['new_genes']['amino_acid']) and
-    not skipped(config['new_genes']['nucleotide'])):
-    # assuming user provided a list of genes
-    print('\33[36m  * Using user-provided set of gene sequences\x1b[0m')
-    include: snake_dir + 'bin/db_update/genes/gene_list/Snakefile'
-else:
-    # assuming the user provide a list of genomes to extract genes from
-    print('\33[36m  * Extracting new genes from user-provided genomes\x1b[0m')
-    include: snake_dir + 'bin/db_update/genes/from_genomes/Snakefile'
 # updating the mmseqs cluster database
 include: snake_dir + 'bin/db_update/genes/db_update/Snakefile'

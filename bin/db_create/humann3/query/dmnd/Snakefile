@@ -31,7 +31,7 @@ def dmnd_start_mem(wildcards, attempt, threads=12):
 
 rule humann3_diamond_pass1:
     """
-    Annotating genes via diamond search of UniRef DB
+    Annotating genes via 'diamond blastp' search of UniRef DB
     """
     input:
         faa = config['tmp_dir'] + config['db_name'] + 'humann3_search/clusters_reps.part-{splitID}.faa',
@@ -49,7 +49,7 @@ rule humann3_diamond_pass1:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = dmnd_start_mem
     conda:
-        '../../../envs/humann3.yaml'
+        '../../../../envs/humann3.yaml'
     log:
         log_dir + 'hm3_diamond_pass1/' + config['db_name'] + '{splitID}.log'
     benchmark:
@@ -70,7 +70,8 @@ rule humann3_diamond_pass1:
 
 rule humann3_diamond_pass2:
     """
-    Annotating genes via diamond search of UniRef DB (sensitive mode)
+    Annotating genes via diamond search of UniRef DB (sensitive mode).
+    Just running on genes not annotated by Pass1.
     """
     input:
         faa = config['tmp_dir'] + config['db_name'] + 'humann3_search/unaln/{splitID}.faa',
@@ -87,7 +88,7 @@ rule humann3_diamond_pass2:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = dmnd_start_mem
     conda:
-        '../../../envs/humann3.yaml'
+        '../../../../envs/humann3.yaml'
     log:
         log_dir + 'hm3_diamond_pass2/' + config['db_name'] + '{splitID}.log'
     benchmark:
@@ -114,7 +115,7 @@ localrules: humann3_diamond_merge
         
 rule humann3_diamond_merge:
     """
-    Merging the results of the 2 DIAMOND passes (all splits)
+    Merging the results of the 2 DIAMOND passes (all query fasta splits)
     """
     input:
         hits1 = expand(config['tmp_dir'] + config['db_name'] + \

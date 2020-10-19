@@ -1,6 +1,8 @@
+#-- preparing input for annotation & humann database construction --#
+
 rule humann3_copy_input:
     """
-    Splitting gene fasta for distributed searching
+    Copying input to temp directory
     """
     input:
         faa_c = genes_dir + 'cluster/clusters_reps.faa.gz',
@@ -31,7 +33,7 @@ rule humann3_copy_input:
 
 rule humann3_batch_seqs:
     """
-    Splitting gene fasta for distributed searching
+    Splitting gene fasta for distributed searching (annotation)
     """
     input:
         faa = genes_dir + 'cluster/clusters_reps.faa.gz'

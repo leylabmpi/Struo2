@@ -1,6 +1,7 @@
+#-- Kraken2 database update workflow --#
 rule kraken2_cp_to_tmp:
     """
-    Copying an existing kraken database 
+    Copying an existing kraken database to temp directory
     """
     input:
         lib = ancient(config['kraken2_db']['library']),
@@ -28,7 +29,7 @@ rule kraken2_cp_to_tmp:
     
 def kraken2_add_taxID_get_taxID(wildcards):
     """
-    Getting genome taxID from the user input table
+    Getting genome taxID from the user input table (genome metadata)
     """
     taxID = config['samples'].loc[wildcards.sample, config['taxID_col']]
     try:
@@ -130,7 +131,7 @@ rule kraken2_build:
     
 rule kraken2_db_copy:
     """
-    Building the kraken database
+    Copying the Kraken database to the output directory
     """
     input:
         lib = config['tmp_dir'] + 'db_update/kraken2/library/',

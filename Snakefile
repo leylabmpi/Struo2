@@ -35,14 +35,8 @@ config['samples_file'] = os.path.abspath(config['samples_file'])
 config['pipeline']['snakemake_folder'] = \
     os.path.abspath(config['pipeline']['snakemake_folder']) + '/'
 
-## db create or update?
+## base of the snakefile hierarchy 
 include: snake_dir + 'bin/Snakefile'
-if config['pipeline']['config'] == 'create':
-    include: snake_dir + 'bin/db_create/Snakefile'
-elif config['pipeline']['config'] == 'update':
-    include: snake_dir + 'bin/db_update/Snakefile'
-else:
-    raise ValueError('Pipeline "config" param not recognized')
 
 ## pipeline main
 wildcard_constraints:

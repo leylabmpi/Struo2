@@ -37,7 +37,7 @@ rule humann3_annotate_genes:
 
 rule humann3_annotate_hits_copy:
     """
-    Copying query hits (diamond or mmseqs) to the final output directory 
+    Copying/compressing query hits (diamond or mmseqs) to the final output directory 
     """
     input:
         hits = config['tmp_dir'] + config['db_name'] + 'humann3_search/hits.txt'
@@ -56,7 +56,7 @@ rule humann3_annotate_hits_copy:
         
 rule humann3_annotate_genes_copy:
     """
-    Copying annotated gene files to the final directory
+    Copying/compressing annotated gene files to the final directory
     """
     input:
         fna = config['tmp_dir'] + 'genome_reps_filt_annot.fna',
@@ -83,7 +83,7 @@ rule humann3_annotate_genes_copy:
     
 rule humann3_bowtie2_build:
     """
-    Running bowtie2 build on combined, annotated genes 
+    Running bowtie2 build on combined, annotated genes (nucleotide)
     """
     input:
         fna = config['tmp_dir'] + 'genome_reps_filt_annot.fna'
@@ -121,7 +121,7 @@ rule humann3_bowtie2_build:
 
 rule humann3_diamond_makedb:
     """
-    Running diamond makedb on combined, annotated genes 
+    Running diamond makedb on combined, annotated genes (amino acid)
     """
     input:
         faa = config['tmp_dir'] + 'genome_reps_filt_annot.faa'

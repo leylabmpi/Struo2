@@ -1,6 +1,6 @@
 rule prodigal:
     """
-    Running prodigal on each genome
+    For each genome, running prodigal to call genes
     """
     input:
         fasta = lambda wildcards: \
@@ -63,7 +63,7 @@ rule vsearch_per_genome:
         
 rule filter_gene_seqs:
     """
-    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    Filtering the amino acid gene sequences to just the vsearch cluster reps (nucleotide).
     Renaming as [seq_name]|gene_length|taxonomy
     """
     input:
@@ -102,7 +102,7 @@ rule filter_gene_seqs:
                 
 rule genes_combine_fna:
     """
-    For all genes of all genomes, combining into 1 collection
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection
     """
     input:
         fna = expand(config['tmp_dir'] + 'nuc_filtered/{sample}_reps.fna',
@@ -122,7 +122,7 @@ rule genes_combine_fna:
 
 rule genes_combine_faa:
     """
-    For all genes of all genomes, combining into 1 collection
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection
     """
     input:
         faa = expand(config['tmp_dir'] + 'prot_filtered/{sample}_reps.faa',
@@ -142,7 +142,7 @@ rule genes_combine_faa:
 
 rule genes_combine_txt:
     """
-    For all genes of all genomes, combining into 1 collection
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection
     """
     input:
         txt = expand(config['tmp_dir'] + 'names_filtered/{sample}_reps.txt',
@@ -162,7 +162,7 @@ rule genes_combine_txt:
 
 rule check_gene_info:
     """
-    Copying gene info to final directory
+    Copying gene info to the output directory
     """
     input:
         fna = config['tmp_dir'] + 'filtered_reps.fna',
@@ -187,7 +187,7 @@ rule check_gene_info:
         
 rule copy_gene_info:
     """
-    Copying gene info to final directory
+    Copying gene info to output directory
     """
     input:
         fna = config['tmp_dir'] + 'filtered_reps.fna',
@@ -246,6 +246,10 @@ rule mmseqs_db_create:
         """
 
 def mmseqs_cluster_mem(wildcards, input, threads, attempt):
+    """
+    Setting the memmory used for mmseqs_cluster based on the size of the
+    input mmseqs genes database.
+    """
     db_size = os.stat(input.db).st_size / 1e9
     mem = round(db_size * 4 / threads + 1.499,0)
     mem = (attempt - 1) ** 2 + 1 + mem
@@ -253,8 +257,7 @@ def mmseqs_cluster_mem(wildcards, input, threads, attempt):
     
 rule mmseqs_cluster:
     """
-    Clustering genes and taking representatives, which will be used
-    for diamond query vs UniRef
+    Clustering the mmseqs gene database
     """
     input:
         db = config['tmp_dir'] + 'cluster/genes_db',
@@ -290,8 +293,10 @@ rule mmseqs_cluster:
         benchmark_dir + 'mmseqs_cluster/all.txt'
     shell:
         """
+        # removing existing output
         rm -rf {params.tmp_dir} 2> {log} && mkdir -p {params.tmp_dir} 2>> {log}
         rm -f {output.db_t} 2>> {log}
+        # clustering
         mmseqs {params.cluster} {params.params} --threads {threads} \
           {input.db} {params.db} {params.tmp_dir} 2>> {log} 1>&2
         touch {output.dbx} {output.db_h} 2>> {log}
@@ -299,8 +304,9 @@ rule mmseqs_cluster:
         
 rule mmseqs_cluster_membership:
     """
-    Getting a table of which genes belong to which cluster.
+    Getting a table of which genes belong to which cluster (cluster membership).
     Output table format: cluster_rep<tab>cluster_member
+    The "cluster_rep" is the de-facto cluster_id
     """
     input:
         db = config['tmp_dir'] + 'cluster/genes_db',
@@ -337,7 +343,7 @@ rule mmseqs_cluster_membership:
         
 rule mmseqs_cluster_rep_db:
     """ 
-    Creating an mmseqs database of 1 representative for each cluster.
+    Creating an mmseqs database of 1 representative for each cluster.    
     """
     input:
         db = config['tmp_dir'] + 'cluster/genes_db',
@@ -376,7 +382,7 @@ rule mmseqs_cluster_rep_db:
        
 rule mmseqs_cluster_rep_seqs:
     """ 
-    Creating fasta flat file for representative sequence database
+    Creating fasta flat file (amino acid) for representative sequence database
     """
     input:
         db = config['tmp_dir'] + 'cluster/clusters_reps_db',
@@ -401,9 +407,7 @@ rule mmseqs_cluster_rep_seqs:
         
 rule mmseqs_copy_db:
     """
-    Copying the database and cluster database to the final directory.
-    The database can be used to create an updated version with new
-    user-provided sequences.
+    Copying the database and cluster database to the output directory.
     """
     input:
         db = config['tmp_dir'] + 'cluster/genes_db',

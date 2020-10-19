@@ -1,7 +1,8 @@
+#-- updating gene database with a user-provided set of genes (fasta & metadata) --#
+
 rule genes_combine_fna:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    Combining new gene set and original gene set.
     """
     input:
         fna1 = config['tmp_dir'] + 'db_update/orig.fna',    # original
@@ -21,8 +22,7 @@ rule genes_combine_fna:
 
 rule genes_combine_faa:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    Combining new gene set and original gene set.
     """
     input:
         faa1 = config['tmp_dir'] + 'db_update/orig.faa',    # original
@@ -42,8 +42,7 @@ rule genes_combine_faa:
 
 rule genes_combine_txt:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    Combining new gene set and original gene set.
     """
     input:
         txt1 = config['tmp_dir'] + 'db_update/orig.txt',  # original
@@ -63,7 +62,7 @@ rule genes_combine_txt:
 
 rule check_gene_info:
     """
-    Copying gene info to final directory
+    Copying gene info to the output directory.
     """
     input:
         faa = config['tmp_dir'] + 'db_update/filtered_reps.faa',
@@ -87,8 +86,7 @@ rule check_gene_info:
         
 rule copy_gene_info:
     """
-    Copying gene info to final directory
-    Also including original genes.    
+    Copying gene info to the output directory.
     """
     input:
         fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
@@ -117,7 +115,7 @@ rule copy_gene_info:
 
 rule mmseqs_db_create:
     """ 
-    Creating mmseqs2 database that will be used for clustering.
+    Creating mmseqs2 database that will be used for updating the existing cluster database.
     Using all genes (original and new).
     """
     input:
@@ -135,7 +133,7 @@ rule mmseqs_db_create:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_db_create/all.log'
     benchmark:

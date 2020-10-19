@@ -151,7 +151,7 @@ rule kraken2_build:
     
 rule kraken2_db_copy:
     """
-    Building the kraken database
+    Copying the kraken2 database to the output directory
     """
     input:
         hash = config['tmp_dir'] + 'kraken2/hash.k2d',

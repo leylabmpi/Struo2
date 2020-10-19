@@ -1,6 +1,8 @@
+#-- obtaining new genes from a list of genomes & adding them to the existing genes database --#
+
 rule prodigal:
     """
-    Running prodigal on each genome
+    For each genome, running prodigal to call genes
     """
     input:
         fasta = lambda wildcards: \
@@ -16,7 +18,7 @@ rule prodigal:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8 + 8
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'prodigal/{sample}.log'
     benchmark:
@@ -47,7 +49,7 @@ rule vsearch_per_genome:
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt * 3
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'vsearch_per_genome/{sample}.log'
     benchmark:
@@ -63,7 +65,7 @@ rule vsearch_per_genome:
         
 rule filter_gene_seqs:
     """
-    For each genome, clustering genes (at nuc level) and taking the centroid. 
+    Filtering the amino acid gene sequences to just the vsearch cluster reps (nucleotide).
     Renaming as [seq_name]|gene_length|taxonomy
     """
     input:
@@ -85,7 +87,7 @@ rule filter_gene_seqs:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 8
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'filter_gene_seqs/{sample}.log'
     benchmark:
@@ -102,8 +104,8 @@ rule filter_gene_seqs:
 
 rule genes_combine_fna:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection.
+    Including original genes.
     """
     input:
         fna1 = config['tmp_dir'] + 'db_update/orig.fna',
@@ -124,8 +126,8 @@ rule genes_combine_fna:
 
 rule genes_combine_faa:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection.
+    Including original genes.
     """
     input:
         faa1 = config['tmp_dir'] + 'db_update/orig.faa',
@@ -146,8 +148,8 @@ rule genes_combine_faa:
 
 rule genes_combine_txt:
     """
-    For all genes of all genomes, combining into 1 collection.
-    Also including original genes.
+    For all per-genome de-replicated genes of all genomes, combining into 1 collection.
+    Including original genes.
     """
     input:
         txt1 = config['tmp_dir'] + 'db_update/orig.txt',
@@ -169,8 +171,7 @@ rule genes_combine_txt:
         
 rule copy_gene_info:
     """
-    Copying gene info to final directory
-    Also including original genes.    
+    Copying/compressing gene data to the output directory.
     """
     input:
         fna = config['tmp_dir'] + 'db_update/filtered_reps.fna',
@@ -198,7 +199,7 @@ rule copy_gene_info:
         
 rule mmseqs_db_create:
     """ 
-    Creating mmseqs2 database that will be used for clustering.
+    Creating mmseqs2 database that will be used for updating the existing cluster database.
     This databased includes all genes (original & new).
     """
     input:
@@ -218,7 +219,7 @@ rule mmseqs_db_create:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 20 + 20
     conda:
-        '../../../envs/genes.yaml'
+        '../../../../envs/genes.yaml'
     log:
         log_dir + 'mmseqs_db_create/all.log'
     benchmark:

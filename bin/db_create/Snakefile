@@ -1,8 +1,10 @@
-## outdir
+#-- Parsing input for db-create workflow --#
+
+# outdir
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'
 config['db_name'] = config['db_name'].rstrip('/') + '/'
 
-## Samples table
+# Samples table
 if not os.path.isfile(config['samples_file']):
     raise IOError('Cannot find file: {}'.format(config['samples_file']))
 config['samples'] = pd.read_csv(config['samples_file'], sep='\t')
@@ -13,7 +15,7 @@ for f in [config['samples_col'], config['fasta_file_path_col'],
 config['samples'][config['samples_col']] = config['samples'][config['samples_col']].str.replace('[^A-Za-z0-9]+', '_')
 config['samples'] = config['samples'].set_index(config['samples'][config['samples_col']])
 
-### check that files exist (skipping if not)
+## check that files exist (skipping if not)
 rowID = 0
 to_rm = []
 for index,row in config['samples'].iterrows():
@@ -64,24 +66,16 @@ else:
 if not skipped(config['databases']['humann3_bowtie2']) and \
    not skipped(config['databases']['humann3_diamond']):
     print('\33[36m* Creating humann3 database\x1b[0m')
-    include: snake_dir + 'bin/db_create/humann3/prepare_query/Snakefile'
-    if not skipped(config['params']['humann3']['mmseqs_search']):
-        print('\33[36m  * Using "mmseqs search" for annotating genes\x1b[0m')
-        include: snake_dir + 'bin/db_create/humann3/query_mmseqs/Snakefile'
-    else:
-        print('\33[36m  * Using "diamond blastp" for annotating genes\x1b[0m')
-        include: snake_dir + 'bin/db_create/humann3/query_dmnd/Snakefile'
-    include: snake_dir + 'bin/db_create/humann3/db_create/Snakefile'
+    include: snake_dir + 'bin/db_create/humann3/Snakefile'
 if not skipped(config['databases']['metaphlan3']):
     include: snake_dir + 'bin/db_create/metaphlan3/Snakefile'
 
-
+# final output files
 def all_which_input(wildcards):
     """
     The final output files for both db_create & db_update
     """
-    input_files = []
-    
+    input_files = []    
     # kraken2
     if not skipped(config['databases']['kraken2']):
         input_files.append(os.path.join(kraken2_dir, 'hash.k2d'))
@@ -106,8 +100,7 @@ def all_which_input(wildcards):
             ## cluster membership info
             input_files.append(genes_dir + 'cluster/clusters_membership.tsv.gz')
             ## cluster rep sequences
-            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')
-                                    
+            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')                                    
     # humann3
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):

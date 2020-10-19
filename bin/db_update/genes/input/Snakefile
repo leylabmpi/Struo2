@@ -1,70 +1,14 @@
-localrules: genes_check_input
+#-- dealing with all possible gene inputs for this workflow --#
 
-if skipped(config['new_genes']['nucleotide']):
-    rule genes_check_input:
-        """
-        Checking that input is formatted correctly.
-        """
-        input:
-            faa = config['genes_db']['genes']['amino_acid'],
-            txt = config['genes_db']['genes']['metadata']
-        output:
-            fna = temp(config['tmp_dir'] + 'db_update/orig.fna'),
-            faa = temp(config['tmp_dir'] + 'db_update/orig.faa'),
-            txt = temp(config['tmp_dir'] + 'db_update/orig.txt'),
-            done = genes_dir + 'genes_input.check.done'
-        params:
-            ionice = config['params']['ionice'],
-            exe1 = config['pipeline']['script_folder'] + 'cat_files.py',
-            exe2 = config['pipeline']['script_folder'] + 'check_gene_info.py'
-        conda:
-            '../../../envs/genes.yaml'
-        resources:
-            time = lambda wildcards, attempt: attempt ** 2 * 59
-        log:
-            log_dir + 'genes_check_input/all.log'
-        shell:
-            """
-            # copy
-            touch {output.fna} 2> {log} 1>&2
-            ionice {params.ionice} seqkit seq -v {input.faa} > {output.faa} 2>> {log}
-            ionice {params.ionice} {params.exe1} {input.txt} > {output.txt} 2>> {log}
-            # check on data content
-            {params.exe2} {input.faa} {input.txt} 2>> {log} 1>&2
-            touch {output.done} 2>> {log}        
-            """    
+# checking/validating input
+include: snake_dir + 'bin/db_update/genes/input/check/Snakefile'
+# gene input
+if (not skipped(config['new_genes']['amino_acid']) and
+    not skipped(config['new_genes']['nucleotide'])):
+    # assuming user provided a set of genes
+    print('\33[36m  * Using user-provided set of gene sequences\x1b[0m')
+    include: snake_dir + 'bin/db_update/genes/input/from_gene_set/Snakefile'
 else:
-    rule genes_check_input:
-        """
-        Checking that input is formatted correctly.
-        """
-        input:
-            fna = config['genes_db']['genes']['nucleotide'],
-            faa = config['genes_db']['genes']['amino_acid'],
-            txt = config['genes_db']['genes']['metadata']
-        output:
-            fna = temp(config['tmp_dir'] + 'db_update/orig.fna'),
-            faa = temp(config['tmp_dir'] + 'db_update/orig.faa'),
-            txt = temp(config['tmp_dir'] + 'db_update/orig.txt'),
-            done = genes_dir + 'genes_input.check.done'
-        params:
-            ionice = config['params']['ionice'],
-            exe1 = config['pipeline']['script_folder'] + 'cat_files.py',
-            exe2 = config['pipeline']['script_folder'] + 'check_gene_info.py'
-        conda:
-            '../../../envs/genes.yaml'
-        resources:
-            time = lambda wildcards, attempt: attempt ** 2 * 59
-        log:
-            log_dir + 'genes_check_input/all.log'
-        shell:
-            """
-            # copy
-            ionice {params.ionice} seqkit seq -v {input.fna} > {output.fna} 2> {log}
-            ionice {params.ionice} seqkit seq -v {input.faa} > {output.faa} 2>> {log}
-            ionice {params.ionice} {params.exe1} {input.txt} > {output.txt} 2>> {log}
-            # check on data content
-            {params.exe2} -n {input.fna} {input.faa} {input.txt} 2>> {log} 1>&2
-            touch {output.done} 2>> {log}        
-            """
-    
+    # assuming the user provide a list of genomes to extract genes from
+    print('\33[36m  * Extracting new genes from user-provided genomes\x1b[0m')
+    include: snake_dir + 'bin/db_update/genes/input/from_genomes/Snakefile'

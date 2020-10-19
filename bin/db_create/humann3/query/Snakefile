@@ -1,0 +1,10 @@
+#-- gene annotation (for humann database) workflow --#
+
+if not skipped(config['params']['humann3']['mmseqs_search']):
+    # mmseqs search
+    print('\33[36m  * Using "mmseqs search" for annotating genes\x1b[0m')
+    include: snake_dir + 'bin/db_create/humann3/query/mmseqs/Snakefile'
+else:
+    # diamond blastp
+    print('\33[36m  * Using "diamond blastp" for annotating genes\x1b[0m')
+    include: snake_dir + 'bin/db_create/humann3/query/dmnd/Snakefile'
