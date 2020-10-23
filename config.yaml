@@ -1,3 +1,6 @@
+#-- email notifications of pipeline success/failure (use "Skip" to deactivate) --#
+email: nyoungblut@tuebingen.mpg.de
+
 #-- I/O --#
 # file listing samples and associated data
 samples_file: tests/samples/samples_GTDBr89_n10.txt
@@ -10,8 +13,7 @@ taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
 # output location
-output_dir: tests/output_GTDBr89_n10/
-#output_dir: tests/output_GTDBr89_n5/
+output_dir: tests/output_GTDBr89_n10
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -20,15 +22,15 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Create
-  bracken: Create
+  kraken2: Skip #Create
+  bracken: Skip #Create
   genes: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
-db_name: UniRef50 #GTDB-custom
+db_name: UniRef50_clst1 #GTDB-custom
 # Name of the humann3 diamond database (must match naming allowed by humann3)
 dmnd_name: uniref50_201901.dmnd
 
@@ -44,8 +46,7 @@ keep_intermediate: True
 
 #-- software parameters --#
 # `vsearch_per_genome` = per-genome gene clustering
-# `vsearch_all` = all genes clustered (including `humann_nuc_seqs` & `humann_prot_seqs`)
-# for humann3, use either mmseqs or diamond (both will not be used)
+# for humann3, use either mmseqs or diamond (mmseqs gets priority if neither skipped)
 # for humann3::mmseqs_search::run, --num-iterations must be >=2
 params:
   ionice: -c 3
@@ -57,31 +58,24 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
-    mmseqs_cluster: --min-seq-id 0.9 -c 0.8
+    mmseqs_cluster: --min-seq-id 1 -c 0.8
     mmseqs_cluster_method: linclust         # or "cluster", which is slower
   humann3:
     batches: 10
     mmseqs_search:
-      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03_Bacteroidetes/UniRef50_Bacteroidetes
+      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03/UniRef50
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
     diamond:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
-    propagate_annotations: --min-cov 80 --min-pident 0.9
+    propagate_annotations: --min-cov 80 --min-pident 0.5
   metaphlan3:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
-
-#-- If adding genes to humann database --#
-# If you have nucleotide/amino-acid gene sequences formatted for humann,
-# provide the file paths to the fasta files below (gzip'ed).
-# These will be clustered with the rest of the genes and then annotated like the others.
-#humann_nuc_seqs: Skip
-#humann_prot_seqs: Skip
 
 #-- snakemake pipeline --#
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
-  name: Struo2
+  name: Struo2_db-create
   config: create

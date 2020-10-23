@@ -65,8 +65,7 @@ keep_intermediate: True
 
 #-- software parameters --#
 # `vsearch_per_genome` = per-genome gene clustering
-# `vsearch_all` = all genes clustered (including `humann_nuc_seqs` & `humann_prot_seqs`)
-# for humann3, use either mmseqs or diamond (both will not be used)
+# for humann3, use either mmseqs or diamond (mmseqs gets priority if neither skipped)
 # for humann3::mmseqs_search::run, --num-iterations must be >=2
 params:
   ionice: -c 3
@@ -96,5 +95,5 @@ params:
 pipeline:
   snakemake_folder: ./
   script_folder: ./bin/scripts/
-  name: Struo2
+  name: Struo2_db-update
   config: update

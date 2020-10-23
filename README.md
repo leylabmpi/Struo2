@@ -307,18 +307,6 @@ match anything in the NCBI!
 
 
 # TODO
-* allow easy updating of genes
-  * gene annotation of new genomes
-  * vsearch de-rep
-  * appending genes to existing gene reps
-* allow easy updating of gene clusters
-  * `mmseqs clusterupdate`
-    * (existing cluster db) + (db of new fasta seqs)
-      * input: new genome seqs or just user-provided seqs
-      * if user-provided seqs, must provide table of:
-        * gene_uuid, gene_taxonomy, gene_taxid
-
-* allow for non-gzip genome input (prodigal)
 * Create [metaphlan3 marker database](https://github.com/biobakery/MetaPhlAn/wiki/MetaPhlAn-3.0#customizing-the-database)
   * [issue about creating the DB](https://github.com/biobakery/MetaPhlAn/issues/103)
   * Get taxonomy of the genomes (provided by GTDB in the metadata)
@@ -340,5 +328,12 @@ match anything in the NCBI!
     * ...also the taxonomy of each genome
     * ...then update the mpa pkl file
   * Create bowtie2 database
-   
-   
+* metaphlan3 custom database using humann_db info
+  * using all genome-derep-annot genes:
+  * for each species in the genome taxonomy (provided by user-samples)
+    * determine which markers are shared by all members
+      * sharing based on uniref IDs
+    * for markers that are just 'nearly' unique to a species:
+      * `ext` => all genomes "external" to the clade
+      * rule of thumb: <=10 "external" genomes
+  
