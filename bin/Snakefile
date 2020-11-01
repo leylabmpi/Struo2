@@ -1,4 +1,5 @@
 #-- settings for all workflows --#
+config['pipeline']['username'] = getpass.getuser()
 config['pipeline']['email'] = config['email']
 
 #-- workflow selection --#
@@ -58,6 +59,9 @@ def all_which_input(wildcards):
         if not skipped(config['databases']['humann3_diamond']):
             input_files.append(os.path.join(humann3_dir, 'protein_database',
                                             config['dmnd_name']))
+    # metaphlan
+    if not skipped(config['databases']['metaphlan3']):
+        input_files.append(config['tmp_dir'] + 'metaphlan3/species_specific.txt')
     
     # ret
     return input_files

@@ -3,8 +3,7 @@ email: nyoungblut@tuebingen.mpg.de
 
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/samples_GTDBr89_n10.txt
-#samples_file: tests/samples/samples_GTDBr89_n5.txt
+samples_file: tests/samples/GTDBr95_n50_Pseudomonas.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -13,7 +12,7 @@ taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
 # output location
-output_dir: tests/output_GTDBr89_n10
+output_dir: tests/output_GTDBr95_n50_Pseudomonas
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -24,18 +23,18 @@ tmp_dir: /ebio/abt3_scratch/
 databases:
   kraken2: Skip #Create
   bracken: Skip #Create
-  genes: Create
+  genes: Skip #Create
   humann3_bowtie2: Create
   humann3_diamond: Create
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
-db_name: UniRef50_clst1 #GTDB-custom
+db_name: UniRef50_clst0.9 #GTDB-custom
 # Name of the humann3 diamond database (must match naming allowed by humann3)
 dmnd_name: uniref50_201901.dmnd
 
 #-- if custom NCBI taxdump files (or just Skip) --#
-# Used for kraken taxonomy
+# Used for kraken taxonomy & metaphlan
 names_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
 nodes_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
 
@@ -58,12 +57,12 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
-    mmseqs_cluster: --min-seq-id 1 -c 0.8
+    mmseqs_cluster: --min-seq-id 0.9 -c 0.8
     mmseqs_cluster_method: linclust         # or "cluster", which is slower
   humann3:
     batches: 10
     mmseqs_search:
-      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03/UniRef50
+      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2019_01/uniref50
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
     diamond:
@@ -71,6 +70,8 @@ params:
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 0.5
   metaphlan3:
+    pkl: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.pkl
+    fasta: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.fna.bz2
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 
 #-- snakemake pipeline --#

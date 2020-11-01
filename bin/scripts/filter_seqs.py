@@ -119,6 +119,9 @@ def format_taxonomy(tax, taxID):
     return tax
 
 def filter_fasta(fasta, idx, output, gzip_out=False):
+    """
+    Filtering fasta to just those in idx
+    """
     if fasta.endswith('.gz'):
         _openR = lambda x: gzip.open(x, 'rb')
     else:
@@ -168,6 +171,9 @@ def filter_fasta(fasta, idx, output, gzip_out=False):
     return found
 
 def idx_overlap(idx1, idx2, verbose=True):
+    """
+    Getting overlapping keys
+    """
     idx = {}
     for x in set(idx1.keys()) & set(idx2.keys()):
         idx[x] = idx1[x]
@@ -178,6 +184,9 @@ def idx_overlap(idx1, idx2, verbose=True):
     return idx
 
 def write_name_idx(idx, tax, genome_id, genome_len):
+    """
+    Writing gene metadata
+    """
     header = ['seq_uuid', 'seq_orig_name', 'domain', 'phylum',
               'class', 'order', 'family', 'genus', 'species',
               'taxid', 'genome_name', 'genome_length_bp']
@@ -186,6 +195,9 @@ def write_name_idx(idx, tax, genome_id, genome_len):
         print('\t'.join([v, k] + tax + [genome_id, str(genome_len)]))        
 
 def genome_length(infile):
+    """
+    Getting the length of the genome
+    """
     if infile.endswith('.gz'):
         _open = lambda x: gzip.open(x, 'rb')
     else:
@@ -200,6 +212,9 @@ def genome_length(infile):
     return seq_len
         
 def format_genomeID(x):
+    """
+    Formatting the genome name (label)
+    """
     if x == '':
         return 'NA'
     genome_len = genome_length(x)
@@ -208,6 +223,9 @@ def format_genomeID(x):
     return genome_name, genome_len
         
 def main(args):
+    """
+    Main interface
+    """
     tax = format_taxonomy(args.taxonomy, args.taxID)
     genomeID,genome_len = format_genomeID(args.genome_file)
     

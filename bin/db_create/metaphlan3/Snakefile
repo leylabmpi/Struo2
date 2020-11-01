@@ -1,27 +1,35 @@
+# method for creating db
+# Use UniRef-IDs for gene clusters
+# For each gene cluster
+  # Taxonomic breadth: specific to any particular species (allowing for N non-species)?
+    # species determined by genome taxonomy
+    # if species-specific:
+      # add to metaphlan database
+      # add marker sequence (w/ correct ID) to marker fasta database
+      
 rule metaphlan3_species_specific_markers:
     """
-    Splitting gene fasta for distributed searching
+    Adding new species-specific markers to the metaphlan pkl database 
     """
     input:
-        fna = config['tmp_dir'] + 'filtered_reps_annot.fna',
-        faa = config['tmp_dir'] + 'filtered_reps_annot.faa',
-        tsv = config['tmp_dir'] + 'filtered_reps_annot.tsv'
+        fna = humann3_dir + 'genome_reps_filt_annot.fna.gz',
+        faa = humann3_dir + 'genome_reps_filt_annot.faa.gz',
+        tsv = humann3_dir + 'genome_reps_filt_annot.tsv.gz'
     output:
-        tsv = config['tmp_dir'] + 'species_specific.txt'
+        tsv = config['tmp_dir'] + 'metaphlan3/species_specific.txt'
     params:
         exe = config['pipeline']['script_folder'] + 'species_specific.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8
     conda:
-        '../envs/genes.yaml'
+        '../../envs/genes.yaml'
     log:
         log_dir + 'metaphlan3_species_specific_markers/all.log'
     benchmark:
         benchmark_dir + 'metaphlan3_species_specific_markers/all.txt'
     shell:
         """
-        exit 1
         {params.exe} {input.tsv} > {output.tsv} 2> {log}
         """
 

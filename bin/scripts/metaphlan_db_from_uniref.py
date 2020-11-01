@@ -3,8 +3,8 @@ from __future__ import print_function
 import sys,os
 import re
 import gzip
-import pickle
 import bz2
+import pickle
 import copy
 import logging
 import argparse
@@ -14,15 +14,23 @@ from pprint import pprint
 
 desc = 'Identify species-specific genes'
 epi = """DESCRIPTION:
-Gene ID based on UniRef annotations.
+Updating a metaphlan3 database (pkl & the nucleotide fasta).
+Using genes annotated for humann3 as cluster.
+Instead of using NCBI taxonomy, GTDB taxonomy will be used.
 """
 parser = argparse.ArgumentParser(description=desc,
                                  epilog=epi,
                                  formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('gene_fasta', metavar='gene_fasta', type=str,
+                    help='all genes in fasta format (nucleotide)')
 parser.add_argument('gene_metadata', metavar='gene_metadata', type=str,
                     help='tab-delim table of gene metadata')
-parser.add_argument('--pkl', type=str, default=None,                    
-                    help='Metaphlan database pkl file to view/update (default: %(default)s)')
+parser.add_argument('metaphlan_pkl', metavar='metaphlan_pkl', type=str,
+                    help='Metaphlan database pkl file to view/update')
+parser.add_argument('metaphlan_fasta', metavar='metaphlan_fasta', type=str,
+                    help='Metaphlan database fasta file')
+parser.add_argument('gtdb_taxdump_names', metavar='gtdb_taxdump_names', type=str,
+                    help='GTDB taxdump names.dmp file')
 parser.add_argument('--pkl-n', type=int, default=0,
                     help='Number of entries to view in the pkl database file. If <1, no viewing (default: %(default)s)')
 parser.add_argument('--pkl-viruses', action='store_true', default=False,
@@ -35,15 +43,35 @@ parser.add_argument('--version', action='version', version='0.0.1')
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+def _open(infile):
+    """
+    Openning of input, regardless of compression
+    """
+    if infile.endswith('.bz2'):
+        return bz2.open(infile, 'rb')
+    elif infile.endswith('.gz'):
+        return gzip.open(infile, 'rb')
+    else:
+        return open(infile)
 
+def _decode(line, infile):
+    """
+    Decoding input, depending on the file extension
+    """
+    if infile.endswith('.gz') or infile.endswith('.bz2'):
+        line = line.decode('utf-8')
+    return line
+    
 def view_mphn_pkl(infile, N=10, viruses=False):
     """
     Reading in metaphlan database pkl file and printing
+    # Sequence formatting: (NCBI_taxid)(UniRef90_cluster)(CDS_name)
+    #   Note that the UniRef90 clusterID does NOT include "Uniref90_"
     """
     logging.info('Reading in: {}'.format(infile))
     db = pickle.load(bz2.open(infile, 'r'))
-    
-    logging.info('-- taxonomy --')
+    m = '-- taxonomy of geach genome: [taxonomy, tax-ids_per-tax-level, genome_length] --'
+    logging.info(m)
     cnt = 0
     for tax in db['taxonomy'].keys():
         if viruses is False and 'k__Viruses' in tax or 'k__Viroids' in tax:
@@ -54,7 +82,10 @@ def view_mphn_pkl(infile, N=10, viruses=False):
             break
         print([tax, db['taxonomy'][tax]])
 
-    logging.info('-- marker gene --')
+    m = '-- marker gene: [gene_id : {ext: [], score: float, clade: str, len: gene_len, taxon: str}] --'
+    logging.info(m)
+    logging.info('  "gene_id" matches the sequence headers of the marker fasta')
+    logging.info('  ext: GCA-IDs of non-species genomes that have markers')
     cnt = 0
     for mkr in db['markers'].keys():
         if viruses is False and 'k__Viruses' in db['markers'][mkr]['taxon']:            
@@ -66,37 +97,101 @@ def view_mphn_pkl(infile, N=10, viruses=False):
         print([mkr, db['markers'][mkr]])
     exit(0)
 
-def create_metadata_indices(meta_file):
+def get_tax_ids(tax, idx):
+    """
+    getting tax_ids based on taxon names
+    """
+    tax_ids = []
+    for x in tax:
+        try:
+            tax_ids.append(idx[x])
+        except KeyError:
+            msg = 'WARNING: {} not found in taxdump names file'
+            logging.info(msg.format(x))
+            tax_ids.append('')
+    if len(tax) != len(tax_ids):
+        tax = ','.join(tax)
+        raise ValueError('Problem finding taxids for {}'.format(tax))
+    return tax_ids
+    
+def create_metadata_indices(meta_file, tax_id_idx):
     """
     Loading Struo gene metadata info and creating an index.
-    return: {cluster_id : {(taxonomy) : { genome_id : {gene_ids : [gene_ids], genome_len : len}}}}
+    Args:
+      meta_file : struo2 genes metadata file
+      marker_len_idx : the length of the gene sequence      
+    Return:
+      return: {cluster_id : {(taxonomy) : { genome_id : {gene_ids : [gene_ids], genome_len : len}}}}
     """
     logging.info('Loading gene metadata...')
     # genes
     header = {}
-    #gene_idx = {}
     idx = collections.defaultdict(dict)
     tax_levs = ['domain','phylum','class','order','family','genus','species']
-    with open(meta_file) as inF:
+    with _open(meta_file) as inF:
         for i,line in enumerate(inF):
+            line = _decode(line, meta_file)
             line = line.rstrip().split('\t')
             if i == 0:
                 header = {x.lower():i for i,x in enumerate(line)}
                 continue
             # genes
             cluster_id = line[header['annotation']]
-            gene_uuid = line[header['gene_uuid']]
-            genomeID = line[header['genomeid']]
-            genome_len = line[header['genome_len']]
-            tax = tuple([line[header[x]] for x in tax_levs])
+            gene_uuid = line[header['seq_uuid']]
+            genome_id = line[header['genome_name']]
+            genome_len = line[header['genome_length_bp']]
+            tax = [line[header[x]] for x in tax_levs]
+            tax_ids = get_tax_ids(tax, tax_id_idx)                
+            genome_tax_id = line[header['taxid']]
+            humann_id = line[header['humann_seq_id']]
+            gene_len = line[header['seq_len_nuc']]
+            ## adding to data structure
             try:
-                idx[cluster_id][tax][genomeID]['gene_ids'].append(gene_uuid)
+                # adding genes to cluster
+                idx[cluster_id][genome_id]['gene_ids'].append([gene_uuid,
+                                                               humann_id,
+                                                               gene_len])
             except KeyError:
-                idx[cluster_id][tax] = {genomeID : {'gene_ids' : [gene_uuid],
-                                                    'genome_len' : genome_len}}
-    metadata_summary(idx)
+                # genome metadata + first gene of cluster
+                idx[cluster_id] = {genome_id : {'gene_ids' : [[gene_uuid,
+                                                               humann_id,
+                                                               gene_len]],
+                                                'genome_len' : genome_len,
+                                                'taxonomy' : tax,
+                                                'taxids' : tax_ids,
+                                                'genome_tax_id' : genome_tax_id}}
+    #metadata_summary(idx)
     return idx
 
+
+def tax_gene_cnt(d):
+    for tax,v1 in d.items():
+        for genome_id,v2 in v1.items():
+            pass
+    
+
+def cluster_tax_breadth(clust_idx, max_ext=10):
+    """
+    Determining the taxonomic breadth of each cluster.
+    Filter multi-copy genes 
+    Which are species specific?
+    """
+    logging.info('Determining taxonomic breadth of each cluster...')
+    for clust_id,v1 in clust_idx.items():
+        tax_cnt = {}
+        for genome_id,v2 in v1.items():
+            pass
+            #n_genes = 
+
+def filter_multicopy(clust_idx):
+    for clust_id,v1 in clust_idx.items():
+        genome_cnts = []
+        for genome_id,v2 in v1.items():
+            genome_cnts.append(len(v2['gene_ids']))
+        print(genome_cnts)
+    sys.exit()
+    
+            
 def sum_stats(x, label):
     """
     Print stats of a distribution (vector)
@@ -278,13 +373,45 @@ def add_markers(idx, pkl):
         pkl['markers'][marker_name] = copy.deepcopy(v)
     return pkl
 
+def create_tax_id_index(infile):
+    """
+    Creating an index from an taxdump names file
+    Return: {tax_name : tax_id}
+    """
+    logging.info('Loading: {}'.format(infile))
+    regex = re.compile('\t\|\t')
+    idx = {}
+    with _open(infile) as inF:
+        for line in inF:
+            line = _decode(line, infile)
+            line = regex.split(line)
+            idx[line[1].replace(' ', '_')] = int(line[0])
+    return idx
+        
 def main(args):
     # viewing pkl file
     if args.pkl_n > 0:
-        view_mphn_pkl(args.pkl, N=args.pkl_n, viruses=args.pkl_viruses)
-        
-    # creating {unirefID : [marker_uuid]} index
-    cluster_idx = create_metadata_indices(args.gene_metadata)
+        view_mphn_pkl(args.metaphlan_pkl, N=args.pkl_n, viruses=args.pkl_viruses)
+
+    # creating indices for all required data
+    ## creating {marker_uuid : gene_length} index
+    #marker_len_idx = create_marker_len_idx(args.gene_fasta)
+    ## creating {tax_name : taxid} index
+    tax_id_idx = create_tax_id_index(args.gtdb_taxdump_names)    
+    ## creating {unirefID : [marker_uuid]} index
+    cluster_idx = create_metadata_indices(args.gene_metadata, tax_id_idx)
+
+    # filtering out multi-copy gene cluster (changes in place)
+    filter_multicopy(cluster_idx)
+    
+    # determining the taxonomic breadth of each cluster
+    cluster_tax_breadth(cluster_idx)
+    
+    
+    #-- TO HERE --#
+    # change to per cluster:
+    ## for the cluster, is it species-specific (with a fraction of non-species genes)?
+    
     ## getting the full taxonomy (w/ genomeIDs) for each cluster
     tax_idx = get_full_tax(cluster_idx)
     ## just clusters that are single copy for each genome

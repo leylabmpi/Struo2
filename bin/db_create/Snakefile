@@ -66,4 +66,5 @@ if not skipped(config['databases']['humann3_bowtie2']) and \
     print('\33[36m* Creating humann3 database\x1b[0m')
     include: snake_dir + 'bin/db_create/humann3/Snakefile'
 if not skipped(config['databases']['metaphlan3']):
+    print('\33[36m* Creating metaphlan database\x1b[0m')
     include: snake_dir + 'bin/db_create/metaphlan3/Snakefile'

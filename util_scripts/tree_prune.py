@@ -34,12 +34,14 @@ parser.add_argument('tree_file', metavar='tree_file', type=str, nargs='+',
                     help='>=1 newick file (or url to the file)')
 parser.add_argument('-r', '--root-brlen', type=float, default=0.0001,
                     help='Root node branch length (default: %(default)s)')
+parser.add_argument('-s', '--skip-root-brlen', action='store_true', default=False,
+                    help='Don\'t add root node branch length (default: %(default)s)')
 parser.add_argument('--version', action='version', version='0.0.1')
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
-def read_tree(file_or_url, root_brlen):
+def read_tree(file_or_url, root_brlen, skip_root_brlen=False):
     """ Reading in tree file (downloading if url) """
     logging.info('Reading tree: {}'.format(file_or_url))
     try:
@@ -49,15 +51,16 @@ def read_tree(file_or_url, root_brlen):
         line = open(file_or_url).read()
               
     line = line.rstrip().rstrip(';')
-    line += '100.0:{}'.format(root_brlen)
+    if not skip_root_brlen:
+        line += '100.0:{}'.format(root_brlen)
     
     return line
 
-def read_trees(tree_files, root_brlen):
+def read_trees(tree_files, root_brlen, skip_root_brlen=False):
     """ reading in >= tree file (or url) """
     trees = []
     for F in tree_files:
-        trees.append(read_tree(F, root_brlen))
+        trees.append(read_tree(F, root_brlen, skip_root_brlen))
     trees = '(' + ','.join(trees) + ')'
     trees += '100.0:{}'.format(root_brlen)
     return trees
@@ -89,9 +92,11 @@ def main(args):
     ## reading in trees
     with open(tmpTree_name, 'w') as tmpTree:        
         if len(args.tree_file) > 1:
-            tree = read_trees(args.tree_file, args.root_brlen)
+            tree = read_trees(args.tree_file, args.root_brlen,
+                              args.skip_root_brlen)
         else:
-            tree = read_tree(args.tree_file[0], args.root_brlen)
+            tree = read_tree(args.tree_file[0], args.root_brlen,
+                             args.skip_root_brlen)
         tmpTree.write(tree + ';')
 
     # pruning 

@@ -171,6 +171,7 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
     kept = 0
     seq = {}
     seq_header = None
+    rename_idx = {}
     with _open(infile) as inF, open(outfile, 'w') as outF:
         for line in inF:
             if infile.endswith('.gz'):
@@ -178,9 +179,11 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
             if line.startswith('>'):      # sequence header
                 # writing previous seq
                 try:
-                    seq = seq[seq_header]                    
-                    seq_header = seq_header.format(len(seq.rstrip('*')) * seq_len_multi)
+                    seq = seq[seq_header]
+                    seq_len = len(seq.rstrip('*')) * seq_len_multi                    
+                    seq_header = seq_header.format(seq_len)
                     outF.write('\n'.join([seq_header, seq]) + '\n')
+                    rename_idx[uuid] = [seq_header.lstrip('>'), seq_len]
                     seq = {}
                     seq_header = None
                 except KeyError:
@@ -219,14 +222,18 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
         # last seq
         if to_skip is False and len(seq[seq_header]) > 0:
             seq = seq[seq_header]
-            seq_header = seq_header.format(len(seq.rstrip('*')) * seq_len_multi)
+            seq_len = len(seq.rstrip('*')) * seq_len_multi
+            seq_header = seq_header.format(seq_len)
             outF.write('\n'.join([seq_header, seq]) + '\n')        
+            rename_idx[uuid] = [seq_header, seq_len]
 
     # status
     logging.info('File written: {}'.format(outfile))
     logging.info('  No. of seqs written: {}'.format(kept))
     if keep_unclassified is False:
         logging.info('  No. of seqs excluded due to unclassified: {}'.format(skipped))
+        
+    return rename_idx
 
 # def check_meta(meta, mmshp):
 #     missing = []
@@ -243,23 +250,31 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
 #         print('\n'.join(missing))
 #         sys.exit(1)
 
-def write_table(meta, mmshp, keep_unclassified=False):
+def write_table(meta, mmshp, humann_name_idx, keep_unclassified=False):
     """
     writing updated metadata table
     """
     logging.info('Writing gene metadata to stdout...')
     skipped = 0
-    print('\t'.join(meta['header'] + ['annotation']))
+    print('\t'.join(meta['header'] + ['annotation', 'humann_seq_id', 'seq_len_nuc']))
     for seq_id,m in meta['body'].items():
         try:
             annot = mmshp[seq_id]
         except KeyError:
             msg = 'Cannot find "{}" in cluster membership'
             raise KeyError(msg.format(seq_id))
+        try:
+            seq_header,seq_len = humann_name_idx[seq_id]
+        except KeyError:
+            if annot.startswith('unclassified'):
+                seq_header = 'None'
+            else:
+                msg = 'Cannot find "{}" in humann name index'
+                raise KeyError(msg.format(seq_id))
         if keep_unclassified is False and annot.startswith('unclassified'):
             skipped += 1
         else:
-            print('\t'.join([seq_id] + m + [annot]))
+            print('\t'.join([seq_id] + m + [annot, seq_header, str(seq_len)]))
     if keep_unclassified is False:
         logging.info('  No. of genes excluded due to unclassified: {}'.format(skipped))
         
@@ -279,15 +294,15 @@ def main(args):
     
     # for each gene [fna, faa]:
     ## apply information to sequence header
-    propagate_info(args.genes_fasta_prot, args.out_prot, mmshp, meta,
-                   args.meta_columns, keep_unclassified=args.keep_unclassified,
-                   seq_len_multi=3)
+    humann_name_idx = propagate_info(args.genes_fasta_prot, args.out_prot, mmshp, meta,
+                                     args.meta_columns, keep_unclassified=args.keep_unclassified,
+                                     seq_len_multi=3)
     if args.in_nuc is not None:
         propagate_info(args.in_nuc, args.out_nuc, mmshp, meta,
                        args.meta_columns, keep_unclassified=args.keep_unclassified,
                        seq_len_multi=1)
     # writing updated metadata table
-    write_table(meta, mmshp, keep_unclassified=args.keep_unclassified)
+    write_table(meta, mmshp, humann_name_idx, keep_unclassified=args.keep_unclassified)
     
     
 if __name__ == '__main__':

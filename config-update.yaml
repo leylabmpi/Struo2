@@ -1,3 +1,6 @@
+#-- email notifications of pipeline success/failure (use "Skip" to deactivate) --#
+email: nyoungblut@tuebingen.mpg.de
+
 #-- databases to update --#
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
