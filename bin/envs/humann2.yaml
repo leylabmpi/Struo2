@@ -1,4 +1,4 @@
-channels: !!python/tuple
+channels:
 - bioconda
 dependencies:
 - pigz
