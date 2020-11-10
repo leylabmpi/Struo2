@@ -37,6 +37,7 @@ config['pipeline']['snakemake_folder'] = \
 
 ## base of the snakefile hierarchy 
 include: snake_dir + 'bin/Snakefile'
+include: snake_dir + 'bin/utils/Snakefile'
 
 ## pipeline main
 wildcard_constraints:

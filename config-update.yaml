@@ -22,7 +22,7 @@ new_genes:
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
-samples_file: tests/samples/samples_GTDBr89_n5.txt
+samples_file: tests/samples/GTDBr95_n5.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -80,7 +80,7 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
-    mmseqs_cluster_update: --min-seq-id 0.9 -s 4.0 
+    mmseqs_cluster_update: --min-seq-id 0.9 -c 0.8 -s 4.0 
   humann3:
     batches: 10
     mmseqs_search:

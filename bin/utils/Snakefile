@@ -1,0 +1,54 @@
+#-- utilty functions --#
+import gzip
+import bz2
+from itertools import chain
+
+
+def concatenate(*lists):
+    """
+    Combine >1 list and/or strings
+    """
+    new_list = []
+    for x in lists:
+        new_list.extend(x)
+    return new_list
+
+def _open(infile, mode='rb'):
+    """
+    Openning of input, regardless of compression
+    """
+    if infile.endswith('.bz2'):
+        return bz2.open(infile, mode)
+    elif infile.endswith('.gz'):
+        return gzip.open(infile, mode)
+    else:
+        return open(infile)
+
+def _decode(line, infile):
+    """
+    Decoding input, depending on the file extension
+    """
+    if os.path.isfile(infile) and (infile.endswith('.gz') or infile.endswith('.bz2')):
+        line = line.decode('utf-8')
+    return line
+
+def cat_files(*args, outfile, header=False):
+    """
+    Combining files (*args). File can be compressed. 
+    Combined files written to outfile.
+    Input:
+      args : tuple of lists, each list contains file paths
+      output : str, output file path
+      header : bool, just print the header line of the first input file?
+    """
+    infiles = concatenate(*args)
+    with open(outfile, 'w') as outF:
+        for i,infile in enumerate(infiles):
+            with _open(infile) as inF:
+                for ii,line in enumerate(inF):
+                    # skipping header (except for first table)
+                    if i > 0 and ii == 0 and header is True:
+                        continue
+                    # writing line 
+                    line = _decode(line, infile)
+                    outF.write(line)

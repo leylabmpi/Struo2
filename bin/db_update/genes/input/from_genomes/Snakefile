@@ -113,16 +113,10 @@ rule genes_combine_fna:
                       sample = config['samples_unique'])
     output:
         fna = temp(config['tmp_dir'] + 'db_update/filtered_reps.fna')
-    params:
-        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    log:
-        log_dir + 'genes_combine_fna/all.log'
-    shell:
-        """
-        {params.exe} {input.fna1} {input.fna2} > {output.fna} 2> {log}
-        """
+    run:
+        cat_files([input.fna1], input.fna2, outfile=output.fna) 
 
 rule genes_combine_faa:
     """
@@ -135,16 +129,10 @@ rule genes_combine_faa:
                       sample = config['samples_unique'])
     output:
         faa = temp(config['tmp_dir'] + 'db_update/filtered_reps.faa')
-    params:
-        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    log:
-        log_dir + 'genes_combine_faa/all.log'
-    shell:
-        """
-        {params.exe} {input.faa1} {input.faa2} > {output.faa} 2> {log}
-        """
+    run:
+        cat_files([input.faa1], input.faa2, outfile=output.faa) 
 
 rule genes_combine_txt:
     """
@@ -158,16 +146,10 @@ rule genes_combine_txt:
                       sample = config['samples_unique'])
     output:
         txt = temp(config['tmp_dir'] + 'db_update/filtered_reps.txt')
-    params:
-        exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59
-    log:
-        log_dir + 'genes_combine_txt/all.log'
-    shell:
-        """
-        {params.exe} --header {input.txt1} {input.txt2} > {output.txt} 2> {log}
-        """
+    run:
+        cat_files([input.txt1], input.txt2, outfile=output.txt, header=True) 
         
 rule copy_gene_info:
     """
