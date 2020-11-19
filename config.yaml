@@ -62,11 +62,11 @@ params:
   humann3:
     batches: 10
     mmseqs_search:
-      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2019_01/uniref50
+      target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
       db_index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
     diamond:
-      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
+      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 0.5
   metaphlan3:

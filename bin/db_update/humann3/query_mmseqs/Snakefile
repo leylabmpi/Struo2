@@ -198,8 +198,10 @@ rule mmseqs_search:
         benchmark_dir + 'mmseqs_search/' + config['db_name'] + 'seqs{splitID}.txt'
     shell:
         """
-        rm -f {output.db} {output.db_t} {output.db_i} 2> {log}
+        rm -rf {params.tmp_dir} 2> {log} 1>&2
+        rm -f {output.db} {output.db_t} {output.db_i} 2>> {log}
         mmseqs search --threads {threads} {params.params} \
+          --remove-tmp-files 1 --local-tmp {params.tmp_dir} \
           --split 0 --split-memory-limit {resources.mem_gb}G \
           {input.qdb} {input.tdb} {params.output_db} \
           {params.tmp_dir} 2>> {log} 1>&2

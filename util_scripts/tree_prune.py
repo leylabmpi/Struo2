@@ -74,8 +74,7 @@ def prune_tree(tree_file, taxa_to_keep):
         res = subprocess.run(cmd, check=True, shell=True,
                              stdout=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        raise e
- 
+        raise e     
     res = res.stdout.decode().rstrip()
     print(res)
         
