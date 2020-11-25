@@ -41,7 +41,8 @@ include: snake_dir + 'bin/utils/Snakefile'
 
 ## pipeline main
 wildcard_constraints:
-    sample="[^/]+"
+    sample="[^/]+",
+    uniref="[^/]+"
 
 localrules: all
 

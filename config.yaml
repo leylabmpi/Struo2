@@ -21,7 +21,7 @@ tmp_dir: /ebio/abt3_scratch/
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Create
+  kraken2: Skip #Create
   bracken: Create
   genes: Create
   humann3_bowtie2: Create
@@ -29,9 +29,12 @@ databases:
   metaphlan3: Skip #Create
   
 # Name for base directory holding all created databases
-db_name: UniRef50 #GTDB-custom
+db_name: GTDB-custom
 # Name of the humann3 diamond database (must match naming allowed by humann3)
-dmnd_name: uniref50_201901.dmnd
+dmnd_name: uniref90_201901.dmnd
+# Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
+## Skip if annotating with UniRef50
+cluster_idx: /ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
 
 #-- if custom NCBI taxdump files (or just Skip) --#
 # Used for kraken taxonomy & metaphlan

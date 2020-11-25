@@ -32,31 +32,34 @@ taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy'
 
 # Saved databases that will be updated
 kraken2_db:
-  library:  tests/output_GTDBr89_n10/kraken2/UniRef50/library/
-  taxonomy: tests/output_GTDBr89_n10/kraken2/UniRef50/taxonomy/
+  library:  tests/output_GTDBr95_n10/kraken2/GTDB-custom/library/
+  taxonomy: tests/output_GTDBr95_n10/kraken2/GTDB-custom/taxonomy/
 genes_db:
   genes:
-    mmseqs_db:   tests/output_GTDBr89_n10/genes/UniRef50/genes_db.tar.gz
-    amino_acid:  tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.faa.gz
-    nucleotide:  tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.fna.gz
-    metadata:    tests/output_GTDBr89_n10/genes/UniRef50/genome_reps_filtered.txt.gz
+    mmseqs_db:   tests/output_GTDBr95_n10/genes/GTDB-custom/genes_db.tar.gz
+    amino_acid:  tests/output_GTDBr95_n10/genes/GTDB-custom/genome_reps_filtered.faa.gz
+    nucleotide:  tests/output_GTDBr95_n10/genes/GTDB-custom/genome_reps_filtered.fna.gz
+    metadata:    tests/output_GTDBr95_n10/genes/GTDB-custom/genome_reps_filtered.txt.gz
   cluster:
-    mmseqs_db:   tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_db.tar.gz
+    mmseqs_db:   tests/output_GTDBr95_n10/genes/GTDB-custom/cluster/clusters_db.tar.gz    
 humann_db:
   query:
-    hits: tests/output_GTDBr89_n10/humann3/UniRef50/annotation_hits.gz
+    hits: tests/output_GTDBr95_n10/humann3/GTDB-custom/annotation_hits.gz
   cluster:
-    reps: tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_reps.faa.gz
-    membership: tests/output_GTDBr89_n10/genes/UniRef50/cluster/clusters_membership.tsv.gz
+    reps: tests/output_GTDBr95_n10/genes/GTDB-custom/cluster/clusters_reps.faa.gz
+    membership: tests/output_GTDBr95_n10/genes/GTDB-custom/cluster/clusters_membership.tsv.gz
 
 #-- Output --#
 # output location
-output_dir: tests/output_GTDBr89_n10/
+output_dir: tests/output_GTDBr95_n10/
 
 # Name for base directory holding all created databases
-db_name: UniRef50_updated_from-genomes
+db_name: GTDB-custom_updated-from-genomes
 # Name of the humann3 diamond database (must match naming allowed by humann3)
-dmnd_name: uniref50_201901.dmnd
+dmnd_name: uniref90_201901.dmnd
+# Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
+## Skip if annotating with UniRef50
+cluster_idx: /ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/

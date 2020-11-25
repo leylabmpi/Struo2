@@ -17,51 +17,64 @@ def all_which_input(wildcards):
     """
     The final output files for both db_create & db_update
     """
-    input_files = []    
+    F = []    
     # kraken2
     if not skipped(config['databases']['kraken2']):
-        input_files.append(os.path.join(kraken2_dir, 'hash.k2d'))
-        input_files.append(os.path.join(kraken2_dir, 'opts.k2d'))
-        input_files.append(os.path.join(kraken2_dir, 'taxo.k2d'))
-        input_files.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
+        F.append(os.path.join(kraken2_dir, 'hash.k2d'))
+        F.append(os.path.join(kraken2_dir, 'opts.k2d'))
+        F.append(os.path.join(kraken2_dir, 'taxo.k2d'))
+        F.append(os.path.join(kraken2_dir, 'seqid2taxid.map'))
         # bracken
         if not skipped(config['databases']['bracken']):
-    	    x = expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
-	               read_len = config['params']['bracken']['build_read_lens'])
-            input_files += x
+    	    F += expand(os.path.join(kraken2_dir, 'database{read_len}mers.kraken'),
+	                read_len = config['params']['bracken']['build_read_lens'])
     # genes
     if not skipped(config['databases']['genes']):
-        input_files.append(genes_dir + 'genome_reps_filtered.fna.gz')
-        input_files.append(genes_dir + 'genome_reps_filtered.faa.gz')
-        input_files.append(genes_dir + 'genome_reps_filtered.txt.gz')
+        F.append(genes_dir + 'genome_reps_filtered.fna.gz')
+        F.append(genes_dir + 'genome_reps_filtered.faa.gz')
+        F.append(genes_dir + 'genome_reps_filtered.txt.gz')
         if str(config['keep_intermediate']) == 'True':
             # mmseqs gene database
-            input_files.append(genes_dir + 'genes_db.tar.gz')
+            F.append(genes_dir + 'genes_db.tar.gz')
             ## mmseqs cluster database
-            input_files.append(genes_dir + 'cluster/clusters_db.tar.gz')
+            F.append(genes_dir + 'cluster/clusters_db.tar.gz')
             ## cluster membership info
-            input_files.append(genes_dir + 'cluster/clusters_membership.tsv.gz')
+            F.append(genes_dir + 'cluster/clusters_membership.tsv.gz')
             ## cluster rep sequences
-            input_files.append(genes_dir + 'cluster/clusters_reps.faa.gz')                                    
+            F.append(genes_dir + 'cluster/clusters_reps.faa.gz')       
     # humann3
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):
+        # multiple UniRef cutoffs
+        uniref_cutoffs = ['UniRef90']
+        dmnd_names = [config['dmnd_name']]
+        if not skipped(config['cluster_idx']):
+            uniref_cutoffs.append('UniRef50')
+            x = re.sub('uniref90', 'uniref50', config['dmnd_name'])
+            if x == dmnd_names[0]:
+                raise ValueError('diamond database name does not include "uniref90"')
+            dmnd_names.append(x)
+        # intermediate files
         if str(config['keep_intermediate']) == 'True':
             # annotation hits
-            input_files.append(humann3_dir + 'annotation_hits.gz')
+            F.append(humann3_dir + 'annotation_hits.gz')
             ## annotated genes (all)
-            input_files.append(humann3_dir + 'genome_reps_filt_annot.fna.gz')
-            input_files.append(humann3_dir + 'genome_reps_filt_annot.faa.gz')
-            input_files.append(humann3_dir + 'genome_reps_filt_annot.tsv.gz')
+            F += expand(humann3_dir + '{uniref}/genome_reps_filt_annot.fna.gz',
+                        uniref = uniref_cutoffs)
+            F += expand(humann3_dir + '{uniref}/genome_reps_filt_annot.faa.gz',
+                        uniref = uniref_cutoffs)
+            F += expand(humann3_dir + '{uniref}/genome_reps_filt_annot.tsv.gz',
+                        uniref = uniref_cutoffs)
         ## databases
         if not skipped(config['databases']['humann3_bowtie2']):
-            input_files.append(os.path.join(humann3_dir, 'bowtie2_build.done'))
+            F += expand(os.path.join(humann3_dir + '{uniref}', 'bowtie2_build.done'),
+                        uniref = uniref_cutoffs)
         if not skipped(config['databases']['humann3_diamond']):
-            input_files.append(os.path.join(humann3_dir, 'protein_database',
-                                            config['dmnd_name']))
+            F += expand(os.path.join(humann3_dir, '{uniref}', 'protein_database', '{dmnd}'),
+                        uniref = uniref_cutoffs, dmnd=dmnd_names)                     
     # metaphlan
     if not skipped(config['databases']['metaphlan3']):
-        input_files.append(config['tmp_dir'] + 'metaphlan3/species_specific.txt')
+        F.append(config['tmp_dir'] + 'metaphlan3/species_specific.txt')
     
     # ret
-    return input_files
+    return F
