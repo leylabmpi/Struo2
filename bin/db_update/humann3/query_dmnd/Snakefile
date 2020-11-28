@@ -72,14 +72,14 @@ rule humann3_diamond_pass1:
     Annotating genes via diamond search of UniRef DB
     """
     input:
-        faa = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.part-{splitID}.faa',
+        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.part-{splitID}.faa',
 	dmnd_db = config['tmp_dir'] + 'humann3/humann3_dmnd_db.dmnd'
     output:
-        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3/hits_pass1/{splitID}.txt'),
-        unaln = temp(config['tmp_dir'] + config['db_name'] + 'humann3/unaln/{splitID}.faa')
+        hits = temp(config['tmp_dir'] + 'humann3/hits_pass1/{splitID}.txt'),
+        unaln = temp(config['tmp_dir'] + 'humann3/unaln/{splitID}.faa')
     params:
         params = config['params']['humann3']['diamond']['run'],
-        tmp_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd_TMP/{splitID}/'
+        tmp_dir = config['tmp_dir'] + 'humann3_dmnd_TMP/{splitID}/'
     threads:
         8
     resources:
@@ -89,9 +89,9 @@ rule humann3_diamond_pass1:
     conda:
         '../../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass1/' + config['db_name'] + '{splitID}.log'
+        log_dir + 'hm3_diamond_pass1/{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass1/' + config['db_name'] + '{splitID}.txt'
+        benchmark_dir + 'hm3_diamond_pass1/{splitID}.txt'
     shell:
         """
         TMPDIR="{params.tmp_dir}"
@@ -111,13 +111,13 @@ rule humann3_diamond_pass2:
     Annotating genes via diamond search of UniRef DB (sensitive mode)
     """
     input:
-        faa = config['tmp_dir'] + config['db_name'] + 'humann3/unaln/{splitID}.faa',
+        faa = config['tmp_dir'] + 'humann3/unaln/{splitID}.faa',
 	dmnd_db = config['tmp_dir'] + 'humann3/humann3_dmnd_db.dmnd'
     output:
-        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3/hits_pass2/{splitID}.txt')
+        hits = temp(config['tmp_dir'] + 'humann3/hits_pass2/{splitID}.txt')
     params:
         params = config['params']['humann3']['diamond']['run'],
-        tmp_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd_TMP/{splitID}/'
+        tmp_dir = config['tmp_dir']  + 'humann3_dmnd_TMP/{splitID}/'
     threads:
         8
     resources:
@@ -127,9 +127,9 @@ rule humann3_diamond_pass2:
     conda:
         '../../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass2/' + config['db_name'] + '{splitID}.log'
+        log_dir + 'hm3_diamond_pass2/{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass2/' + config['db_name'] + '{splitID}.txt'
+        benchmark_dir + 'hm3_diamond_pass2/{splitID}.txt'
     shell:
         """
         NSEQ=`seqkit seq -n {input.faa} | wc -l 2> {log}`
@@ -156,15 +156,15 @@ rule humann3_diamond_merge:
     Also including all original hits (prior to db update).
     """
     input:
-        hits_orig = config['tmp_dir'] + config['db_name'] + 'humann3/query_hits.txt',  
-        hits1 = expand(config['tmp_dir'] + config['db_name'] + \
+        hits_orig = config['tmp_dir'] + 'humann3/query_hits.txt',  
+        hits1 = expand(config['tmp_dir'] + \
                        'humann3/hits_pass1/{splitID}.txt',
 	               splitID=config['params']['humann3']['splits']),
-        hits2 = expand(config['tmp_dir'] + config['db_name'] + \
+        hits2 = expand(config['tmp_dir'] + \
                        'humann3/hits_pass2/{splitID}.txt',
 	               splitID=config['params']['humann3']['splits'])
     output:
-        hits = temp(config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt')
+        hits = temp(config['tmp_dir'] + 'humann3/hits.txt')
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     run:

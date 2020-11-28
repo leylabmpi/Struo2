@@ -1,14 +1,7 @@
-# def which_hits(wildcards):
-#     """
-#     Selecting whether to use `diamond blastp` or `mmseqs search` results
-#     """
-#     if (not skipped(config['params']['humann3']['diamond']['db']) and
-#         not skipped(config['params']['humann3']['diamond']['run'])):
-#         return config['tmp_dir'] + config['db_name'] + 'humann3_dmnd/hits.txt'
-#     else:
-#         return config['tmp_dir'] + config['db_name'] + 'mmseqs_search/hits.txt'        
-
 def which_membership(wildcards):
+    """
+    Which membership file to use as input
+    """
     if not skipped(config['databases']['genes']):
         return genes_dir + 'cluster/clusters_membership.tsv.gz'
     else:
@@ -21,15 +14,15 @@ rule humann3_annotate_genes:
     to each member of the cluster.
     """
     input:
-        hits = config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt',
-        fna = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.fna',
-        faa = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.faa',
-        txt = config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.txt',
+        hits = config['tmp_dir'] + 'humann3/hits.txt',
+        fna = config['tmp_dir'] + 'humann3/genome_reps_filtered.fna',
+        faa = config['tmp_dir'] + 'humann3/genome_reps_filtered.faa',
+        txt = config['tmp_dir'] + 'humann3/genome_reps_filtered.txt',
         tsv = which_membership
     output:
-        fna = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna'),
-        faa = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa'),
-        tsv = temp(config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.tsv'),
+        fna = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.fna'),
+        faa = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.faa'),
+        tsv = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.tsv'),
     params:
         exe = config['pipeline']['script_folder'] + 'propagate_annotations.py',
         params = config['params']['humann3']['propagate_annotations']
@@ -37,9 +30,9 @@ rule humann3_annotate_genes:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
     log:
-        log_dir + 'hm3_annotate_genes/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'hm3_annotate_genes/all.log'
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'hm3_annotate_genes/all.txt'
     shell:
         """
         {params.exe} {params.params} \
@@ -56,7 +49,7 @@ rule humann3_annotate_hits_copy:
     Copying query hits (diamond or mmseqs) to the final output directory 
     """
     input:
-        hits = config['tmp_dir'] + config['db_name'] + 'humann3/hits.txt'
+        hits = config['tmp_dir'] + 'humann3/hits.txt'
     output:
         hits = humann3_dir + 'annotation_hits.gz'
     params:
@@ -64,32 +57,71 @@ rule humann3_annotate_hits_copy:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'hm3_annotate_hits_copy/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'hm3_annotate_hits_copy/all.log'
     shell:
         """
         ionice {params.ionice} gzip -c {input.hits} > {output.hits} 2> {log}
         """
+
+rule humann3_alt_annotate:
+    """
+    Re-annotating with different UniRef cluster resolution
+    """
+    input:
+        fna = config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.fna',
+        faa = config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.faa',
+        tsv = config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.tsv',
+        idx = ancient(config['cluster_idx'])
+    output:
+        fna = temp(config['tmp_dir'] + config['uniref_other_name'] + \
+                   '/genome_reps_filt_annot.fna'),
+        faa = temp(config['tmp_dir'] + config['uniref_other_name'] + \
+                   '/genome_reps_filt_annot.faa'),
+        tsv = temp(config['tmp_dir'] + config['uniref_other_name'] + \
+                   '/genome_reps_filt_annot.tsv')
+    params:
+        exe = config['pipeline']['script_folder'] + 'uniref_clst_trans.py'
+    resources:
+        time = lambda wildcards, attempt: attempt ** 3 * 59,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 9
+    log:
+        log_dir + 'hm3_annotate_genes/all.log'
+    benchmark:
+        benchmark_dir + 'hm3_annotate_genes/all.txt'
+    shell:
+        """
+        OUTDIR=`dirname {output.fna}`
+        mkdir -p $OUTDIR 2> {log}
+        {params.exe} {input.idx} \
+          --in-nuc {input.fna} \
+          --in-prot {input.faa} \
+          --in-tsv {input.tsv} \
+          --out-nuc {output.fna} \
+          --out-prot {output.faa} \
+          --out-tsv {output.tsv} \
+          2>> {log} 1>&2
+        """    
         
 rule humann3_annotate_genes_copy:
     """
     Copying annotated gene files to the final directory
     """
     input:
-        fna = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna',
-        faa = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa',
-        tsv = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.tsv'
+        fna = config['tmp_dir'] + '{uniref}/genome_reps_filt_annot.fna',
+        faa = config['tmp_dir'] + '{uniref}/genome_reps_filt_annot.faa',
+        tsv = config['tmp_dir'] + '{uniref}/genome_reps_filt_annot.tsv'
     output:
-        fna = humann3_dir + 'genome_reps_filt_annot.fna.gz',
-        faa = humann3_dir + 'genome_reps_filt_annot.faa.gz',
-        tsv = humann3_dir + 'genome_reps_filt_annot.tsv.gz'            
+        fna = humann3_dir + '{uniref}/genome_reps_filt_annot.fna.gz',
+        faa = humann3_dir + '{uniref}/genome_reps_filt_annot.faa.gz',
+        tsv = humann3_dir + '{uniref}/genome_reps_filt_annot.tsv.gz'            
     params:
         ionice = config['params']['ionice']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'hm3_annotate_genes_copy/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'hm3_annotate_genes_copy/{uniref}.log'
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes_copy/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'hm3_annotate_genes_copy/{uniref}.txt'
     shell:
         """
         ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}
@@ -102,9 +134,9 @@ rule humann3_bowtie2_build:
     Running bowtie2 build on combined, annotated genes 
     """
     input:
-        fna = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.fna'
+        fna = config['tmp_dir'] + '{uniref}/genome_reps_filt_annot.fna'
     output:
-        touch(os.path.join(humann3_dir, 'bowtie2_build.done'))
+        os.path.join(humann3_dir, '{uniref}/bowtie2_build.done')
     params:
         prefix = humann3_dir + 'all_genes_annot'
     conda:
@@ -117,9 +149,9 @@ rule humann3_bowtie2_build:
         mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 2 + 8,
         lg_idx = lambda wildcards, attempt: '--large-index' if attempt > 1 else ''
     log:
-        log_dir + 'humann3_bowtie2_build/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_bowtie2_build/{uniref}.log'
     benchmark:
-        benchmark_dir + 'humann3_bowtie2_build/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'humann3_bowtie2_build/{uniref}.txt'
     shell:
         """
         bowtie2-build --threads {threads} {resources.lg_idx} \
@@ -133,6 +165,7 @@ rule humann3_bowtie2_build:
           echo "ERROR: no bowtie2 index files found!"
           exit 1
         fi
+        touch {output} 2>> {log}
         """    
 
 rule humann3_diamond_makedb:
@@ -140,9 +173,9 @@ rule humann3_diamond_makedb:
     Running diamond makedb on combined, annotated genes 
     """
     input:
-        faa = config['tmp_dir'] + config['db_name'] + 'genome_reps_filt_annot.faa'
+        faa = config['tmp_dir'] + '{uniref}/genome_reps_filt_annot.faa'
     output:
-        os.path.join(humann3_dir, 'protein_database', config['dmnd_name'])
+        humann3_dir + '{uniref}/protein_database/{dmnd}'
     params:
         tmp_dir = config['tmp_dir']
     conda:
@@ -151,9 +184,9 @@ rule humann3_diamond_makedb:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12
     log:
-        log_dir + 'humann3_diamond_makedb/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_diamond_makedb/{uniref}/{dmnd}.log'
     benchmark:
-        benchmark_dir + 'humann3_diamond_makedb/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'humann3_diamond_makedb/{uniref}/{dmnd}.txt'
     shell:
         """
         PREF=`echo {output} | perl -pe 's/\.[^.]+$//'`

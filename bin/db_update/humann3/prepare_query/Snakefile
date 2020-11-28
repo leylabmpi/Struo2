@@ -3,21 +3,24 @@ rule humann3_which_to_query:
     Selecting which of the cluster reps need to be queried, given the existing query hits.
     """
     input:
-        mem_c = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_membership.tsv',
-        hit_c = config['tmp_dir'] + config['db_name'] + 'humann3/query_hits.txt',        
-        faa_c = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps.faa'
+        mem_c = config['tmp_dir'] + 'humann3/clusters_membership.tsv',
+        hit_c = config['tmp_dir'] + 'humann3/query_hits.txt',        
+        faa_c = config['tmp_dir'] + 'humann3/clusters_reps.faa'
     output:
-        faa = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.faa'
+        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.faa'
     params:
-        exe = config['pipeline']['script_folder'] + 'filter_cluster_reps.py'
+        exe = config['pipeline']['script_folder'] + 'filter_cluster_reps.py',
+        params = config['params']['humann3']['filter_existing']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
     log:
-        log_dir + 'humann3_which_to_query/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_which_to_query/all.log'
     shell:
         """
-        {params.exe} {input.mem_c} {input.hit_c} {input.faa_c} > {output.faa} 2> {log}
+        {params.exe} {params.params} \
+          {input.mem_c} {input.hit_c} \
+          {input.faa_c} > {output.faa} 2> {log}
         """
         
 rule humann_query_fasta_split:
@@ -25,24 +28,24 @@ rule humann_query_fasta_split:
     Splitting gene fasta for distributed searching
     """
     input:
-        faa = config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps_filt.faa'
+        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.faa'
     output:
-        splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
+        splt = temp(expand(config['tmp_dir'] + \
                            'humann3/clusters_reps_filt.part-{splitID}.faa',
 	                   splitID=config['params']['humann3']['splits']))
     params:
         ionice = config['params']['ionice'],
         n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + config['db_name'] + 'humann3'
+	out_dir = config['tmp_dir'] + 'humann3'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
     conda:
         '../../../envs/genes.yaml'
     log:
-        log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'mmseqs_search_batch_seqs/all.log'
     benchmark:
-        benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
+        benchmark_dir + 'mmseqs_search_batch_seqs/all.txt'
     shell:
         """    
         echo "# Splitting fasta..." >> {log}

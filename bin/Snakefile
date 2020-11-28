@@ -46,13 +46,11 @@ def all_which_input(wildcards):
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):
         # multiple UniRef cutoffs
-        uniref_cutoffs = ['UniRef90']
+        uniref_cutoffs = [config['uniref_name']]
         dmnd_names = [config['dmnd_name']]
-        if not skipped(config['cluster_idx']):
-            uniref_cutoffs.append('UniRef50')
-            x = re.sub('uniref90', 'uniref50', config['dmnd_name'])
-            if x == dmnd_names[0]:
-                raise ValueError('diamond database name does not include "uniref90"')
+        if config['uniref_name'] != 'uniref50' and not skipped(config['cluster_idx']):
+            uniref_cutoffs.append('uniref50')
+            x = re.sub('([Uu])ni([Rr])ef90', '\\1ni\\2ef50', config['dmnd_name'])
             dmnd_names.append(x)
         # intermediate files
         if str(config['keep_intermediate']) == 'True':
@@ -66,12 +64,16 @@ def all_which_input(wildcards):
             F += expand(humann3_dir + '{uniref}/genome_reps_filt_annot.tsv.gz',
                         uniref = uniref_cutoffs)
         ## databases
+        ### bowtie2
         if not skipped(config['databases']['humann3_bowtie2']):
             F += expand(os.path.join(humann3_dir + '{uniref}', 'bowtie2_build.done'),
                         uniref = uniref_cutoffs)
+        ### diamond
         if not skipped(config['databases']['humann3_diamond']):
-            F += expand(os.path.join(humann3_dir, '{uniref}', 'protein_database', '{dmnd}'),
-                        uniref = uniref_cutoffs, dmnd=dmnd_names)                     
+            x = os.path.join(humann3_dir, '{uniref}', 'protein_database', '{dmnd}')
+            for u,d in zip(uniref_cutoffs, dmnd_names):                               
+                F.append(x.format(uniref=u,dmnd=d))
+                        
     # metaphlan
     if not skipped(config['databases']['metaphlan3']):
         F.append(config['tmp_dir'] + 'metaphlan3/species_specific.txt')

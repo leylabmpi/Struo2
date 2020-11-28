@@ -22,7 +22,7 @@ parser.add_argument('cluster_reps_fasta', metavar='cluster_reps_aa', type=str,
 parser.add_argument('--hit-columns', type=str,
                     default='qseqid,sseqid,evalue,pident,alnlen,slen',
                     help='Hit table output columns (default: %(default)s)')      
-parser.add_argument('--min-pident', type=float, default=50,
+parser.add_argument('--min-pident', type=float, default=90,
                     help='Min % identity of hit (default: %(default)s)')
 parser.add_argument('--min-cov', type=float, default=80,
                     help='Min % alignment coverage of subject sequence length (default: %(default)s)')
@@ -55,7 +55,8 @@ def read_membership(infile):
     return mem
 
 def read_hits(infile, mem, colnames, min_pident=0, min_cov=0):
-    """ Loading query hits
+    """ 
+    Loading query hits.
     Return: set(cluster rep)  # clusters with hits
     """
     logging.info('Loading hits table...')    
@@ -98,7 +99,6 @@ def read_hits(infile, mem, colnames, min_pident=0, min_cov=0):
                     raise KeyError(msg.format(qseqid))
     clusts = set(clusts)
     logging.info('No of clusters w/ annotations: {}'.format(len(clusts)))
-#    print('2ff13be4663246e69aaf365463447d82' in clusts); sys.exit()
     return clusts
 
 def filter_fasta(infile, clust_w_annot):

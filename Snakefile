@@ -35,6 +35,10 @@ config['samples_file'] = os.path.abspath(config['samples_file'])
 config['pipeline']['snakemake_folder'] = \
     os.path.abspath(config['pipeline']['snakemake_folder']) + '/'
 
+# uniref
+config['uniref_name'] = config['uniref_name'].lower()
+config['uniref_other_name'] = 'uniref50' if config['uniref_name'] == 'uniref90' else 'uniref90'
+
 ## base of the snakefile hierarchy 
 include: snake_dir + 'bin/Snakefile'
 include: snake_dir + 'bin/utils/Snakefile'

@@ -3,8 +3,10 @@ if not skipped(config['databases']['genes']):
     print('\33[36m  * Using updated genes database\x1b[0m')
     include: snake_dir + 'bin/db_update/humann3/input_from_genes/Snakefile'
 else:
-    print('\33[36m  * Using user-provided gene set\x1b[0m')     
-    include: snake_dir + 'bin/db_update/humann3/input_from_user/Snakefile'
+    msg = '\33[35m  X For user-provided gene sequences'
+    msg += ' you must update the genes database!\x1b[0m'
+    print(msg)
+    sys.exit(1)
 include: snake_dir + 'bin/db_update/humann3/prepare_query/Snakefile'
 # query
 if not skipped(config['params']['humann3']['mmseqs_search']):

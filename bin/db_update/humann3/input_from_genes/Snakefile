@@ -9,16 +9,16 @@ rule humann3_copy_gene_input:
         faa = genes_dir + 'genome_reps_filtered.faa.gz',
         txt = genes_dir + 'genome_reps_filtered.txt.gz'
     output:
-        fna = temp(config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.fna'),
-        faa = temp(config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.faa'),
-        txt = temp(config['tmp_dir'] + config['db_name'] + 'humann3/genome_reps_filtered.txt')
+        fna = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.fna'),
+        faa = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.faa'),
+        txt = temp(config['tmp_dir'] + 'humann3/genome_reps_filtered.txt')
     params:
         ionice = config['params']['ionice'],
         exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'humann3_copy_gene_input/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_copy_gene_input/all.log'
     shell:
         """
         ionice {params.ionice} {params.exe} {input.fna} > {output.fna} 2>  {log}
@@ -35,16 +35,16 @@ rule humann3_copy_cluster_input:
         faa_c = genes_dir + 'cluster/clusters_reps.faa.gz',
         mem_c = genes_dir + 'cluster/clusters_membership.tsv.gz',
     output:
-        hit_c = temp(config['tmp_dir'] + config['db_name'] + 'humann3/query_hits.txt'),
-        faa_c = temp(config['tmp_dir'] + config['db_name'] + 'humann3/clusters_reps.faa'),
-        mem_c = temp(config['tmp_dir'] + config['db_name'] + 'humann3/clusters_membership.tsv')
+        hit_c = temp(config['tmp_dir'] + 'humann3/query_hits.txt'),
+        faa_c = temp(config['tmp_dir'] + 'humann3/clusters_reps.faa'),
+        mem_c = temp(config['tmp_dir'] + 'humann3/clusters_membership.tsv')
     params:
         ionice = config['params']['ionice'],
         exe = config['pipeline']['script_folder'] + 'cat_files.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'humann3_copy_cluster_input/{}.log'.format(config['db_name'].rstrip('/'))
+        log_dir + 'humann3_copy_cluster_input/all.log'
     shell:
         """
         ionice {params.ionice} {params.exe} {input.hit_c} > {output.hit_c} 2>  {log} 

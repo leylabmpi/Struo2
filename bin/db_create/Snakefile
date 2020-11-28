@@ -2,7 +2,6 @@
 
 # outdir
 config['output_dir'] = config['output_dir'].rstrip('/') + '/'
-config['db_name'] = config['db_name'].rstrip('/') + '/'
 
 # Samples table
 if not os.path.isfile(config['samples_file']):
