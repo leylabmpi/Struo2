@@ -8,6 +8,13 @@ if skipped(config['new_genes']['amino_acid']):
         input:
             fna = config['new_genes']['nucleotide']        
         output:
+            tdb = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db'),
+            tdbt = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db.dbtype'),
+            tdbi = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db.index'),
+            tdbl = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db.lookup'),
+            tdbh = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db_h'),
+            tdbht = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db_h.dbtype'),
+            tdbhi = temp(config['tmp_dir'] + 'db_update/user-genes-nuc-tmp_db_h.index'),
             db = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db'),
             dbt = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db.dbtype'),
             dbi = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db.index'),
@@ -25,7 +32,8 @@ if skipped(config['new_genes']['amino_acid']):
             log_dir + 'genes_from_user_translate/all.log'
         shell:
             """
-            mmseqs translatenucs {input.fna} {output.db} 2> {log} 1>&2
+            mmseqs createdb {input.fna} {output.tdb} 2> {log} 1>&2
+            mmseqs translatenucs {output.tdb} {output.db} 2>> {log} 1>&2
             mmseqs convert2fasta {output.db} {output.faa} 2>> {log} 1>&2
             """
 
@@ -37,6 +45,13 @@ if skipped(config['new_genes']['nucleotide']):
         input:
             faa = config['new_genes']['amino_acid'] 
         output:
+            tdb = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db'),
+            tdbt = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db.dbtype'),
+            tdbi = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db.index'),
+            tdbl = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db.lookup'),
+            tdbh = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db_h'),
+            tdbht = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db_h.dbtype'),
+            tdbhi = temp(config['tmp_dir'] + 'db_update/user-genes-aa-tmp_db_h.index'),  
             db = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db'),
             dbt = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db.dbtype'),
             dbi = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db.index'),
@@ -54,7 +69,8 @@ if skipped(config['new_genes']['nucleotide']):
             log_dir + 'genes_translate/all.log'
         shell:
             """
-            mmseqs translateaa {input.faa} {output.db} 2> {log} 1>&2
+            mmseqs createdb {input.faa} {output.tdb} 2> {log} 1>&2
+            mmseqs translateaa {output.tdb} {output.db} 2>> {log} 1>&2
             mmseqs convert2fasta {output.db} {output.fna} 2>> {log} 1>&2
             """
 

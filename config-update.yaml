@@ -17,8 +17,8 @@ databases:
 # If you have nucleotide/amino-acid gene sequences formatted for humann
 # If translate = True, missing nuc or AA seqs will be (rev)translated from the other, else seqs not used
 new_genes:
-  amino_acid: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
-  nucleotide: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
+  amino_acid: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
+  nucleotide: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
   metadata: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.txt.gz
   translate: False
 

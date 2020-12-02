@@ -10,7 +10,6 @@ Struo2
 * Version: 2.1.1
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
-  * Jacobo de la Cuesta <jacobo.delacuesta@tuebingen.mpg.de>
 * Maintainers:
   * Nick Youngblut <nyoungb2@gmail.com>
 
@@ -33,13 +32,18 @@ Bioinformatics , November.
 * By default `mmseqs search` is used for annotation instead of `DIAMOND blastp`
   * `mmseqs search` can be a bit faster and more sensitive than DIAMOND
     * see [Steinegger and Soeding 2017](https://www.nature.com/articles/nbt.3988)
-* Metadata is saved for each gene in the database (e.g., taxonomy)
+* Metadata is saved for each gene in the database (e.g., gene taxonomy)
 * Each database can be updated incrementally
   * Intermediate files are saved for faster database reconstruction
-  * For the databse of all genes, `mmseqs clusterupdate` is used to add to the
-    existing cluster database.
-  * For humann3, only clusters lacking an annotation (to UniRef by default)
+  * For the database of all genes, `mmseqs clusterupdate` is used to add to the
+    existing cluster database instead of re-clustering all sequences.
+  * For HUMAnN3, only clusters lacking an annotation (to UniRef by default)
     are queried, which can save a great deal of time.
+* Users can provide genes via either:
+  * A set of genomes fasta files (genes called by prodigal)
+  * A set of gene sequences (eg., produced by [PLASS](https://github.com/soedinglab/plass))
+    * If only amino-acid genes provided, the sequences can be rev-translated or skipped
+    * If only nucleotide genes provided, the sequences can be translated or skipped
 
 # Pre-built custom databases
 
