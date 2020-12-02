@@ -3,7 +3,7 @@
 # checking/validating input
 include: snake_dir + 'bin/db_update/genes/input/check/Snakefile'
 # gene input
-if (not skipped(config['new_genes']['amino_acid']) and
+if (not skipped(config['new_genes']['amino_acid']) or
     not skipped(config['new_genes']['nucleotide'])):
     # assuming user provided a set of genes
     print('\33[36m  * Using user-provided set of gene sequences\x1b[0m')

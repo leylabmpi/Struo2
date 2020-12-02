@@ -111,7 +111,7 @@ rule mmseqs_cluster_update:
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 48,
         n = lambda wildcards, input, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 3,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 3
     conda:
         '../../../envs/genes.yaml'
     log:

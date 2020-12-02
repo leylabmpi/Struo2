@@ -161,7 +161,8 @@ def rename_seqs(best_hits, fasta_file, taxonomy, outfile, gzip_output=False):
     logging.info('File written: {}'.format(outfile))
      
 def format_taxonomy(tax, taxID):
-    """Formatting taxonomy string
+    """
+    Formatting taxonomy string
     """
     logging.info('Taxonomy string provided {}'.format(tax))
     logging.info('TaxID provided {}'.format(taxID))

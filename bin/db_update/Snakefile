@@ -1,4 +1,5 @@
 #-- database update workflow --#
+import gzip
 
 # input processing
 ## outdir
@@ -32,6 +33,31 @@ if config['samples'].shape[0] < 1:
     raise ValueError('No genomes remaining after filtering!')
 config['samples_unique'] = config['samples'][config['samples_col']].unique().tolist()
 
+# check that user-gene info (if provided) as all of the required columns
+if (not skipped(config['new_genes']['amino_acid']) or
+    not skipped(config['new_genes']['nucleotide'])):
+    if skipped(config['new_genes']['metadata']) or config['new_genes']['metadata'] == '':
+        raise IOError('User-provide genes metadata file not provided, but required!')
+    req_cols = ['seq_uuid', 'seq_orig_name', 'genus', 'species', 'taxid']
+    if config['new_genes']['metadata'].endswith('.gz'):
+        _open = lambda x: gzip.open(x, 'rb')
+    else:
+        _open = lambda x: open(x)
+    with _open(config['new_genes']['metadata']) as inF:        
+        for i,line in enumerate(inF):
+            if i > 0:
+                break
+            if config['new_genes']['metadata'].endswith('.gz'):
+                line = line.decode('utf-8')
+            line = line.rstrip().split('\t')
+            missing = [x for x in req_cols if not x in line]
+            if len(missing) > 0:
+                msg = 'Missing required columns in user-provided genes metadata file: {}'
+                raise ValueError(msg.format(','.join(missing)))
+            if line[0] != 'seq_uuid':
+                msg = 'The first column of the gene metadata table must be "seq_uuid"'
+                raise ValueError(msg)
+
 ## temp_folder
 config['pipeline']['username'] = getpass.getuser()
 config['pipeline']['email'] = config['pipeline']['username'] + '@tuebingen.mpg.de'
@@ -49,14 +75,11 @@ snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
 ### Adding genomes to kraken/bracken (user cannot provide gene list)
 if not skipped(config['databases']['kraken2']):
-    if not skipped(config['new_genes']['amino_acid']):
-        print('\33[36m* Gene list provided; skipping kraken/bracken DB update\x1b[0m')
-    else:
-        print('\33[36m* Updating kraken2 database\x1b[0m')        
-        include: snake_dir + 'bin/db_update/kraken2/Snakefile'
-        if not skipped(config['databases']['bracken']):
-            print('\33[36m* Updating bracken database\x1b[0m')        
-            include: snake_dir + 'bin/db_update/bracken/Snakefile'
+    print('\33[36m* Updating kraken2 database\x1b[0m')        
+    include: snake_dir + 'bin/db_update/kraken2/Snakefile'
+    if not skipped(config['databases']['bracken']):
+        print('\33[36m* Updating bracken database\x1b[0m')        
+        include: snake_dir + 'bin/db_update/bracken/Snakefile'
 ### Updating genes db
 if not skipped(config['databases']['genes']):
     print('\33[36m* Updating genes database\x1b[0m')

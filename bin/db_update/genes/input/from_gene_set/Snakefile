@@ -1,12 +1,85 @@
 #-- updating gene database with a user-provided set of genes (fasta & metadata) --#
 
+if skipped(config['new_genes']['amino_acid']):
+    rule genes_from_user_translate:
+        """
+        If only nucleotide sequences provided, trans to AA seqs
+        """
+        input:
+            fna = config['new_genes']['nucleotide']        
+        output:
+            db = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db'),
+            dbt = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db.dbtype'),
+            dbi = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db.index'),
+            dbl = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db.lookup'),
+            dbh = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db_h'),
+            dbht = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db_h.dbtype'),
+            dbhi = temp(config['tmp_dir'] + 'db_update/user-genes-nuc_db_h.index'),
+            faa = temp(config['tmp_dir'] + 'db_update/user-genes.faa')
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.5 * 8,0))
+        conda:
+            '../../../../envs/genes.yaml'
+        log:
+            log_dir + 'genes_from_user_translate/all.log'
+        shell:
+            """
+            mmseqs translatenucs {input.fna} {output.db} 2> {log} 1>&2
+            mmseqs convert2fasta {output.db} {output.faa} 2>> {log} 1>&2
+            """
+
+if skipped(config['new_genes']['nucleotide']):
+    rule genes_from_user_revtranslate:
+        """
+        If only amino acid sequences provided, rev-trans to get nucleotide
+        """
+        input:
+            faa = config['new_genes']['amino_acid'] 
+        output:
+            db = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db'),
+            dbt = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db.dbtype'),
+            dbi = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db.index'),
+            dbl = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db.lookup'),
+            dbh = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db_h'),
+            dbht = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db_h.dbtype'),
+            dbhi = temp(config['tmp_dir'] + 'db_update/user-genes-aa_db_h.index'),
+            fna = temp(config['tmp_dir'] + 'db_update/user-genes.fna')
+        resources:
+            time = lambda wildcards, attempt: attempt ** 2 * 59,
+            mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.5 * 8,0))
+        conda:
+            '../../../../envs/genes.yaml'
+        log:
+            log_dir + 'genes_translate/all.log'
+        shell:
+            """
+            mmseqs translateaa {input.faa} {output.db} 2> {log} 1>&2
+            mmseqs convert2fasta {output.db} {output.fna} 2>> {log} 1>&2
+            """
+
+def which_genes_combine_fna(wildcards):
+    """
+    Either user-provided nuc seqs or rev-translated from user-provided AA seqs
+    """
+    # original seqs
+    F = [config['tmp_dir'] + 'db_update/orig.fna']
+    # user-provide seqs
+    if skipped(config['new_genes']['nucleotide']):
+        # must rev-translate or just skip
+        if str(config['new_genes']['translate']) == 'True':            
+            F.append(config['tmp_dir'] + 'db_update/user-genes.fna')
+    else:
+        # using user-provide nuc seqs
+        F.append(config['new_genes']['nucleotide'])
+    return F
+            
 rule genes_combine_fna:
     """
     Combining new gene set and original gene set.
     """
     input:
-        fna1 = config['tmp_dir'] + 'db_update/orig.fna',    # original
-        fna2 = config['new_genes']['nucleotide']            # new 
+        which_genes_combine_fna
     output:
         fna = temp(config['tmp_dir'] + 'db_update/filtered_reps.fna')
     params:
@@ -17,16 +90,31 @@ rule genes_combine_fna:
         log_dir + 'genes_combine_fna/all.log'
     shell:
         """
-        {params.exe} {input.fna1} {input.fna2} > {output.fna} 2> {log}
+        {params.exe} {input} > {output.fna} 2> {log}
         """
 
+def which_genes_combine_faa(wildcards):
+    """
+    Either user-provided AA seqs or translated from user-provided nuc seqs
+    """
+    # original seqs
+    F = [config['tmp_dir'] + 'db_update/orig.faa']
+    ## user-provided seqs
+    if skipped(config['new_genes']['amino_acid']):
+        # must translate from nuc seqs or just skip
+        if str(config['new_genes']['translate']) == 'True':            
+            F.append(config['tmp_dir'] + 'db_update/user-genes.faa')
+    else:
+        # using user-provided seqs
+        F.append(config['new_genes']['amino_acid'])
+    return F
+        
 rule genes_combine_faa:
     """
     Combining new gene set and original gene set.
     """
     input:
-        faa1 = config['tmp_dir'] + 'db_update/orig.faa',    # original
-        faa2 = config['new_genes']['amino_acid']            # new 
+        which_genes_combine_faa
     output:
         faa = temp(config['tmp_dir'] + 'db_update/filtered_reps.faa')
     params:
@@ -37,7 +125,7 @@ rule genes_combine_faa:
         log_dir + 'genes_combine_faa/all.log'
     shell:
         """
-        {params.exe} {input.faa1} {input.faa2} > {output.faa} 2> {log}
+        {params.exe} {input} > {output.faa} 2> {log}
         """
 
 rule genes_combine_txt:

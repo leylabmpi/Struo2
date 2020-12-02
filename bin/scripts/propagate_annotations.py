@@ -12,6 +12,8 @@ desc = 'Propagating all BLAST-table-formatted annotations to all genes in each m
 epi = """DESCRIPTION:
 Taking DIAMOND/mmseqs hits of gene cluster reps to a UniRef DB and applying them
 to each member of the cluster.
+
+Table of gene metadata written to STDOUT
 """
 parser = argparse.ArgumentParser(description=desc,
                                  epilog=epi,
@@ -32,9 +34,6 @@ parser.add_argument('--out-prot', type=str, default='annotated.faa',
                     help='Output amino acid fasta (default: %(default)s)')
 parser.add_argument('--dmnd-columns', type=str, default='qseqid,sseqid,evalue,pident,alnlen,slen',
                     help='Diamond output columns (default: %(default)s)')      
-parser.add_argument('--meta-columns', type=str,
-                    default='uuid,gene_name,domain,phylum,class,order,family,genus,species,taxID,genomeID,genome_len',
-                    help='Gene metadata table columns (default: %(default)s)')
 parser.add_argument('--keep-unclassified', action='store_true', default=False,
                     help='Keep gene clusters without DIAMOND hit? (default: %(default)s)')
 parser.add_argument('--min-pident', type=float, default=50,
@@ -54,7 +53,8 @@ def _open(infile):
         return open(infile)
 
 def load_query_hits(infile, colnames, min_pident=0, min_cov=0):
-    """ Loading query hits
+    """ 
+    Loading query hits
     Return: {query => cluster_rep : hit => unirefID}  
     """
     logging.info('Loading hits table...')    
@@ -99,7 +99,8 @@ def load_query_hits(infile, colnames, min_pident=0, min_cov=0):
     return dmnd
     
 def load_cluster_mmshp(infile):
-    """ Loading cluster membership, formatted by 'mmseqs createtsv'
+    """ 
+    Loading cluster membership, formatted by 'mmseqs createtsv'
     Return: {cluster_member : cluster_rep} 
     """
     logging.info('Loading cluster membership...')
@@ -119,7 +120,7 @@ def load_cluster_mmshp(infile):
 
 def mmshp_annotate(mmshp, dmnd):
     """ 
-    Converting {cluster_member | cluster_rep} to {cluster_member : target_hit_seq_id} 
+    Converting {cluster_member : cluster_rep} to {cluster_member : target_hit_seq_id} 
     """
     logging.info('Propogating sseqid values to all members of each cluster...')
     # cluster representatives with diamond hit
@@ -140,24 +141,26 @@ def mmshp_annotate(mmshp, dmnd):
 
 def load_gene_metadata(infile):
     """ Loading gene metadata
-    Return: {geneID : 'body' : [metadata]} 
+    Return: {geneID : 'body' : [metadata], header : header_line]
     """
     logging.info('Loading gene metadata...')
+    colnames = {}
     meta = defaultdict(dict)
     with _open(infile) as inF:
         for i,line in enumerate(inF):
             if infile.endswith('.gz'):
-                line = line.decode('utf-8')
+                line = line.decode('utf-8')                
             line = line.rstrip().split('\t')
             if i == 0:
                 meta['header'] = line
+                colnames = {x.lower():ii for ii,x in enumerate(line[1:])}
                 continue
             if line[0] == '':
                 continue
             if len(line) < 2:
                 raise ValueError('<2 values in gene metadata table')
             meta['body'][line[0]] = line[1:]
-    return meta
+    return meta, colnames
 
 def propagate_info(infile, outfile, mmshp, meta, colnames,
                    keep_unclassified=True, seq_len_multi=1):
@@ -165,7 +168,9 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
     sequence header: gene_family|gene_length|taxonomy
     gene_len = nucleotide length (hence, the seq_len_multi)
     """
-    idx = {x.lower():i for i,x in enumerate(colnames.split(',')[1:])}
+    outdir = os.path.split(outfile)[0]
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
     to_skip = False
     skipped = 0
     kept = 0
@@ -209,9 +214,9 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
                     skipped += 1
                     continue
                 else:                    
-                    genus = m[idx['genus']]
-                    species = m[idx['species']]                
-                    taxid = m[idx['taxid']]
+                    genus = m[colnames['genus']]
+                    species = m[colnames['species']]                
+                    taxid = m[colnames['taxid']]
                     species = '__'.join([species, taxid])
                     taxonomy = ';'.join([genus, species])
                     seq_header = '|'.join(['>' + sseqid, '{}', taxonomy])
@@ -220,7 +225,11 @@ def propagate_info(infile, outfile, mmshp, meta, colnames,
             elif to_skip is False:       # sequence
                 seq[seq_header] += line.rstrip()
         # last seq
-        if to_skip is False and len(seq[seq_header]) > 0:
+        try:
+            seq_len = len(seq[seq_header])
+        except KeyError:
+            seq_len = 0
+        if to_skip is False and seq_len > 0:
             seq = seq[seq_header]
             seq_len = len(seq.rstrip('*')) * seq_len_multi
             seq_header = seq_header.format(seq_len)
@@ -288,18 +297,18 @@ def main(args):
     mmshp = mmshp_annotate(mmshp, dmnd)
     dmnd = None
     # load genes metadata
-    meta = load_gene_metadata(args.genes_names)
+    meta,meta_columns = load_gene_metadata(args.genes_names)
     # checking that genes are present in membership
     #check_meta(meta, mmshp)
     
     # for each gene [fna, faa]:
     ## apply information to sequence header
     humann_name_idx = propagate_info(args.genes_fasta_prot, args.out_prot, mmshp, meta,
-                                     args.meta_columns, keep_unclassified=args.keep_unclassified,
+                                     meta_columns, keep_unclassified=args.keep_unclassified,
                                      seq_len_multi=3)
     if args.in_nuc is not None:
         propagate_info(args.in_nuc, args.out_nuc, mmshp, meta,
-                       args.meta_columns, keep_unclassified=args.keep_unclassified,
+                       meta_columns, keep_unclassified=args.keep_unclassified,
                        seq_len_multi=1)
     # writing updated metadata table
     write_table(meta, mmshp, humann_name_idx, keep_unclassified=args.keep_unclassified)

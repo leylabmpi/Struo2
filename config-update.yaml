@@ -15,10 +15,12 @@ databases:
 #-- Input --#
 #--- If just a set of gene sequences to add ---#
 # If you have nucleotide/amino-acid gene sequences formatted for humann
+# If translate = True, missing nuc or AA seqs will be (rev)translated from the other, else seqs not used
 new_genes:
-  amino_acid: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
-  nucleotide: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
-  metadata: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.txt.gz
+  amino_acid: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
+  nucleotide: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
+  metadata: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.txt.gz
+  translate: False
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
@@ -82,7 +84,7 @@ params:
   genes:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
-    mmseqs_cluster_update: --min-seq-id 0.9 -c 0.8 -s 4.0 
+    mmseqs_cluster_update: --min-seq-id 0.9 -c 0.8 -s 4.0    
   humann3:
     batches: 10
     filter_existing: --min-pident 0   # any existing w/ < cutoff hits with be re-queried

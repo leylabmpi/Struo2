@@ -28,7 +28,7 @@ rule humann3_annotate_genes:
         params = config['params']['humann3']['propagate_annotations']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11
     log:
         log_dir + 'hm3_annotate_genes/all.log'
     benchmark:
@@ -83,7 +83,7 @@ rule humann3_alt_annotate:
         exe = config['pipeline']['script_folder'] + 'uniref_clst_trans.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 9
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 15
     log:
         log_dir + 'hm3_annotate_genes/all.log'
     benchmark:
