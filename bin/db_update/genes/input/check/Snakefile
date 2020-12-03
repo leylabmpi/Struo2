@@ -2,7 +2,7 @@
 
 localrules: genes_check_input
 
-if skipped(config['new_genes']['nucleotide']):
+if skipped(config['genes_db']['genes']['nucleotide']):
     rule genes_check_input:
         """
         Checking that input is formatted correctly.

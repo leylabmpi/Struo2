@@ -73,7 +73,7 @@ params:
     diamond:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
-    propagate_annotations: --min-cov 80 --min-pident 0.5
+    propagate_annotations: --min-cov 80 --min-pident 0.9
   metaphlan3:
     pkl: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.pkl
     fasta: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.fna.bz2
