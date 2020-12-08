@@ -27,12 +27,74 @@ rule mmseqs_search_target_db_copy:
         benchmark_dir + 'mmseqs_search_target_db_copy/all.txt'
     shell:
         """
-       ionice {params.ionice} cp -f {input.db} {output.db} 2> {log} 1>&2 
-       ionice {params.ionice} cp -f {input.db_t} {output.db_t} 2>> {log} 1>&2 
-       ionice {params.ionice} cp -f {input.db_i} {output.db_i} 2>> {log} 1>&2 
-       ionice {params.ionice} cp -f {input.db_h} {output.db_h} 2>> {log} 1>&2 
-       ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log} 1>&2 
-       ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db} {output.db} 2> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db_t} {output.db_t} 2>> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db_i} {output.db_i} 2>> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db_h} {output.db_h} 2>> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log} 1>&2 
+        ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log} 1>&2 
+        """
+
+def mmseqs_idx_create_mem(wildcards, attempt, threads=8):
+    """ 
+    memory for indexing the mmseqs target database
+    """
+    x = config['params']['humann3']['mmseqs_search']['target_db']
+    prot_db_size = os.stat(x).st_size / 1e9
+    mem = (prot_db_size * 3 + 10) * attempt
+    mem = round(float(mem) / threads + 1.499,0)
+    return int(mem)
+        
+rule mmseqs_search_target_db_idx_create:
+    """
+    Copying target database index 
+    """
+    input:
+        db = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db',
+        db_t = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.dbtype',
+        db_i = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.index',
+        db_h = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db_h',
+        db_ht = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db_h.dbtype',  
+        db_hi = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db_h.index'  
+    output:
+        idx0 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.0'),
+        idx1 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.1'),
+        idx2 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.2'),
+        idx3 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.3'),
+        idx4 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.4'), 
+        idx5 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.5'),        
+        idx6 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.6'),        
+        idx7 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.7'),
+        idx8 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.8'),
+        idx9 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.9'),
+        idx10 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.10'),
+        idx11 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.11'),
+        idx12 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.12'), 
+        idx13 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.13'),        
+        idx14 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.14'),        
+        idx15 = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.15'),        
+        idxt = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.dbtype'),
+        idxi = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.index')
+    params:
+        tmp_dir = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/tmp/'
+    conda:
+        '../../../../envs/genes.yaml'
+    threads:
+        8                 
+    resources:
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 12,
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = mmseqs_idx_create_mem
+    log:
+        log_dir + 'mmseqs_search_target_db_idx_create/all.log'
+    benchmark:
+        benchmark_dir + 'mmseqs_search_target_db_idx_create/all.txt'
+    shell:
+        """
+        rm -rf {params.tmp_dir} && mkdir -p {params.tmp_dir} 2> {log}
+        mmseqs createindex --threads {threads} \
+          --split 8 {input.db} {params.tmp_dir} \
+          2> {log} 1>&2
         """
         
 rule mmseqs_search_create_query_db:
@@ -40,7 +102,7 @@ rule mmseqs_search_create_query_db:
     Creating mmseqs database for query sequences
     """
     input:
-        config['tmp_dir'] + 'humann3_search/clusters_reps.part-{splitID}.faa'
+        config['tmp_dir'] + 'humann3_search/stdin.part_{splitID}.fasta'
     output:
         db = temp(config['tmp_dir'] +  'humann3_search/seqs{splitID}_db'),
         db_t = temp(config['tmp_dir'] + 'humann3_search/seqs{splitID}_db.dbtype'),
@@ -65,11 +127,15 @@ rule mmseqs_search_create_query_db:
         """
 
 def mmseqs_search_mem(wildcards, attempt, threads=8):
-    """ memory for mmseqs search
+    """ 
+    memory for mmseqs searching the indexed database
     """
-    prot_db_size = os.stat(config['params']['humann3']['mmseqs_search']['target_db']).st_size / 1e9
-    mem = round((prot_db_size * 3 + 10) / threads + 1.499,0)
-    mem = (attempt - 1) * 2 + mem
+    x = config['params']['humann3']['mmseqs_search']['target_db']    
+    prot_db_size = os.stat(x).st_size / 1e9
+    mem = (prot_db_size * 3.5 + 10) * attempt
+    mem = round(float(mem) / threads + 1.499,0) + attempt
+    if x.lower().endswith('uniref90') and mem < 29:
+        mem = 29
     return int(mem)
 
 rule mmseqs_search:
@@ -86,6 +152,25 @@ rule mmseqs_search:
         qdb_h = config['tmp_dir'] + 'humann3_search/seqs{splitID}_db_h',
         qdb_ht = config['tmp_dir'] + 'humann3_search/seqs{splitID}_db_h.dbtype',
         qdb_hi = config['tmp_dir'] + 'humann3_search/seqs{splitID}_db_h.index',
+        ## index
+        idx0 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.0',
+        idx1 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.1',
+        idx2 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.2',
+        idx3 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.3',
+        idx4 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.4',
+        idx5 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.5',
+        idx6 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.6',
+        idx7 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.7',
+        idx8 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.8',
+        idx9 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.9',
+        idx10 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.10',
+        idx11 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.11',
+        idx12 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.12', 
+        idx13 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.13',        
+        idx14 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.14',        
+        idx15 = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.15',
+        idxt = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.dbtype',
+        idxi = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.index',
         # target
         tdb = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db',
         tdb_t = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.dbtype',
@@ -106,9 +191,7 @@ rule mmseqs_search:
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 60 * 24,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = mmseqs_search_mem,
-        mem_gb = lambda wildcards, attempt, threads: \
-                   int(mmseqs_search_mem(wildcards, attempt, threads) * threads * 0.8)
+        mem_gb_pt = mmseqs_search_mem
     conda:
         '../../../../envs/genes.yaml'
     log:
@@ -119,12 +202,9 @@ rule mmseqs_search:
         """
         rm -f {output.db} {output.db_t} {output.db_i} 2> {log}
         mmseqs search --threads {threads} {params.params} \
-          --split 0 --split-memory-limit {resources.mem_gb}G \
           {input.qdb} {input.tdb} {params.output_db} \
           {params.tmp_dir} 2>> {log} 1>&2
-        if [ -f "{params.output_db}" ]; then
-          touch {output.db}
-        fi
+        touch {output.db} 2>> {log}
         """
         
 rule mmseqs_search_convertalis:

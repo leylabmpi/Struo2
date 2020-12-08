@@ -44,8 +44,10 @@ parser.add_argument('--taxonomy', type=str, default='',
                     help='genome taxonomy')
 parser.add_argument('--taxID', type=str, default='',
                     help='genome taxonomy')
+parser.add_argument('--accession', type=str, default='',
+                    help='genome accession')
 parser.add_argument('--genome-file', type=str, default='',
-                    help='genome fasta file (basename used for genomeID)')
+                    help='genome fasta file (to get genome length)')
 parser.add_argument('--gzip', action='store_true', default=False,
                     help='gzip output')
 parser.add_argument('--version', action='version', version='0.0.1')
@@ -194,7 +196,7 @@ def write_name_idx(idx, tax, genome_id, genome_len):
     for k,v in idx.items():
         print('\t'.join([v, k] + tax + [genome_id, str(genome_len)]))        
 
-def genome_length(infile):
+def get_genome_length(infile):
     """
     Getting the length of the genome
     """
@@ -210,24 +212,14 @@ def genome_length(infile):
             if not line.startswith('>'):
                 seq_len += len(line.rstrip())
     return seq_len
-        
-def format_genomeID(x):
-    """
-    Formatting the genome name (label)
-    """
-    if x == '':
-        return 'NA'
-    genome_len = genome_length(x)
-    genome_name = os.path.split(x)[1]
-    genome_name = os.path.splitext(genome_name.rstrip('.gz'))[0]
-    return genome_name, genome_len
-        
+                
 def main(args):
     """
     Main interface
     """
     tax = format_taxonomy(args.taxonomy, args.taxID)
-    genomeID,genome_len = format_genomeID(args.genome_file)
+    genome_len = get_genome_length(args.genome_file)
+    genomeID = args.accession
     
     # creating the seq header index
     seq_idx = make_index(args.fasta1) & make_index(args.fasta2)

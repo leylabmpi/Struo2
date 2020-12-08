@@ -72,7 +72,7 @@ rule humann3_diamond_pass1:
     Annotating genes via diamond search of UniRef DB
     """
     input:
-        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.part-{splitID}.faa',
+        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.part_{splitID}.faa',
 	dmnd_db = config['tmp_dir'] + 'humann3/humann3_dmnd_db.dmnd'
     output:
         hits = temp(config['tmp_dir'] + 'humann3/hits_pass1/{splitID}.txt'),

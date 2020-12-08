@@ -36,19 +36,17 @@ rule humann3_batch_seqs:
     Splitting gene fasta for distributed searching (annotation)
     """
     input:
-        faa = genes_dir + 'cluster/clusters_reps.faa.gz'
+        faa = config['tmp_dir'] + 'humann3/clusters_reps.faa.gz'
     output:
-        faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
+        done = config['tmp_dir'] + 'humann3_search/split.done',
         splt = temp(expand(config['tmp_dir'] + \
-                           'humann3_search/clusters_reps.part-{splitID}.faa',
+                           'humann3_search/stdin.part_{splitID}.fasta',
 	                   splitID=config['params']['humann3']['splits']))
     params:
-        ionice = config['params']['ionice'],         
         n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + 'humann3_search'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 10
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 10
     conda:
         '../../../envs/genes.yaml'
     log:
@@ -57,15 +55,20 @@ rule humann3_batch_seqs:
         benchmark_dir + 'humann3_batch_seqs/all.txt'
     shell:
         """
-        echo "# Uncompressing fasta..." > {log}
-        mkdir -p `dirname {output.faa}` 2>> {log}
-        ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
-
-        echo "# Splitting fasta..." >> {log}
-        mkdir -p {params.out_dir} 2>> {log}
-        fasta-splitter \
-          --n-parts {params.n_splits} \
-          --out-dir {params.out_dir} \
-          {output.faa} 2>> {log} 1>&2
+        OUTDIR=`dirname {output.done} 2> {log}`
+        seqkit shuffle -j 1 --two-pass {input.faa} 2>> {log} | \
+          perl -pe 's/^\n//' 2>> {log} | \
+          seqkit split -j 1 --by-part {params.n_splits} --out-dir $OUTDIR 2>> {log} 1>&2
+        touch {output.done}
         """
 
+        # echo "# Uncompressing fasta..." > {log}
+        # mkdir -p `dirname {output.faa}` 2>> {log}
+        # ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
+
+        # echo "# Splitting fasta..." >> {log}
+        # mkdir -p {params.out_dir} 2>> {log}
+        # fasta-splitter \
+        #   --n-parts {params.n_splits} \
+        #   --out-dir {params.out_dir} \
+        #   {output.faa} 2>> {log} 1>&2

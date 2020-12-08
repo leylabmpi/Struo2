@@ -73,7 +73,7 @@ def read_hits(infile, mem, colnames, min_pident=0, min_cov=0):
                 msg = 'Line {}: <2 values in hits table'
                 raise ValueError(msg.format(i+1))
             else:
-                # filtering
+                # filtering to just acceptable annotations
                 ## percent identity
                 pident = 0
                 try:
@@ -90,7 +90,7 @@ def read_hits(infile, mem, colnames, min_pident=0, min_cov=0):
                     pass
                 if cov < min_cov:
                     continue
-                ## getting cluster id
+                ## adding clusterID to set of genes w/ acceptable annotation
                 qseqid = line[idx['qseqid']]
                 try:
                     clusts.append(mem[qseqid])
@@ -98,10 +98,13 @@ def read_hits(infile, mem, colnames, min_pident=0, min_cov=0):
                     msg = 'Cannot find "{}" in cluster membership'
                     raise KeyError(msg.format(qseqid))
     clusts = set(clusts)
-    logging.info('No of clusters w/ annotations: {}'.format(len(clusts)))
+    logging.info('No of clusters with acceptable annotations: {}'.format(len(clusts)))
     return clusts
 
 def filter_fasta(infile, clust_w_annot):
+    """
+    Filtering out sequences that are in the set(clust_w_annot)
+    """
     cnts = {'all' : 0, 'filtered' : 0, 'kept' : 0}
     to_keep = False
     with _open(infile) as inF:
@@ -123,17 +126,17 @@ def filter_fasta(infile, clust_w_annot):
                 print(line, end='')
     # status
     logging.info('No. of total seqs: {}'.format(cnts['all']))
-    logging.info('No. of filt. seqs: {}'.format(cnts['filtered']))
-    logging.info('No. of kept seqs: {}'.format(cnts['kept']))
+    logging.info('No. of filtered seqs: {}'.format(cnts['filtered']))
+    logging.info('No. of retained seqs: {}'.format(cnts['kept']))
     
 def main(args):
-    # determining which clusters already have annotations
+    # determining which clusters already have acceptable annotations
     clust_w_annot = read_hits(args.query_hits,
                               read_membership(args.cluster_membership),
                               colnames = args.hit_columns,
                               min_pident = args.min_pident,
                               min_cov = args.min_cov)
-    # filtering fasta to just those lacking annotations
+    # filtering fasta to just those lacking acceptable annotations
     filter_fasta(args.cluster_reps_fasta, clust_w_annot)
     
     

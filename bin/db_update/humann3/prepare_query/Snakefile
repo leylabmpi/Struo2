@@ -7,7 +7,7 @@ rule humann3_which_to_query:
         hit_c = config['tmp_dir'] + 'humann3/query_hits.txt',        
         faa_c = config['tmp_dir'] + 'humann3/clusters_reps.faa'
     output:
-        faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.faa'
+        faa = temp(config['tmp_dir'] + 'humann3/clusters_reps_filt.faa')
     params:
         exe = config['pipeline']['script_folder'] + 'filter_cluster_reps.py',
         params = config['params']['humann3']['filter_existing']
@@ -30,13 +30,12 @@ rule humann_query_fasta_split:
     input:
         faa = config['tmp_dir'] + 'humann3/clusters_reps_filt.faa'
     output:
+        done = config['tmp_dir'] + 'humann3_search/split.done',
         splt = temp(expand(config['tmp_dir'] + \
-                           'humann3/clusters_reps_filt.part-{splitID}.faa',
+                           'humann3/stdin.part_{splitID}.fasta',
 	                   splitID=config['params']['humann3']['splits']))
     params:
-        ionice = config['params']['ionice'],
-        n_splits = config['params']['humann3']['batches'],
-	out_dir = config['tmp_dir'] + 'humann3'
+        n_splits = config['params']['humann3']['batches']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 10
@@ -48,48 +47,10 @@ rule humann_query_fasta_split:
         benchmark_dir + 'mmseqs_search_batch_seqs/all.txt'
     shell:
         """    
-        echo "# Splitting fasta..." >> {log}
-        mkdir -p {params.out_dir} 2>> {log}
-        fasta-splitter \
-          --n-parts {params.n_splits} \
-          --out-dir {params.out_dir} \
-          {input.faa} 2>> {log} 1>&2
+        OUTDIR=`dirname {output.done} 2> {log}`
+        seqkit shuffle -j 1 --two-pass {input.faa} 2>> {log} | \
+          perl -pe 's/^\n//' 2>> {log} | \
+          seqkit split -j 1 --by-part {params.n_splits} --out-dir $OUTDIR 2>> {log} 1>&2
+        touch {output.done}
         """
         
-# rule humann3_diamond_batch_seqs:
-#     """
-#     Splitting gene fasta for distributed searching
-#     """
-#     input:
-#         faa = genes_dir + 'cluster/clusters_reps.faa.gz'
-#     output:
-#         faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
-#         splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
-#                            'humann3_dmnd/clusters_reps.part-{splitID}.faa',
-# 	                   splitID=config['params']['humann3']['splits']))
-#     params:
-#         ionice = config['params']['ionice'],         
-#         n_splits = config['params']['humann3']['batches'],
-# 	out_dir = config['tmp_dir'] + config['db_name'] + 'humann3_dmnd'
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 3 * 59,
-#         mem_gb_pt = lambda wildcards, attempt: attempt * 10
-#     conda:
-#         '../../envs/genes.yaml'
-#     log:
-#         log_dir + 'humann3_diamond_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
-#     benchmark:
-#         benchmark_dir + 'humann3_diamond_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
-#     shell:
-#         """
-#         echo "# Uncompressing fasta..." > {log}
-#         mkdir -p `dirname {output.faa}` 2>> {log}
-#         ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
-
-#         echo "# Splitting fasta..." >> {log}
-#         mkdir -p {params.out_dir} 2>> {log}
-#         fasta-splitter \
-#           --n-parts {params.n_splits} \
-#           --out-dir {params.out_dir} \
-#           {output.faa} 2>> {log} 1>&2
-#         """

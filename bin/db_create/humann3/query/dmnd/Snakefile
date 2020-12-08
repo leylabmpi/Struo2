@@ -34,7 +34,7 @@ rule humann3_diamond_pass1:
     Annotating genes via 'diamond blastp' search of UniRef DB
     """
     input:
-        faa = config['tmp_dir'] + 'humann3_search/clusters_reps.part-{splitID}.faa',
+        faa = config['tmp_dir'] + 'humann3_search/stdin.part_{splitID}.fasta',
 	dmnd_db = config['tmp_dir'] + 'humann3_search/humann3_dmnd_db.dmnd'
     output:
         hits = temp(config['tmp_dir'] + 'humann3_search/hits_pass1/{splitID}.txt'),

@@ -33,95 +33,13 @@ rule mmseqs_search_target_db_copy:
         ionice {params.ionice} cp -f {input.db_ht} {output.db_ht} 2>> {log} 1>&2 
         ionice {params.ionice} cp -f {input.db_hi} {output.db_hi} 2>> {log} 1>&2 
         """
-
-# def mmseqs_db_index_mem(wildcards, attempt, threads=8):
-#     """ memory for mmseqs search
-#     """
-#     prot_db_size = os.stat(config['params']['humann3']['mmseqs_search']['db']).st_size / 1e9
-#     mem = round((prot_db_size * 3 + 55) / threads + 1.499,0)
-#     mem = (attempt - 1) * 2 + mem
-#     return int(mem)
-        
-# rule mmseqs_search_target_db_index:
-#     """Indexing the target db
-#     """
-#     input:
-#         db = config['tmp_dir'] + 'mmseqs_search_db/db',
-#         db_t = config['tmp_dir'] + 'mmseqs_search_db/db.dbtype',
-#         db_i = config['tmp_dir'] + 'mmseqs_search_db/db.index',
-#         db_h = config['tmp_dir'] + 'mmseqs_search_db/db_h',
-#         db_ht = config['tmp_dir'] + 'mmseqs_search_db/db_h.dbtype',  
-#         db_hi = config['tmp_dir'] + 'mmseqs_search_db/db_h.index' 
-#     output:
-#         dbi = temp(config['tmp_dir'] + 'mmseqs_search_db/db.idx'),
-#         dbi_t = temp(config['tmp_dir'] + 'mmseqs_search_db/db.idx.dbtype'),
-#         dbi_i = temp(config['tmp_dir'] + 'mmseqs_search_db/db.idx.index')
-#     params:
-#         params = config['params']['humann3']['mmseqs_search']['db_index']
-#     threads:
-#         12
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 2 * 60 * 12,
-#         n = lambda wildcards, attempt, threads: threads,
-#         mem_gb_pt = mmseqs_db_index_mem
-#     conda:
-#         '../../envs/genes.yaml'
-#     log:
-#         log_dir + 'mmseqs_search_target_db_copy/all.log'
-#     benchmark:
-#         benchmark_dir + 'mmseqs_search_target_db_copy/all.txt'
-#     shell:
-#         """
-#         TMPDIR=`dirname {input.db}`
-#         mmseqs createindex \
-#           --threads {threads} {params.params} \
-#           {input.db} $TMPDIR 2> {log} 1>&2
-#         """
-        
-# rule mmmseqs_search_fasta_split:
-#     """
-#     Splitting gene fasta for distributed searching
-#     """
-#     input:
-#         faa = genes_dir + 'cluster/clusters_reps.faa.gz'
-#     output:
-#         faa = temp(config['tmp_dir'] + 'fasta_split/clusters_reps.faa'),
-#         splt = temp(expand(config['tmp_dir'] + config['db_name'] + \
-#                            'mmseqs_search/clusters_reps.part-{splitID}.faa',
-# 	                   splitID=config['params']['humann3']['splits']))
-#     params:
-#         ionice = config['params']['ionice'],
-#         n_splits = config['params']['humann3']['batches'],
-# 	out_dir = config['tmp_dir'] + config['db_name'] + 'mmseqs_search'
-#     resources:
-#         time = lambda wildcards, attempt: attempt ** 3 * 59,
-#         mem_gb_pt = lambda wildcards, attempt: attempt * 10
-#     conda:
-#         '../../../envs/genes.yaml'
-#     log:
-#         log_dir + 'mmseqs_search_batch_seqs/{}.log'.format(config['db_name'].rstrip('/'))
-#     benchmark:
-#         benchmark_dir + 'mmseqs_search_batch_seqs/{}.txt'.format(config['db_name'].rstrip('/'))
-#     shell:
-#         """    
-#         echo "# Uncompressing fasta..." > {log}
-#         mkdir -p `dirname {output.faa}` 2>> {log}
-#         ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
-
-#         echo "# Splitting fasta..." >> {log}
-#         mkdir -p {params.out_dir} 2>> {log}
-#         fasta-splitter \
-#           --n-parts {params.n_splits} \
-#           --out-dir {params.out_dir} \
-#           {output.faa} 2>> {log} 1>&2
-#         """
         
 rule mmseqs_search_create_db:
     """
     Creating mmseqs database for query sequences
     """
     input:
-        config['tmp_dir'] + 'humann3/clusters_reps_filt.part-{splitID}.faa'
+        config['tmp_dir'] + 'humann3/stdin.part_{splitID}.fasta'
     output:
         db = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db'),
         db_t = temp(config['tmp_dir'] + 'mmseqs_search/seqs{splitID}_db.dbtype'),
@@ -146,7 +64,8 @@ rule mmseqs_search_create_db:
         """
 
 def mmseqs_search_mem(wildcards, attempt, threads=8):
-    """ memory for mmseqs search
+    """ 
+    Estimating memory required for mmseqs search
     """
     prot_db_size = os.stat(config['params']['humann3']['mmseqs_search']['db']).st_size / 1e9
     mem = round((prot_db_size * 3 + 10) / threads + 1.499,0)

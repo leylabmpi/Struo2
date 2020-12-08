@@ -82,7 +82,9 @@ rule filter_gene_seqs:
         tax = lambda wildcards: \
                 config['samples'].loc[wildcards.sample, config['taxonomy_col']],
         taxID = lambda wildcards: \
-	          config['samples'].loc[wildcards.sample, config['taxID_col']]
+	          config['samples'].loc[wildcards.sample, config['taxID_col']],
+        acc = lambda wildcards: \
+	      config['samples'].loc[wildcards.sample, config['accession_col']]
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 8
@@ -96,6 +98,7 @@ rule filter_gene_seqs:
         """        
         {params.exe} --taxonomy "{params.tax}" \
            --taxID {params.taxID} \
+           --accession {params.acc} \
            --genome-file {input.fasta} \
            {input.reps} {input.faa} \
            {output.fna} {output.faa} \

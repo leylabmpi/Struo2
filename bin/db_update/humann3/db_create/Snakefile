@@ -22,7 +22,7 @@ rule humann3_annotate_genes:
     output:
         fna = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.fna'),
         faa = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.faa'),
-        tsv = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.tsv'),
+        tsv = temp(config['tmp_dir'] + config['uniref_name'] + '/genome_reps_filt_annot.tsv')
     params:
         exe = config['pipeline']['script_folder'] + 'propagate_annotations.py',
         params = config['params']['humann3']['propagate_annotations']
@@ -138,7 +138,7 @@ rule humann3_bowtie2_build:
     output:
         os.path.join(humann3_dir, '{uniref}/bowtie2_build.done')
     params:
-        prefix = humann3_dir + 'all_genes_annot'
+        prefix = humann3_dir + '{uniref}/genome_reps_filt_annot'
     conda:
         '../../../envs/humann3.yaml'
     threads:

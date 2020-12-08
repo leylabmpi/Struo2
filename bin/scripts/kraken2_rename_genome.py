@@ -7,7 +7,8 @@ import logging
 
 desc = 'Renaming sequence headers in a genome fasta to kraken2 db format'
 epi = """DESCRIPTION:
-Output format: `kraken:taxid|<taxID>|<seqID>`
+Output seq header format: `kraken:taxid|<taxID>|<seqID>`
+The taxid is provided by the user.
 """
 
 parser = argparse.ArgumentParser(description=desc,

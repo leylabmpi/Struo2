@@ -7,6 +7,7 @@ samples_file: tests/samples/GTDBr95_n10.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
+accession_col: 'accession'
 fasta_file_path_col: 'fasta_file_path'
 taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
@@ -68,8 +69,7 @@ params:
     batches: 10
     mmseqs_search:
       target_db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
-      db_index: -s 6
-      run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
+      run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2

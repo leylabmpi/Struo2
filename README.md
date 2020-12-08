@@ -7,7 +7,7 @@ Struo2
 
 ![](https://media.giphy.com/media/lPSMFWqKCJY5Let2v5/giphy.gif)
 
-* Version: 2.1.1
+* Version: 2.1.2
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
 * Maintainers:

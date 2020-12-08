@@ -23,10 +23,9 @@ snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/ll_pipeline_utils/Snakefile'
 config_default(config, 'pipeline', 'name')
 ## custom functions
-def make_fasta_splits(n_jobs):
+def make_fasta_splits(n_jobs, zero_pad=3):
     if str(n_jobs).lstrip().startswith('Skip'):
         n_jobs = 1
-    zero_pad = len(str(n_jobs))
     zero_pad = '{0:0' + str(zero_pad) + 'd}'
     return [str(zero_pad.format(x+1)) for x in range(n_jobs)]
 
