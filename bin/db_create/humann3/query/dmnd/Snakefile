@@ -51,9 +51,9 @@ rule humann3_diamond_pass1:
     conda:
         '../../../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass1/{splitID}.log'
+        log_dir + 'humann3_diamond_pass1/{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass1/{splitID}.txt'
+        benchmark_dir + 'humann3_diamond_pass1/{splitID}.txt'
     shell:
         """
         TMPDIR="{params.tmp_dir}"
@@ -90,9 +90,9 @@ rule humann3_diamond_pass2:
     conda:
         '../../../../envs/humann3.yaml'
     log:
-        log_dir + 'hm3_diamond_pass2/{splitID}.log'
+        log_dir + 'humann3_diamond_pass2/{splitID}.log'
     benchmark:
-        benchmark_dir + 'hm3_diamond_pass2/{splitID}.txt'
+        benchmark_dir + 'humann3_diamond_pass2/{splitID}.txt'
     shell:
         """
         NSEQ=`seqkit seq -n {input.faa} | wc -l 2> {log}`

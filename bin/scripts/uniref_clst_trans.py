@@ -106,38 +106,72 @@ def which_ext(infile):
     msg = 'Cannot determine file type from extension: {}'
     raise IOError(msg.format(infile))
 
+def make_dir(outfile):
+    D = os.path.split(outfile)[0]
+    if not os.path.isdir(D):
+        os.makedirs(D)
+
 def rename_fasta(infile, outfile, idx):
     logging.info('Processing file: {}'.format(infile))
+    make_dir(outfile)
+    to_write = False
+    stats = {'in_index' : 0, 'not_in_index' : 0}
     with _open(infile) as inF, open(outfile, 'w') as outF:
         for line in inF:
             line = _decode(line, infile)
+            # header
             if line.startswith('>'):
                 line = line.lstrip('>').split('|')
                 try:
                     line[0] = idx[line[0]]
+                    to_write = True
+                    stats['in_index'] += 1
                 except KeyError:
                     msg = 'Cannot find "{}" in index'
-                    raise KeyError(msg.format(line[0]))
-                line = '>' + '|'.join(line)
-            outF.write(line)
+                    logging.warning(msg.format(line[0]))
+                    to_write = False
+                    stats['not_in_index'] += 1                    
+                if to_write is True:
+                    line = '>' + '|'.join(line)
+            # body
+            if to_write is True:
+                outF.write(line)
+    # status
+    msg = '  No. of genes found in UniRef50<=>90 index: {}'
+    logging.info(msg.format(stats['in_index']))
+    msg = '  No. of genes NOT found in UniRef50<=>90 index: {}'
+    logging.info(msg.format(stats['not_in_index']))
+    if stats['in_index'] == 0:
+        raise ValueError('No genes were present in the UniRef50<=>90 index!')
                     
 def rename_txt(infile, outfile, idx):
     logging.info('Processing file: {}'.format(infile))
+    make_dir(outfile)    
     header = {}
+    to_write = False
+    stats = {'in_index' : 0, 'not_in_index' : 0}
     with _open(infile) as inF, open(outfile, 'w') as outF:
         for i,line in enumerate(inF):
             line = _decode(line, infile)
             line = line.rstrip().split('\t')
             if i == 0:
                 header = {x:ii for ii,x in enumerate(line)}
-            else:                
+            else:
                 try:
                     line[header['annotation']] = idx[line[header['annotation']]]
+                    to_write = True
+                    stats['in_index'] += 1       
                 except KeyError:
-                    msg = 'Cannot find "{}" in index'
-                    raise KeyError(msg.format(line[header['annotation']]))
-            outF.write('\t'.join(line) + '\n')            
-
+                    to_write = False
+                    stats['not_in_index'] += 1
+            if i == 0 or to_write is True:
+                outF.write('\t'.join(line) + '\n')
+    # status
+    msg = '  No. of genes found in UniRef50<=>90 index: {}'
+    logging.info(msg.format(stats['in_index']))
+    msg = '  No. of genes NOT found in UniRef50<=>90 index: {}'
+    logging.info(msg.format(stats['not_in_index']))
+                
 def pickle_idx(idx, outfile):
     logging.info('Pickling index to {}'.format(outfile))
     with open(outfile, 'wb') as outF:

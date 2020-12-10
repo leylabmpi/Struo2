@@ -5,8 +5,8 @@ email: nyoungblut@tuebingen.mpg.de
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Create
-  bracken: Create
+  kraken2: Skip #Create
+  bracken: Skip #Create
   genes: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
@@ -28,6 +28,7 @@ samples_file: tests/samples/GTDBr95_n5.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
+accession_col: 'accession'
 fasta_file_path_col: 'fasta_file_path'
 taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
@@ -53,7 +54,7 @@ humann_db:
 
 #-- Output --#
 # output location
-output_dir: tests/output_GTDBr95_n10_updated-genes/
+output_dir: tests/output_GTDBr95_n10_updated-genomes/
 
 # Name of the humann3 diamond database to create
 ## This must match naming allowed by humann3
@@ -87,15 +88,14 @@ params:
     mmseqs_cluster_update: --min-seq-id 0.9 -c 0.8 -s 4.0    
   humann3:
     batches: 10
-    filter_existing: --min-pident 0   # any existing w/ < cutoff hits with be re-queried
+    filter_existing: --min-pident 0  # any existing genes w/ < cutoff with be re-queried
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef50/2020_03/UniRef50
-      db_index: -s 6
+      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
       run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
     diamond:
-      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref50/uniref50_201901.dmnd
-      run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
-    propagate_annotations: --min-cov 80 --min-pident 0.9
+      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
+      run: Skip #--evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2
+    propagate_annotations: --min-cov 80 --min-pident 90
   metaphlan3:
     species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 

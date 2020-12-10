@@ -21,9 +21,9 @@ rule humann3_annotate_genes:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
     log:
-        log_dir + 'hm3_annotate_genes/all.log'
+        log_dir + 'humann3_annotate_genes/all.log'
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes/all.txt'
+        benchmark_dir + 'humann3_annotate_genes/all.txt'
     shell:
         """
         OUTDIR=`dirname {output.fna}`
@@ -50,7 +50,7 @@ rule humann3_annotate_hits_copy:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'hm3_annotate_hits_copy/all.log'
+        log_dir + 'humann3_annotate_hits_copy/all.log'
     shell:
         """
         ionice {params.ionice} gzip -c {input.hits} > {output.hits} 2> {log}
@@ -78,9 +78,9 @@ rule humann3_alt_annotate:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 9
     log:
-        log_dir + 'hm3_annotate_genes/all.log'
+        log_dir + 'humann3_annotate_genes/all.log'
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes/all.txt'
+        benchmark_dir + 'humann3_annotate_genes/all.txt'
     shell:
         """
         OUTDIR=`dirname {output.fna}`
@@ -112,9 +112,9 @@ rule humann3_annotate_genes_copy:
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     log:
-        log_dir + 'hm3_annotate_genes_copy/{uniref}.log'
+        log_dir + 'humann3_annotate_genes_copy/{uniref}.log'
     benchmark:
-        benchmark_dir + 'hm3_annotate_genes_copy/{uniref}.txt'
+        benchmark_dir + 'humann3_annotate_genes_copy/{uniref}.txt'
     shell:
         """
         ionice {params.ionice} gzip -c {input.fna} > {output.fna} 2> {log}

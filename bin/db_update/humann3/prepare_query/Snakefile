@@ -32,7 +32,7 @@ rule humann_query_fasta_split:
     output:
         done = config['tmp_dir'] + 'humann3_search/split.done',
         splt = temp(expand(config['tmp_dir'] + \
-                           'humann3/stdin.part_{splitID}.fasta',
+                           'humann3_search/stdin.part_{splitID}.fasta',
 	                   splitID=config['params']['humann3']['splits']))
     params:
         n_splits = config['params']['humann3']['batches']
