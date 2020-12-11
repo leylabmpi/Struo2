@@ -91,7 +91,8 @@ params:
     filter_existing: --min-pident 0  # any existing genes w/ < cutoff with be re-queried
     mmseqs_search:
       db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
-      run: -e 1e-3 --max-accept 1 --max-seqs 100 -s 6 --num-iterations 2
+      index: -s 6
+      run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2

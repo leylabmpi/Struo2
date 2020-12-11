@@ -76,7 +76,8 @@ rule mmseqs_search_target_db_idx_create:
         idxi = temp(config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx.index')
     params:
         tmp_dir = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/tmp/',
-        outbase = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx'
+        outbase = config['tmp_dir'] + 'humann3_search/mmseqs_search_db/db.idx',
+        params = config['params']['humann3']['mmseqs_search']['index']
     conda:
         '../../../envs/genes.yaml'
     threads:
@@ -93,7 +94,7 @@ rule mmseqs_search_target_db_idx_create:
         """
         rm -f {params.outbase}* 2> {log}
         rm -rf {params.tmp_dir} && mkdir -p {params.tmp_dir} 2>> {log}
-        mmseqs createindex --threads {threads} \
+        mmseqs createindex --threads {threads} {params.params} \
           --split 16 {input.db} {params.tmp_dir} \
           2> {log} 1>&2
         """
@@ -135,8 +136,10 @@ def mmseqs_search_mem(wildcards, attempt, threads=8):
     prot_db_size = os.stat(x).st_size / 1e9
     mem = prot_db_size * 3.5 + 10
     mem = round(float(mem) / threads + 1.499,0) + attempt ** 2
-    if x.lower().endswith('uniref90') and mem < 30:
-        mem = 29 + attempt ** 2
+    if x.lower().endswith('uniref90') and mem < 29:
+        mem = 28 + attempt ** 2
+    elif x.lower().endswith('uniref50') and mem < 18:
+        mem = 18 + attempt ** 2
     return int(mem)
 
 rule mmseqs_search:
