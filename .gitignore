@@ -15,6 +15,7 @@ screenlog.*
 bin/scripts/metaphlan2/databases/
 .ipynb_checkpoints/
 no-log_jobs_sge.*
+*4test.yaml
 
 # hg
 **/.hg/

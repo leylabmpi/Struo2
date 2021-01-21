@@ -26,10 +26,13 @@ Bioinformatics , November.
 
 # Changes from Version 1
 
+* Support for HUMAnN3
 * All coding sequences from all genomes are now clustered prior to annotation
   (hits to UniRef), and then the UniRef IDs are propagated to each member
   of each cluster.
-* By default `mmseqs search` is used for annotation instead of `DIAMOND blastp`
+  * This is substantially faster than the per-genome annotation appraoch used for Struo1
+  * It also allows for easy database updates via `mmseqs clusterupdate`.
+* By default `mmseqs search` is used for annotation instead of `diamond blastp`
   * `mmseqs search` can be a bit faster and more sensitive than DIAMOND
     * see [Steinegger and Soeding 2017](https://www.nature.com/articles/nbt.3988)
 * Metadata is saved for each gene in the database (e.g., gene taxonomy)
@@ -44,6 +47,7 @@ Bioinformatics , November.
   * A set of gene sequences (eg., produced by [PLASS](https://github.com/soedinglab/plass))
     * If only amino-acid genes provided, the sequences can be rev-translated or skipped
     * If only nucleotide genes provided, the sequences can be translated or skipped
+* Experimental support for metaphlan3, but see the notes below
 
 # Pre-built custom databases
 
@@ -52,50 +56,75 @@ Bioinformatics , November.
 Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo/)
 
 **GTDB releases available:**
-* Release 86 (14.03.2019)
-  * Number of genomes included: 21,276
-  * NCBI taxonomy/taxIDs used
+* Release 95 (13.07.2020)
+  * Number of genomes included: 30,989
+  * GTDB taxdump
+    * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
+  * Genome phylogeny
+    * GTDB `ar122_r95.tree` & `bac120_r95.tree` grafted together
 * Release 89 (30.08.2019)
   * Number of genomes included: 23,361
   * GTDB taxonomy/taxIDs used
     * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
+* Release 86 (14.03.2019)
+  * Number of genomes included: 21,276
+  * NCBI taxonomy/taxIDs used
   
-# Description
+# Setup
 
-## Struo’s workflow
-
-![](./images/struo_workflow.png)
-Struo's workflow encompasses the steps from genome download to database construction
-
-## Setup
-
-### Download
+## Download
 
 To download the pipeline, clone the Git repository:
 
 ```
-git clone git@github.com:leylabmpi/struo2.git 
+git clone --recurse-submodules git@github.com:leylabmpi/struo2.git 
 ```
 
-### conda env setup
 
-> Versions listed are those that have been tested
+## conda env setup
 
-* python=3.6
-* snakemake=5.7.0
-* r-base=3.6
-* r-argparse=2.0.1
-* r-curl=4.2
-* r-data.table=1.12.4
-* r-dplyr=0.8.3
-* ncbi-genome-download=0.2.10
-* newick_utils=1.6
+> Versions listed are those that have been tested. Newer versions will likely work
 
-### UniRef diamond database(s)
+* If just running the pipeline
+  * python=3.6
+  * snakemake=5.31.1
+* If using the utility scripts
+  * r-base=3.6
+  * r-argparse=2.0.1
+  * r-curl=4.2
+  * r-data.table=1.12.4
+  * r-dplyr=0.8.3
+  * ncbi-genome-download=0.2.10
+  * newick_utils=1.6
+
+## UniRef diamond database(s)
 
 You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef50).
 See the "Download a translated search database" section of the
 [humann3 docs](https://github.com/biobakery/biobakery/wiki/humann3#welcome-to-the-humann-30-tutorial)
+
+## UniRef50-90 index
+
+TODO: ftp
+
+/ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
+
+## NCBI taxdump
+
+```
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+tar -pzxvf taxdump.tar.gz
+```
+
+## GTDB taxdump
+
+By default, the pipeline uses custom GTDB taxIDs generated with
+[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
+
+TODO: ftp
+
+/ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
+/ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
 
 ## Getting reference genomes for the custom databases
 
@@ -103,57 +132,58 @@ See the "Download a translated search database" section of the
 
 * If using [GTDB](https://gtdb.ecogenomic.org/) genomes, run `GTDB_metadata_filter.R` to select genomes
 * If downloading genomes from genbank/refseq, you can use `genome_download.R`
+* You can also include your own genomes (e.g., newly created MAGs)
 
 Example:
 
 ```
 # Filtering GTDB metadata to certain genomes
-./GTDB_metadata_filter.R -o gtdb-r89_bac-arc.tsv https://data.ace.uq.edu.au/public/gtdb/data/releases/release89/89.0/bac120_metadata_r89.tsv https://data.ace.uq.edu.au/public/gtdb/data/releases/release89/89.0/ar122_metadata_r89.tsv
+./GTDB_metadata_filter.R -o gtdb-r95_bac-arc.tsv https://data.gtdb.ecogenomic.org/releases/release95/95.0/ar122_metadata_r95.tar.gz https://data.gtdb.ecogenomic.org/releases/release95/95.0/bac120_metadata_r95.tar.gz
 
 # Downloading all genomes (& creating tab-delim table of genome info)
-./genome_download.R -o genomes -p 8 gtdb-r89_bac-arc.tsv > genomes.txt
+./genome_download.R -o genomes -p 8 gtdb-r95_bac-arc.tsv > genomes.txt
 
-# Note: the output of ./genome_download.R can be directly used for running the `Struo` pipeline (see below)
+# Note: the output of ./genome_download.R can be directly used for running the `Struo2` pipeline (see below)
 # Note: genomes must be gzip'd for input to Struo2
 ```
 
-### User-provided databases
+## Input genome data (`samples.txt` file)
 
-Users can also provide genomes as compressed fasta files (`.fna.gz`).
-This also requires adding the corresponding information to the `samples.txt` file (see below)
-
-## Input data (`samples.txt` file)
-
-The table of input files/data can be created using the helper scripts described above. 
+The table of input files/data can be created using the helper scripts described above
+if you downloaded the genomes from the GTDB or NCBI.
 
 * The pipeline requires a tab-delimited table that includes the following columns (column names specified in the `config.yaml` file):
-  * Sample ID
+  * `samples_col` (default = `ncbi_organism_name`)
     * This will usually just be the species/strain names
-  * Path to the genome assembly fasta file
-    * NOTE: these must be gzip'ed
-  * taxonomy ID
-    * This should be the NCBI taxonomy ID at the species/strain level
+    * Do not include special characters
+  * `accession_col` (default = `accession`)
+    * Genome accession
+    * You can fill with "blank" or "NA" if no accession is available
+  * `fasta_file_path_col` (default = `fasta_file_path`)
+    * Path to the genome fasta
+    * The fasta must be gzip'ed
+  * `taxID_col` (default = `gtdb_taxid`)    
+    * This should be the NCBI/GTDB taxonomy ID at the species/strain level
       * Needed for Kraken
-  * taxonomy
+    * For custom genomes (e.g., MAGs), you will need to taxonomically classify the genomes
+      and get a taxid 
+  * `taxonomy_col` (default = `gtdb_taxonomy`)
     * This should at least include `g__<genus>;s__<species>`
     * The taxonomy can include higher levels, as long as levels 6 & 7 are genus and species
     * Any taxonomy lacking genus and/or species levels will be labeled:
       * `g__unclassified`  (if no genus)
       * `s__unclassified`  (if no species)
-    * This is needed for humann3
+    * This is needed for HUMAnN3
 
 Other columns in the file will be ignored. The path to the samples file should be specified in the `config.yaml` file (see below)
 
 ### Using the GTDB taxonomy instead of NCBI taxIDs
 
-kraken2 & humann3 databases used NCBI taxIDs, and thus the NCBI taxonomy is used by default
+Kraken2 & HUMAnN3 databases used NCBI taxIDs, and thus the NCBI taxonomy is used by default
 for `Struo`. You can instead create custom taxIDs from the GTDB taxonomy with
 [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
 
-The resulting `names.dmp` and `nodes.dmp` files, along with a genome metadata file that includes the gtdb_taxids,
-then you can modify the Struo pipeline to fully use the GTDB taxonomy & taxIDs.
-You will need to modify the `config.yaml` file (see "If using GTDB taxIDs" below).
-
+The resulting `names.dmp` and `nodes.dmp` files, along with a genome metadata file that includes the gtdb_taxids, then you can modify the Struo pipeline to fully use the GTDB taxonomy & taxIDs.
 
 ## Running the pipeline
 

@@ -1,0 +1,3 @@
+[submodule "bin/ll_pipeline_utils"]
+	path = bin/ll_pipeline_utils
+	url = git@github.com:leylabmpi/ll_pipeline_utils.git
