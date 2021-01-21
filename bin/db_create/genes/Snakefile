@@ -313,6 +313,7 @@ rule mmseqs_cluster_membership:
         4
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
+        n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = lambda wildcards, attempt: attempt ** 3 + 5
     conda:
         '../../envs/genes.yaml'

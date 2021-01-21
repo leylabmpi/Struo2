@@ -332,6 +332,30 @@ match anything in the NCBI!
     * ...also the taxonomy of each genome
     * ...then update the mpa pkl file
   * Create bowtie2 database
+* metaphlan3 custom database using genes_db info
+  * using gene cluster & gene taoxnomy to determine clade-level inclusion
+  * method
+    * build DAG of taxonomy (eg., taxdump + taxids + GTDB metadata)
+      * attributes for tips (genomes)
+        * ncbi_total_length
+    * for each gene cluster:
+      * place on taxonomy
+        * cluster membership => genes => taxid
+      * determine LCA
+        * must be inclusive of N% of descendents
+	* [optional] for each descendent internal node determine externals
+    * format for metaphlan3
+      * sequence headers
+        * standard marker_name = `(NCBI_taxid)(UniRef90_cluster)(CDS_name)`
+          * names are actually arbitrary but must match the keys in `db['markers'][new_marker_name]`	 
+      * pkl
+        * taxonomy
+	  * `db['taxonomy'][FULL_TAXONOMY] = [genome_taxid, genome_length]`
+	* markers
+	  * clade: leaf of the taxonomy (genome name)
+	  * ext: non-target genomes (full taxonomy)
+	  * len: average length of the marker
+	  * taxon: full taxonomy of target clade
 * metaphlan3 custom database using humann_db info
   * using all genome-derep-annot genes:
   * for each species in the genome taxonomy (provided by user-samples)
@@ -340,4 +364,4 @@ match anything in the NCBI!
     * for markers that are just 'nearly' unique to a species:
       * `ext` => all genomes "external" to the clade
       * rule of thumb: <=10 "external" genomes
-  
+

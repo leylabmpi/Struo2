@@ -12,24 +12,30 @@ rule metaphlan3_species_specific_markers:
     Adding new species-specific markers to the metaphlan pkl database 
     """
     input:
-        fna = humann3_dir + 'genome_reps_filt_annot.fna.gz',
-        faa = humann3_dir + 'genome_reps_filt_annot.faa.gz',
-        tsv = humann3_dir + 'genome_reps_filt_annot.tsv.gz'
+        pkl = config['params']['metaphlan3']['pkl'],
+        mp_fna = config['params']['metaphlan3']['fasta'],
+        names = config['names_dmp'],
+        fna = humann3_dir + '{uniref}/genome_reps_filt_annot.fna.gz',
+        tsv = humann3_dir + '{uniref}/genome_reps_filt_annot.tsv.gz',
     output:
-        tsv = config['tmp_dir'] + 'metaphlan3/species_specific.txt'
+        tsv = config['tmp_dir'] + '{uniref}/metaphlan3/species_specific.txt'
     params:
-        exe = config['pipeline']['script_folder'] + 'species_specific.py'
+        params = config['params']['metaphlan3']['species_specific_markers'],
+        exe = config['pipeline']['script_folder'] + 'metaphlan_db_from_uniref.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
         mem_gb_pt = lambda wildcards, attempt: attempt * 2 * 8
     conda:
         '../../envs/genes.yaml'
     log:
-        log_dir + 'metaphlan3_species_specific_markers/all.log'
+        log_dir + 'metaphlan3_species_specific_markers/{uniref}.log'
     benchmark:
-        benchmark_dir + 'metaphlan3_species_specific_markers/all.txt'
+        benchmark_dir + 'metaphlan3_species_specific_markers/{uniref}.txt'
     shell:
         """
-        {params.exe} {input.tsv} > {output.tsv} 2> {log}
+        {params.exe} {params.params} \
+           {input.fna} {input.tsv} \
+           {input.pkl} {input.mp_fna} \
+           {input.names} 2> {log} 
         """
 

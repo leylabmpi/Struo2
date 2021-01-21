@@ -14,7 +14,7 @@ from pprint import pprint
 
 desc = 'Identify species-specific genes'
 epi = """DESCRIPTION:
-Gene ID based on UniRef annotations.
+
 """
 parser = argparse.ArgumentParser(description=desc,
                                  epilog=epi,

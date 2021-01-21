@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description=desc,
 parser.add_argument('gene_fasta', metavar='gene_fasta', type=str,
                     help='all genes in fasta format (nucleotide)')
 parser.add_argument('gene_metadata', metavar='gene_metadata', type=str,
-                    help='tab-delim table of gene metadata')
+                    help='tab-delim table of gene metadata with humann annotations')
 parser.add_argument('metaphlan_pkl', metavar='metaphlan_pkl', type=str,
                     help='Metaphlan database pkl file to view/update')
 parser.add_argument('metaphlan_fasta', metavar='metaphlan_fasta', type=str,
@@ -430,9 +430,7 @@ def main(args):
     pkl = add_markers(tax_breadth, pkl)
     # formatting the fasta
     pprint(pkl)
-
-# output format: `(NCBI_taxid)__(uniref90_ID)__(CDS_name) (uniref90_ID_full);(taxonomy)`
-# >100053__V6HUX8__LEP1GSC062_2642 UniRef90_V6HUX8;k__Bacteria|p__Spirochaetes|c__Spirochaetia|o__Spirochaetia_unclassified|f__Leptospiraceae|g__Leptospira|s__Leptospira_alexanderi;t__GCA_000243815
+    sys.exit(1)
     
 if __name__ == '__main__':
     args = parser.parse_args()
