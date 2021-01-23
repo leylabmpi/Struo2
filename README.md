@@ -1,3 +1,5 @@
+![Struo2](https://github.com/leylabmpi/Struo2/workflows/Struo2/badge.svg)
+
 Struo2
 ======
 
@@ -106,6 +108,13 @@ git clone --recurse-submodules git@github.com:leylabmpi/struo2.git
 If you want email notifications upon pipeline success/failure, then you need
 mutt installed on your OS.
 
+## Setting a location for necessary files
+
+```
+OUTDIR=./data/
+mkdir -p $OUTDIR
+```
+
 ## UniRef diamond database(s)
 
 You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef50).
@@ -121,7 +130,7 @@ You then do not have to annotate against UniRef90 clusters and UniRef50 clusters
 which requires a lot more querying of genes against UniRef. 
 
 ```
-wget http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
+wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
 ```
 ## GTDB taxdump
 
@@ -132,8 +141,8 @@ By default, the pipeline uses custom GTDB taxIDs generated with
 To download the custom taxdump files:
 
 ```
-wget http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
-wget http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
+wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
+wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
 ```
 
 ## NCBI taxdump
@@ -141,8 +150,8 @@ wget http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
 If you would rather use NCBI taxonomy instead of the GTDB taxonomy:
 
 ```
-wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
-tar -pzxvf taxdump.tar.gz
+wget -O $OUTDIR https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+tar -pzxvf $OUTDIR/taxdump.tar.gz
 ```
 
 ## Getting reference genomes for the custom databases
