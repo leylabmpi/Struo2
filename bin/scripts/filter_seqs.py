@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys,os
 import re
 import gzip
+import bz2
 import uuid
 import argparse
 import logging
@@ -54,6 +55,26 @@ parser.add_argument('--version', action='version', version='0.0.1')
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
+def _open(infile, mode='rb'):
+    """
+    Openning of input, regardless of compression
+    """
+    if infile.endswith('.bz2'):
+        return bz2.open(infile, mode)
+    elif infile.endswith('.gz'):
+        return gzip.open(infile, mode)
+    else:
+        return open(infile)
+
+def _decode(line):
+    """
+    Decoding input, depending on the file extension
+    """
+    try:
+        line = line.decode('utf-8')
+    except AttributeError:
+        pass
+    return line
 
 def make_index(fasta):
     regex = re.compile(r' .+')
@@ -63,10 +84,9 @@ def make_index(fasta):
         _openR = lambda x: open(x, 'r')        
     
     idx = {}
-    with _openR(fasta) as inF:
+    with _open(fasta) as inF:
         for line in inF:
-            if fasta.endswith('.gz'):
-                line = line.decode('utf8')            
+            line = _decode(line)
             if line.startswith('>'):
                 line = line.lstrip('>').rstrip()
                 idx[regex.sub('', line)] = 0  
@@ -124,23 +144,17 @@ def filter_fasta(fasta, idx, output, gzip_out=False):
     """
     Filtering fasta to just those in idx
     """
-    if fasta.endswith('.gz'):
-        _openR = lambda x: gzip.open(x, 'rb')
-    else:
-        _openR = lambda x: open(x, 'r')        
-    
     if gzip_out is True:
         _openW = lambda x: gzip.open(x, 'wb')
     else:
         _openW = lambda x: open(x, 'w')
-
+        
     found = {}
     hit = False
     regex = re.compile(r' .+')
-    with _openR(fasta) as inF, _openW(output) as outF:
+    with _open(fasta) as inF, _openW(output) as outF:
         for line in inF:
-            if fasta.endswith('.gz'):
-                line = line.decode('utf8')
+            line = _decode(line)
             if line.startswith('>'):
                 line = regex.sub('', line.lstrip('>').rstrip())
                 # filter is already seen

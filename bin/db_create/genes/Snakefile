@@ -10,7 +10,8 @@ rule prodigal:
         faa = temp(config['tmp_dir'] + 'prodigal/{sample}.faa'),
         gbk = temp(config['tmp_dir'] + 'prodigal/{sample}.gbk')
     params:
-        params = config['params']['genes']['prodigal']
+        params = config['params']['genes']['prodigal'],
+        exe = config['pipeline']['script_folder'] + 'uncomp.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
         n = lambda wildcards, attempt, threads: threads,
@@ -23,7 +24,7 @@ rule prodigal:
         benchmark_dir + 'prodigal/{sample}.txt'
     shell:
         """
-        gunzip -c {input.fasta} | \
+        {params.exe} {input.fasta} | \
           prodigal {params.params} \
           -o {output.gbk} -d {output.fna} -a {output.faa} \
           2> {log} 1>&2

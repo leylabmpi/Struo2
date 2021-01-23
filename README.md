@@ -16,6 +16,7 @@ Struo2
 # Citation
 
 Struo version 2 has major changes from version 1, but verion 2 has not yet been published.
+For now, please just cite Struo1:
 
 ## Struo version 1 
 
@@ -24,14 +25,27 @@ Cuesta-Zuluaga, Jacobo de la, Ruth E. Ley, and Nicholas D. Youngblut. 2019.
 Bioinformatics , November.
 [https://doi.org/10.1093/bioinformatics/btz899](https://doi.org/10.1093/bioinformatics/btz899)
 
+# Overview
+
+Efficiently create/update custom databases for the following metagenome profilers:
+
+* [Kraken2](https://github.com/DerrickWood/kraken2)
+* [Bracken](https://github.com/jenniferlu717/Bracken)
+* [HUMAnN3](https://github.com/biobakery/humann)
+
+You can also just use Struo2 for efficiently clustering genes via mmseqs and
+generating gene & gene-cluster databases that can be efficiently updated via
+mmseqs2.
+
 # Changes from Version 1
 
 * Support for HUMAnN3
-* All coding sequences from all genomes are now clustered prior to annotation
-  (hits to UniRef), and then the UniRef IDs are propagated to each member
+  * HUMAnN3 uses a much more updated version of UniRef and a new version of DIAMOND
+* All coding sequences from all genomes are now clustered prior to annotation,
+  and then the annotations (UniRef IDs, by default) are propagated to each member
   of each cluster.
   * This is substantially faster than the per-genome annotation appraoch used for Struo1
-  * It also allows for easy database updates via `mmseqs clusterupdate`.
+  * It also allows for efficient database updates via `mmseqs clusterupdate`.
 * By default `mmseqs search` is used for annotation instead of `diamond blastp`
   * `mmseqs search` can be a bit faster and more sensitive than DIAMOND
     * see [Steinegger and Soeding 2017](https://www.nature.com/articles/nbt.3988)
@@ -51,9 +65,7 @@ Bioinformatics , November.
 
 # Pre-built custom databases
 
-## Version 1
-
-Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo/)
+Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo2/)
 
 **GTDB releases available:**
 * Release 95 (13.07.2020)
@@ -62,15 +74,10 @@ Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mp
     * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
   * Genome phylogeny
     * GTDB `ar122_r95.tree` & `bac120_r95.tree` grafted together
-* Release 89 (30.08.2019)
-  * Number of genomes included: 23,361
-  * GTDB taxonomy/taxIDs used
-    * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
-* Release 86 (14.03.2019)
-  * Number of genomes included: 21,276
-  * NCBI taxonomy/taxIDs used
   
-# Setup
+# Setup for installing Struo2
+
+> Only Unix/Linux OS supported
 
 ## Download
 
@@ -79,7 +86,6 @@ To download the pipeline, clone the Git repository:
 ```
 git clone --recurse-submodules git@github.com:leylabmpi/struo2.git 
 ```
-
 
 ## conda env setup
 
@@ -97,6 +103,9 @@ git clone --recurse-submodules git@github.com:leylabmpi/struo2.git
   * ncbi-genome-download=0.2.10
   * newick_utils=1.6
 
+If you want email notifications upon pipeline success/failure, then you need
+mutt installed on your OS.
+
 ## UniRef diamond database(s)
 
 You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef50).
@@ -105,26 +114,36 @@ See the "Download a translated search database" section of the
 
 ## UniRef50-90 index
 
-TODO: ftp
+Needed to map annotations from UniRef90 clusters to UniRef50 clusters.
+This allows for just annotating against UniRef90 and then UniRef50 cluster IDs
+an be mapped based on the UniRef90 cluster IDs.
+You then do not have to annotate against UniRef90 clusters and UniRef50 clusters,
+which requires a lot more querying of genes against UniRef. 
 
-/ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
+```
+wget http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
+```
+## GTDB taxdump
+
+The taxdump files are used for creating/updating the Kraken2 database.
+
+By default, the pipeline uses custom GTDB taxIDs generated with
+[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
+To download the custom taxdump files:
+
+```
+wget http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
+wget http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
+```
 
 ## NCBI taxdump
+
+If you would rather use NCBI taxonomy instead of the GTDB taxonomy:
 
 ```
 wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
 tar -pzxvf taxdump.tar.gz
 ```
-
-## GTDB taxdump
-
-By default, the pipeline uses custom GTDB taxIDs generated with
-[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
-
-TODO: ftp
-
-/ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
-/ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
 
 ## Getting reference genomes for the custom databases
 
@@ -134,7 +153,7 @@ TODO: ftp
 * If downloading genomes from genbank/refseq, you can use `genome_download.R`
 * You can also include your own genomes (e.g., newly created MAGs)
 
-Example:
+An example:
 
 ```
 # Filtering GTDB metadata to certain genomes
@@ -144,7 +163,7 @@ Example:
 ./genome_download.R -o genomes -p 8 gtdb-r95_bac-arc.tsv > genomes.txt
 
 # Note: the output of ./genome_download.R can be directly used for running the `Struo2` pipeline (see below)
-# Note: genomes must be gzip'd for input to Struo2
+# Note: genome fasta files can be compressed (gzip or bzip2) or uncompress for input to Struo2
 ```
 
 ## Input genome data (`samples.txt` file)
@@ -161,7 +180,7 @@ if you downloaded the genomes from the GTDB or NCBI.
     * You can fill with "blank" or "NA" if no accession is available
   * `fasta_file_path_col` (default = `fasta_file_path`)
     * Path to the genome fasta
-    * The fasta must be gzip'ed
+    * The fasta can be uncompressed or compressed (gzip or bzip2)
   * `taxID_col` (default = `gtdb_taxid`)    
     * This should be the NCBI/GTDB taxonomy ID at the species/strain level
       * Needed for Kraken
@@ -177,18 +196,15 @@ if you downloaded the genomes from the GTDB or NCBI.
 
 Other columns in the file will be ignored. The path to the samples file should be specified in the `config.yaml` file (see below)
 
-### Using the GTDB taxonomy instead of NCBI taxIDs
-
-Kraken2 & HUMAnN3 databases used NCBI taxIDs, and thus the NCBI taxonomy is used by default
-for `Struo`. You can instead create custom taxIDs from the GTDB taxonomy with
-[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
-
-The resulting `names.dmp` and `nodes.dmp` files, along with a genome metadata file that includes the gtdb_taxids, then you can modify the Struo pipeline to fully use the GTDB taxonomy & taxIDs.
-
 ## Running the pipeline
 
-### Edit the `config.yaml`
+> This applies to creating and updating the databases
 
+### Edit the config file
+
+* Select a config to edit
+  * If creating a new database: edit `config.yaml`
+  * If updating an existing database: edit `config-update.yaml`
 * Specify the input/output paths
 * Modify parameters as needed
   * Make sure to add the path to the UniRef diamond database for HUMAnN3
@@ -236,15 +252,33 @@ snakemake may try to run all genomes again through the computationally expensive
 
 ## Using the resulting databases
 
-Set the database paths in humann2, kraken2, etc. to the new, custom database files.
+Set the database paths in humann3, kraken2, etc. to the new, custom database files.
 
-* humann2
+* genes
+  * `genome_reps_filtered.fna.gz`
+    * representative gene sequences (nucleotide)
+  * `genome_reps_filtered.faa.gz`
+    * representative gene sequences (amino acid)
+  * `genome_reps_filtered.tsv.gz`
+    * representative gene sequences (metadata)
+  * `genes_db.tar.gz`
+    * mmseqs genes database
+  * clusters
+    * `clusters_db.tar.gz`
+      * mmseqs cluster database
+    * `clusters_membership.tsv.gz`
+      * mmseqs cluster membership table
+    * `clusters_reps.faa.gz`
+      * cluster representative sequences (amino acid)
+* kraken2
+  * `*.k2d`
+* bracken
+  * `database*mers.kmer_distrib`
+* humann3
   * nucleotide
     * `all_genes_annot.fna.gz`
   * amino acid
     * `all_genes_annot.dmnd`
-* kraken2
-  * `database*mers.kraken`
   
 ### Example of a humann2 run
 

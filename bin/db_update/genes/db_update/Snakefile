@@ -18,7 +18,7 @@ rule mmseqs_copy_genes_to_temp:
         db_hi = temp(config['tmp_dir'] + 'db_update/orig_genes/genes_db_h.index')
     params:
         ionice = config['params']['ionice'],
-        exe = config['pipeline']['script_folder'] + 'uncomp.py'
+        exe = config['pipeline']['script_folder'] + 'uncomp_tarball.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     conda:
@@ -46,7 +46,7 @@ rule mmseqs_copy_clust_to_temp:
         db_clu_h = temp(config['tmp_dir'] + 'db_update/cluster/clusters_db_h')
     params:
         ionice = config['params']['ionice'],
-        exe = config['pipeline']['script_folder'] + 'uncomp.py'
+        exe = config['pipeline']['script_folder'] + 'uncomp_tarball.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     conda:

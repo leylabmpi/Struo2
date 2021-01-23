@@ -1,5 +1,5 @@
 #-- email notifications of pipeline success/failure (use "Skip" to deactivate) --#
-email: nyoungblut@tuebingen.mpg.de
+email: None
 
 #-- I/O --#
 # file listing samples and associated data
@@ -27,19 +27,18 @@ databases:
   genes: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
-  metaphlan3: Skip #Create
 
 # Name of UniRef clustering (uniref90 or uniref50)
 ## uniref90 highly recommended
 uniref_name: uniref90
 # Name of the humann3 diamond database to be created
-## This must match naming allowed by humann3
+## This must match the naming allowed by humann3
 dmnd_name: uniref90_201901.dmnd
 # Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
-## This is skipped if annotating with UniRef50
+## This is skipped if annotating with UniRef50 instead of UniRef90
 cluster_idx: /ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
 
-#-- if custom NCBI taxdump files (or just Skip) --#
+#-- if custom NCBI taxdump files (or just "Skip") --#
 # Used for kraken taxonomy & metaphlan
 names_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
 nodes_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
@@ -75,10 +74,6 @@ params:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
-  metaphlan3:
-    pkl: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.pkl
-    fasta: /ebio/abt3_projects/databases_no-backup/metaphlan3/201901/mpa_v30_CHOCOPhlAn_201901.fna.bz2
-    species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 
 #-- snakemake pipeline --#
 pipeline:

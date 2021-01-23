@@ -1,16 +1,15 @@
 #-- email notifications of pipeline success/failure (use "Skip" to deactivate) --#
-email: nyoungblut@tuebingen.mpg.de
+email: None
 
 #-- databases to update --#
 # Replace "Create" with "Skip" to skip creation of any of these
 # Note that braken relies on the kraken2 database
 databases:
-  kraken2: Skip #Create
-  bracken: Skip #Create
+  kraken2: Create
+  bracken: Create
   genes: Create
   humann3_bowtie2: Create
   humann3_diamond: Create
-  metaphlan3: Skip #Create
 
 #-- Input --#
 #--- If just a set of gene sequences to add ---#
@@ -97,8 +96,6 @@ params:
       db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
-  metaphlan3:
-    species_specific_markers: --ext-abs-cutoff 10 --ext-rel-cutoff 0.1
 
 #-- snakemake pipeline --#
 pipeline:
