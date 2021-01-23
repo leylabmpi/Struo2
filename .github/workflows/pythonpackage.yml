@@ -1,0 +1,44 @@
+name: Struo2
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7]
+    steps:
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: 'latest'
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge,bioconda
+        activate-environment: deepmased
+    - name: conda env setup
+      shell: bash -l {0}
+      run: |
+        conda info -a
+        conda install python=${{ matrix.python-version }} pandas snakemake r-base r-argparse r-curl r-data.table r-dplyr ncbi-genome-download newick_utils
+        conda list
+    - uses: actions/checkout@v2	
+    - name: Util script tests
+      shell: bash -l {0}
+      run: |
+        ./util_scripts/genome_download.R -h
+        ./util_scripts/GTDB_metadata_filter.R -h
+        ./util_scripts/tree_prune.py -h
+    - name: DB create tests
+      shell: bash -l {0}
+      run: |
+        snakemake --use-conda --configfile config.yaml -F --dryrun
+    - name: DB update tests
+      shell: bash -l {0}
+      run: |
+        snakemake --use-conda --configfile config.yaml -F --dryrun
