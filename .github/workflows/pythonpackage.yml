@@ -27,8 +27,8 @@ jobs:
       shell: bash -l {0}
       run: |
         git submodule update --remote --init --recursive
-	mkdir -p $DATADIR
-	wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
+        mkdir -p $DATADIR
+        wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
         wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
     - name: conda env setup
       shell: bash -l {0}
