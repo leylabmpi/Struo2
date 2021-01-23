@@ -10,6 +10,8 @@ jobs:
   build:
     name: build (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ubuntu-latest
+    env:
+      DATADIR: data
     strategy:
       matrix:
         python-version: [3.6, 3.7]
@@ -20,7 +22,14 @@ jobs:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
         channels: conda-forge,bioconda
-        activate-environment: deepmased
+        activate-environment: struo2
+    - name: struo2 setup
+      shell: bash -l {0}
+      run: |
+        git submodule update --remote --init --recursive
+	mkdir -p $DATADIR
+	wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
+        wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
     - name: conda env setup
       shell: bash -l {0}
       run: |
