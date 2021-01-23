@@ -23,10 +23,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
         channels: conda-forge,bioconda
         activate-environment: struo2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Checkout submodules
+      run: git submodule update --init --recursive --remote
     - name: struo2 setup
       shell: bash -l {0}
       run: |
-        git submodule update --remote --init --recursive
         mkdir -p $DATADIR
         wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
         wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
@@ -36,7 +39,6 @@ jobs:
         conda info -a
         conda install python=${{ matrix.python-version }} pandas snakemake r-base r-argparse r-curl r-data.table r-dplyr ncbi-genome-download newick_utils
         conda list
-    - uses: actions/checkout@v2	
     - name: Util script tests
       shell: bash -l {0}
       run: |
