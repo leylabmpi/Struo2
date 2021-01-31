@@ -89,6 +89,12 @@ To download the pipeline, clone the Git repository:
 git clone --recurse-submodules git@github.com:leylabmpi/struo2.git 
 ```
 
+Note the use of submodules. If needed, you can update the submodule(s) via:
+
+```
+git submodule update --remote --init --recursive
+```
+
 ## conda env setup
 
 > Versions listed are those that have been tested. Newer versions will likely work
@@ -111,47 +117,77 @@ mutt installed on your OS.
 ## Setting a location for necessary files
 
 ```
+# creating a directory to hold all of the necessary Struo2 data files
 OUTDIR=./data/
 mkdir -p $OUTDIR
 ```
 
-## UniRef diamond database(s)
-
-You will need a UniRef diamond database for the humann3 database construction (e.g., UniRef50).
-See the "Download a translated search database" section of the
-[humann3 docs](https://github.com/biobakery/biobakery/wiki/humann3#welcome-to-the-humann-30-tutorial)
-
-## UniRef50-90 index
-
-Needed to map annotations from UniRef90 clusters to UniRef50 clusters.
-This allows for just annotating against UniRef90 and then UniRef50 cluster IDs
-an be mapped based on the UniRef90 cluster IDs.
-You then do not have to annotate against UniRef90 clusters and UniRef50 clusters,
-which requires a lot more querying of genes against UniRef. 
-
-```
-wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
-```
-## GTDB taxdump
+## taxdump files
 
 The taxdump files are used for creating/updating the Kraken2 database.
+
+### GTDB taxdump
 
 By default, the pipeline uses custom GTDB taxIDs generated with
 [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
 To download the custom taxdump files:
 
 ```
-wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
-wget -O $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
 ```
 
-## NCBI taxdump
+### NCBI taxdump
 
 If you would rather use NCBI taxonomy instead of the GTDB taxonomy:
 
 ```
-wget -O $OUTDIR https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+wget --directory-prefix $OUTDIR https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
 tar -pzxvf $OUTDIR/taxdump.tar.gz
+```
+
+## UniRef
+
+UniRef databases are used for annotating genes.
+UniRef IDs are required for HUMANnN3.
+You do not need any UniRef databases if just creating Kraken2/Bracken databases.
+
+### IF using `mmseqs search` for gene annotation
+
+**mmseqs UniRef database(s)**
+
+See the [mmseqs2 wiki on database downloading](https://github.com/soedinglab/mmseqs2/wiki#downloading-databases)
+
+```
+# you must have mmseqs2 installed
+# Example of downloading UniRef50
+mmseqs databases UniRef50 $OUTDIR/UniRef50 DB_TMP
+```
+
+### IF using `diamond blastp` for gene annotation
+
+**HUMAnN3 UniRef diamond database(s)**
+
+See the "Download a translated search database" section of the
+[humann3 docs](https://github.com/biobakery/biobakery/wiki/humann3#welcome-to-the-humann-30-tutorial).
+
+```
+# Example download of UniRef50 DIAMOND database
+wget --directory-prefix $OUTDIR http://huttenhower.sph.harvard.edu/humann_data/uniprot/uniref_annotated/uniref50_annotated_v201901.tar.gz
+```
+
+## UniRef50-90 index
+
+> Optional, but recommended
+
+This is needed to map annotations from UniRef90 clusters to UniRef50 clusters.
+This allows for just annotating against UniRef90 and then mapping
+those annotations to UniRef50 cluster IDs.
+You then do not have to annotate against UniRef90 clusters and UniRef50 clusters,
+which requires a lot more querying of genes against UniRef.
+
+```
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
 ```
 
 ## Getting reference genomes for the custom databases
@@ -162,7 +198,7 @@ tar -pzxvf $OUTDIR/taxdump.tar.gz
 * If downloading genomes from genbank/refseq, you can use `genome_download.R`
 * You can also include your own genomes (e.g., newly created MAGs)
 
-An example:
+**An example:**
 
 ```
 # Filtering GTDB metadata to certain genomes
@@ -175,10 +211,17 @@ An example:
 # Note: genome fasta files can be compressed (gzip or bzip2) or uncompress for input to Struo2
 ```
 
-## Input genome data (`samples.txt` file)
+
+# Input genome/gene data
+
+The genomes and/or individual genes used for creating/updating databases
+
+## Genome data
 
 The table of input files/data can be created using the helper scripts described above
 if you downloaded the genomes from the GTDB or NCBI.
+
+The `samples.txt` file, by default.
 
 * The pipeline requires a tab-delimited table that includes the following columns (column names specified in the `config.yaml` file):
   * `samples_col` (default = `ncbi_organism_name`)
@@ -205,41 +248,70 @@ if you downloaded the genomes from the GTDB or NCBI.
 
 Other columns in the file will be ignored. The path to the samples file should be specified in the `config.yaml` file (see below)
 
-## Running the pipeline
+## Gene data
+
+This can only be used for updating existing databases
+(e.g., existing custom GTDB Kraken2 or HUMAnN databases).
+
+The gene data must include:
+
+* Amino acid sequencing in fasta format
+  * [optional] corresponding nucleotide sequences in fasta format
+  * The fasta can be compressed via gzip
+* A tab-delimited table of metadata with the following columns:
+  * `seq_uuid`
+    * A unique identifier for that sequence
+  * `seq_orig_name`
+    * The original name for that sequence
+  * `genus`
+    * The genus-level taxonomy of that sequences
+    * Format: `g__<taxonomy>`
+    * If unknown, use `g__unclassified` 
+  * `species`
+    * The species-level taxonomy of that sequences
+    * Format: `s__<taxonomy>`
+    * If unknown, use `s__unclassified`
+  * `taxid`
+    * The taxid corresponding to the genus-species taxonomy
+    * [taxonkit](https://bioinf.shenwei.me/taxonkit/) can help with this
+
+
+# Running the pipeline
 
 > This applies to creating and updating the databases
 
-### Edit the config file
+## Edit the config file
 
 * Select a config to edit
   * If creating a new database: edit `config.yaml`
   * If updating an existing database: edit `config-update.yaml`
-* Specify the input/output paths
+* Specify the input/output files paths
+  * See above for downloading input files
 * Modify parameters as needed
   * Make sure to add the path to the UniRef diamond database for HUMAnN3
     * see above for instructions on retrieving this file
+  * Can the taxdump files from GTDB to NCBI if needed
+  * By defeault, `mmseqs search` is used instead of `diamond blastp`
 * Modify `temp_folder:` if needed
   * This folder is used just for read/write of temporary files
-
-#### If using GTDB taxIDs
-
-If you have followed "Using the GTDB taxonomy instead of NCBI taxIDs" above, then
-make the following modifications to the `config.yaml` file:
-
-```
-## column names in samples table
-taxID_col: 'gtdb_taxid'
-taxonomy_col: 'gtdb_taxonomy'
-
-#-- if custom NCBI taxdump files --#
-names_dmp: /YOUR/PATH/TO/names.dmp
-nodes_dmp: /YOUR/PATH/TO/nodes.dmp
-```
+  * Use SSDs, if available 
 
 
 ### Running locally
 
-`snakemake --use-conda`
+This is only recommended for test runs
+
+It is always good to run snakemake in `dryrun` mode first:
+
+```
+snakemake --use-conda -j -Fqn
+```
+
+For an actual run with 2 cores:
+
+```
+snakemake --use-conda -j 2
+```
 
 ### Running on a cluster
 
@@ -285,66 +357,36 @@ Set the database paths in humann3, kraken2, etc. to the new, custom database fil
   * `database*mers.kmer_distrib`
 * humann3
   * nucleotide
-    * `all_genes_annot.fna.gz`
+    * `genome_reps_filt_annot.fna.gz`
+      * plus the `*.bt2` files 
   * amino acid
-    * `all_genes_annot.dmnd`
+    * `uniref*_*.dmnd`
+      * Example: `uniref90_201901.dmnd`
   
-### Example of a humann2 run
+### Example of a HUMANnN3 run
 
-Run humann2 with custom databases created by Struo. Change that PATHs as necessary. 
+Run HUMAnN3 with custom databases created by Struo2. Change that PATHs as necessary. 
 
 ```
-STRUO_OUT_DIR=./struo_output/
-NUC_DB=`dirname $STRUO_OUT_DIR"/all_genes_annot.fna.gz"`
-PROT_DB=`dirname $STRUO_OUT_DIR"/all_genes_annot.dmnd"`
-MTPHLN_BT2_DB=`dirname ./metaphlan2_db/mpa_v20_m200/mpa_v20_m200.1.bt2`
-MTPHLN_PKL_DB=/ebio/abt3_projects/databases_no-backup/metaphlan2/mpa_v20_m200/mpa_v20_m200.pkl
+STRUO2_OUT_DIR=./struo2_output/
+NUC_DB=$STRUO2_OUT_DIR/humann3/uniref50/genome_reps_filt_annot.fna.gz
+PROT_DB=$STRUO2_OUT_DIR/humann3/uniref50/protein_database/uniref50_201901.dmnd
+MP_DB=$STRUO2_OUT_DIR/mpa_v30_CHOCOPhlAn_201901_marker_info.txt
 
-humann2 --gap-fill on --bypass-nucleotide-index  \
-  --nucleotide-database $NUC_DB  \
+READS=/path/to/example/read/files/CHANGE/THIS/reads.fq
+
+# metaphlan database not actually used
+touch $MP_DB
+
+# humann3 run	
+humann3 --bypass-nucleotide-index \
+  --nucleotide-database $NUC_DB \
   --protein-database $PROT_DB \
-  --metaphlan-options "Skip --mpa_pkl $MTPHLN_PKL_DB --bowtie2db $MTPHLN_BT2_DB" \
-  --tmp-dir /dev/shm/humann2_temp/ \
-  --threads 12 \
-  --input-format fastq  \
-  --output-basename SRS018656 \
-  --input SRS018656_R1.fq
+  --metaphlan-options "--bowtie2db $MP_DB" \
+  --output-basename humann \
+  --input $READS \
+  --output humann_output
 ```
-  
-
-### Adding more samples (genomes) to an existing custom DB
-
-If you set `keep_intermediate: True` for your initial run, then the
-intermediate files from the computationally intensive steps are kept,
-and so those genomes don't have to be reprocessed. Only new genomes will
-be processed, and then the database(s) will be re-created with old + new
-genomes.
-
-To create a database with more genomes:
-
-* Add new genomes to the input table.
-* **If** you want to over-write your old databases:
-  * DO NOT change the `db_name:` parameter in the config.yaml file
-* **OR if** you want to create new database:
-  * Change the `db_name:` parameter in the config.yaml file
-* Re-run the snakemake pipeline.
-  * Snakemake should skip the genomes that have already been processed.
-  * Use `--dryrun` to see what snakemake is going to do before actually running the pipeline.
-  * You may need to set `use_ancient: True` in order to have snakemake skip the diamond mapping for humann2
-    * This is needed if the timestamps on the genome gene files have been (accidently) modified since the last run.
-
-
-### Adding existing gene sequences to humann2 databases
-
-If you have gene sequences already formatted for creating a humann2 custom DB,
-and you'd like to include them with the gene sequences generated from the
-input genomes, then just provide the file paths to the nuc/prot fasta files
-(`humann2_nuc_seqs` and `humann2_prot_seqs` in the `config.yaml` file).
-
-All genes (from genomes & user-provided) will be clustered altogether with `vsearch`.
-See the `vsearch_all:` setting in the `config.yaml` for the default clustering parameters used.
-You can use `vsearch_all: Skip` to skip the clustering and instead all of the sequences
-will just be combined without removing redundancies.
 
 
 # Utilities
@@ -381,60 +423,11 @@ This is useful for creating an NCBI taxdump (names.dmp and nodes.dmp)
 from the GTDB taxonomy. Note that the taxIDs are arbitrary and don't
 match anything in the NCBI! 
 
+## `nbci-gtdb_map.py`
 
+This is a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
 
-# TODO
-* Create [metaphlan3 marker database](https://github.com/biobakery/MetaPhlAn/wiki/MetaPhlAn-3.0#customizing-the-database)
-  * [issue about creating the DB](https://github.com/biobakery/MetaPhlAn/issues/103)
-  * Get taxonomy of the genomes (provided by GTDB in the metadata)
-  * Call genes via prokka
-  * Map to UniRef90 via DIAMOND (--evalue=1, --query-cover=80, --id=90)
-  * For each species in the genome taxonomy:
-    * determine which markers are shared by all members of the species (same uniref ID)
-    * for markers that are just 'nearly' unique to a species:
-      * `ext` => all genomes "external" to the clade
-      * rule of thumb: <=10 "external" genomes
-  * Rename sequences:
-    * marker_name = `(NCBI_taxid)(UniRef90_cluster)(CDS_name)`
-    * Example `>100053__V6HZP8__LEP1GSC062_3436`
-  * Determine marker info
-    * clade, ext, len, taxon
-      * ext: list of genomes sharing that marker
-      * clade = species
-      * taxon = species?
-    * ...also the taxonomy of each genome
-    * ...then update the mpa pkl file
-  * Create bowtie2 database
-* metaphlan3 custom database using genes_db info
-  * using gene cluster & gene taoxnomy to determine clade-level inclusion
-  * method
-    * build DAG of taxonomy (eg., taxdump + taxids + GTDB metadata)
-      * attributes for tips (genomes)
-        * ncbi_total_length
-    * for each gene cluster:
-      * place on taxonomy
-        * cluster membership => genes => taxid
-      * determine LCA
-        * must be inclusive of N% of descendents
-	* [optional] for each descendent internal node determine externals
-    * format for metaphlan3
-      * sequence headers
-        * standard marker_name = `(NCBI_taxid)(UniRef90_cluster)(CDS_name)`
-          * names are actually arbitrary but must match the keys in `db['markers'][new_marker_name]`	 
-      * pkl
-        * taxonomy
-	  * `db['taxonomy'][FULL_TAXONOMY] = [genome_taxid, genome_length]`
-	* markers
-	  * clade: leaf of the taxonomy (genome name)
-	  * ext: non-target genomes (full taxonomy)
-	  * len: average length of the marker
-	  * taxon: full taxonomy of target clade
-* metaphlan3 custom database using humann_db info
-  * using all genome-derep-annot genes:
-  * for each species in the genome taxonomy (provided by user-samples)
-    * determine which markers are shared by all members
-      * sharing based on uniref IDs
-    * for markers that are just 'nearly' unique to a species:
-      * `ext` => all genomes "external" to the clade
-      * rule of thumb: <=10 "external" genomes
+This is useful for mapping between GTDB and NCBI taxonomies.
+The mapping is based on the GTDB archaeal and bacterial metadata tables,
+which contain both GTDB and NCBI taxonomic lineages. 
 
