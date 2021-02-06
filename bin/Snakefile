@@ -75,9 +75,9 @@ def all_which_input(wildcards):
                 F.append(x.format(uniref=u,dmnd=d))
                         
     # metaphlan
-    if not skipped(config['databases']['metaphlan3']):
-        F += expand(config['tmp_dir'] + '{uniref}/metaphlan3/species_specific.txt',
-                    uniref = uniref_cutoffs)        
+    #if not skipped(config['databases']['metaphlan3']):
+    #    F += expand(config['tmp_dir'] + '{uniref}/metaphlan3/species_specific.txt',
+    #                uniref = uniref_cutoffs)        
     
     # ret
     return F

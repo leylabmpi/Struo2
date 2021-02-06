@@ -1,6 +1,8 @@
 #-- gene annotation (for humann database) workflow --#
 
-if not skipped(config['params']['humann3']['mmseqs_search']):
+if (not skipped(config['params']['humann3']['mmseqs_search']['db']) and
+    not skipped(config['params']['humann3']['mmseqs_search']['index']) and
+    not skipped(config['params']['humann3']['mmseqs_search']['run'])):
     # mmseqs search
     print('\33[36m  * Using "mmseqs search" for annotating genes\x1b[0m')
     include: snake_dir + 'bin/db_create/humann3/query/mmseqs/Snakefile'

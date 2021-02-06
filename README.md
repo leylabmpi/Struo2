@@ -143,7 +143,7 @@ If you would rather use NCBI taxonomy instead of the GTDB taxonomy:
 
 ```
 wget --directory-prefix $OUTDIR https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
-tar -pzxvf $OUTDIR/taxdump.tar.gz
+tar -pzxvf $OUTDIR/taxdump.tar.gz --directory $OUTDIR
 ```
 
 ## UniRef
@@ -160,8 +160,8 @@ See the [mmseqs2 wiki on database downloading](https://github.com/soedinglab/mms
 
 ```
 # you must have mmseqs2 installed
-# Example of downloading UniRef50
-mmseqs databases UniRef50 $OUTDIR/UniRef50 DB_TMP
+# Example of downloading UniRef50 (WARNING: slow!)
+mmseqs databases --remove-tmp-files 1 --threads 4 UniRef50 $OUTDIR/UniRef50 data/DB_TMP
 ```
 
 ### IF using `diamond blastp` for gene annotation
@@ -174,6 +174,7 @@ See the "Download a translated search database" section of the
 ```
 # Example download of UniRef50 DIAMOND database
 wget --directory-prefix $OUTDIR http://huttenhower.sph.harvard.edu/humann_data/uniprot/uniref_annotated/uniref50_annotated_v201901.tar.gz
+tar -pzxvf $OUTDIR/uniref50_annotated_v201901.tar.gz --directory $OUTDIR
 ```
 
 ## UniRef50-90 index
@@ -198,7 +199,23 @@ wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/insta
 * If downloading genomes from genbank/refseq, you can use `genome_download.R`
 * You can also include your own genomes (e.g., newly created MAGs)
 
-**An example:**
+#### A toy dataset
+
+A collection of 10 genomes from the GTDB:
+
+```
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_data/genomes/GTDBr95_n10.tar.gz
+tar -pzxvf $OUTDIR/GTDBr95_n10.tar.gz --directory $OUTDIR
+```
+
+To test database updating, get this collection of 5 genomes:
+
+```
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_data/genomes/GTDBr95_n5.tar.gz
+tar -pzxvf $OUTDIR/GTDBr95_n5.tar.gz --directory $OUTDIR
+```
+
+#### Example of download from the GTDB
 
 ```
 # Filtering GTDB metadata to certain genomes
@@ -210,6 +227,7 @@ wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/insta
 # Note: the output of ./genome_download.R can be directly used for running the `Struo2` pipeline (see below)
 # Note: genome fasta files can be compressed (gzip or bzip2) or uncompress for input to Struo2
 ```
+
 
 
 # Input genome/gene data

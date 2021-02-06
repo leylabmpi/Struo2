@@ -3,7 +3,7 @@ email: None
 
 #-- I/O --#
 # file listing samples and associated data
-samples_file: tests/samples/GTDBr95_n10.tsv
+samples_file: data/GTDBr95_n10/GTDBr95_n10.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -36,12 +36,12 @@ uniref_name: uniref90
 dmnd_name: uniref90_201901.dmnd
 # Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
 ## This is skipped if annotating with UniRef50 instead of UniRef90
-cluster_idx: /ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
+cluster_idx: data/uniref50-90.pkl
 
-#-- if custom NCBI taxdump files (or just "Skip") --#
+#-- if custom NCBI/GTDB taxdump files, "Skip" if standard NCBI taxdump --#
 # Used for kraken taxonomy & metaphlan
-names_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/names.dmp
-nodes_dmp: /ebio/abt3_projects/databases_no-backup/GTDB/release95/taxdump/nodes.dmp
+names_dmp: data/names.dmp
+nodes_dmp: data/nodes.dmp
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
@@ -50,6 +50,7 @@ keep_intermediate: True
 
 #-- software parameters --#
 # `vsearch_per_genome` = per-genome gene clustering
+# use "Skip" at the start of any param to skip (if possible to skip) 
 # for humann3, use either mmseqs or diamond (mmseqs gets priority if neither skipped)
 # for humann3::mmseqs_search::run, --num-iterations must be >=2
 params:
@@ -65,13 +66,13 @@ params:
     mmseqs_cluster: --min-seq-id 0.9 -c 0.8
     mmseqs_cluster_method: linclust         # or "cluster", which is slower
   humann3:
-    batches: 10
+    batches: 2
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
+      db: Skip #data/uniref50    # uniref90 recommended
       index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
-      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
+      db: data/uniref50_201901.dmnd
       run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
 
