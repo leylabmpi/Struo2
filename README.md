@@ -40,7 +40,7 @@ Efficiently create/update custom databases for the following metagenome profiler
 
 You can also just use Struo2 for efficiently clustering genes via mmseqs and
 generating gene & gene-cluster databases that can be efficiently updated via
-mmseqs2.
+[mmseqs2](https://github.com/soedinglab/MMseqs2).
 
 # Changes from Version 1
 
@@ -64,13 +64,14 @@ mmseqs2.
 * Users can provide genes via either:
   * A set of genomes fasta files (genes called by prodigal)
   * A set of gene sequences (eg., produced by [PLASS](https://github.com/soedinglab/plass))
+    * Note: currently only works for updating existing Struo2-generated databases
     * If only amino-acid genes provided, the sequences can be rev-translated or skipped
     * If only nucleotide genes provided, the sequences can be translated or skipped
 * Experimental support for metaphlan3, but see the notes below
 
 # Pre-built custom databases
 
-Custom GTDB databases available at the [struo data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo2/)
+Custom GTDB databases available at the [Struo2 data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo2/)
 
 **GTDB releases available:**
 * Release 95 (13.07.2020)
@@ -447,7 +448,7 @@ then the phylogenies are merged.
 
 ## `gtdb_to_taxdump`
 
-This is a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
+This is located in a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
 
 This is useful for creating an NCBI taxdump (names.dmp and nodes.dmp)
 from the GTDB taxonomy. Note that the taxIDs are arbitrary and don't
@@ -455,7 +456,7 @@ match anything in the NCBI!
 
 ## `nbci-gtdb_map.py`
 
-This is a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
+This is located in a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
 
 This is useful for mapping between GTDB and NCBI taxonomies.
 The mapping is based on the GTDB archaeal and bacterial metadata tables,
