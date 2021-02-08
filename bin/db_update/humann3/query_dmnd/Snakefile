@@ -24,7 +24,8 @@ def dmnd_start_mem(wildcards, attempt, threads=12):
     """
     Estimating the baseline memory to use for jobs, given the diamond database size
     """
-    prot_db_size = os.stat(config['tmp_dir'] + 'humann3/humann3_dmnd_db.dmnd').st_size / 1e9
+    F = config['tmp_dir'] + 'humann3/humann3_dmnd_db.dmnd'
+    prot_db_size = os.stat(F).st_size / 1e9
     mem = round(prot_db_size * 5 / threads + 1.499,0)
     mem = (attempt - 1) * 2 + mem
     return int(mem)
@@ -110,8 +111,7 @@ rule humann3_diamond_pass2:
         fi
         """        
 
-localrules: humann3_diamond_merge
-        
+localrules: humann3_diamond_merge       
 rule humann3_diamond_merge:
     """
     Merging the results of the 2 DIAMOND passes (all splits).
@@ -131,7 +131,7 @@ rule humann3_diamond_merge:
         time = lambda wildcards, attempt: attempt ** 3 * 59
     run:
         with open(output.hits, 'w') as outF:
-            for F in [hits_orig] + input.hits1 + input.hits2:
+            for F in [input.hits_orig] + input.hits1 + input.hits2:
                 with open(F) as inF:
                     for line in inF:
                         outF.write(line)
