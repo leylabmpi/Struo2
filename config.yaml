@@ -29,11 +29,11 @@ databases:
   humann3_diamond: Create
 
 # Name of UniRef clustering (uniref90 or uniref50)
-## uniref90 highly recommended
-uniref_name: uniref90
+## "uniref90" highly recommended
+uniref_name: uniref50
 # Name of the humann3 diamond database to be created
-## This must match the naming allowed by humann3
-dmnd_name: uniref90_201901.dmnd
+## This must match the naming allowed by humann3 (eg., "uniref90_201901.dmnd")
+dmnd_name: uniref50_201901.dmnd
 # Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
 ## This is skipped if annotating with UniRef50 instead of UniRef90
 cluster_idx: data/uniref50-90.pkl
@@ -64,16 +64,16 @@ params:
     prodigal: ""
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
     mmseqs_cluster: --min-seq-id 0.9 -c 0.8
-    mmseqs_cluster_method: linclust         # or "cluster", which is slower
+    mmseqs_cluster_method: linclust     # or "cluster", which is slower
   humann3:
     batches: 2
     mmseqs_search:
-      db: Skip #data/uniref50    # uniref90 recommended
+      db: Skip #data/mmmseq2/uniref50    # UniRef90 is recommended!
       index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
-      db: data/uniref50_201901.dmnd
-      run: Skip #--evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
+      db: data/uniref50_201901.dmnd   # UniRef90 is recommended!
+      run: --evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
 
 #-- snakemake pipeline --#

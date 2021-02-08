@@ -9,11 +9,13 @@ Struo2
 
 ![](https://media.giphy.com/media/lPSMFWqKCJY5Let2v5/giphy.gif)
 
-* Version: 2.1.2
+* Version: 2.2.0
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
 * Maintainers:
   * Nick Youngblut <nyoungb2@gmail.com>
+
+> WARNING: the pipeline is still in development and could change substantially without warning!
 
 # Citation
 
@@ -161,7 +163,7 @@ See the [mmseqs2 wiki on database downloading](https://github.com/soedinglab/mms
 ```
 # you must have mmseqs2 installed
 # Example of downloading UniRef50 (WARNING: slow!)
-mmseqs databases --remove-tmp-files 1 --threads 4 UniRef50 $OUTDIR/UniRef50 data/DB_TMP
+mmseqs databases --remove-tmp-files 1 --threads 4 UniRef50 $OUTDIR/mmseqs2/UniRef50 data/mmseqs2_TMP
 ```
 
 ### IF using `diamond blastp` for gene annotation
@@ -208,11 +210,18 @@ wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_d
 tar -pzxvf $OUTDIR/GTDBr95_n10.tar.gz --directory $OUTDIR
 ```
 
-To test database updating, get this collection of 5 genomes:
+To test database updating with new genomes, get this collection of 5 genomes:
 
 ```
 wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_data/genomes/GTDBr95_n5.tar.gz
 tar -pzxvf $OUTDIR/GTDBr95_n5.tar.gz --directory $OUTDIR
+```
+
+To test database updating with indivdual genes, get this collection:
+
+```
+wget --directory-prefix $OUTDIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_data/genes/UniRef50_n5.tar.gz
+tar -pzxvf $OUTDIR/UniRef50_n5.tar.gz --directory $OUTDIR
 ```
 
 #### Example of download from the GTDB
@@ -300,6 +309,8 @@ The gene data must include:
 
 ## Edit the config file
 
+* For testing, UniRef50 is used for annotations; HOWEVER, UniRef90 is recommended
+  * If you use UniRef90, then UniRef50 annotations can be included without much extra computation via the `cluster_idx:` mapping file.
 * Select a config to edit
   * If creating a new database: edit `config.yaml`
   * If updating an existing database: edit `config-update.yaml`

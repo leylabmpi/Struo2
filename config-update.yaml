@@ -16,14 +16,14 @@ databases:
 # If you have nucleotide/amino-acid gene sequences formatted for humann
 # If translate = True, missing nuc or AA seqs will be (rev)translated from the other, else seqs not used
 new_genes:
-  amino_acid: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.faa.gz
-  nucleotide: Skip #tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.fna.gz
-  metadata: tests/output_GTDBr89_n5/genes/UniRef50/genome_reps_filtered.txt.gz
+  amino_acid: Skip #data/UniRef50/genome_reps_filtered.faa.gz
+  nucleotide: Skip #data/UniRef50/genome_reps_filtered.fna.gz
+  metadata: Skip #data/genome_reps_filtered.txt.gz
   translate: False
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
-samples_file: tests/samples/GTDBr95_n5.tsv
+samples_file: data/GTDBr95_n5/GTDBr95_n5.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -38,12 +38,12 @@ kraken2_db:
   taxonomy: tests/output_GTDBr95_n10/kraken2/taxonomy/
 genes_db:
   genes:
-    mmseqs_db:   tests/output_GTDBr95_n10/genes/genes_db.tar.gz
-    amino_acid:  tests/output_GTDBr95_n10/genes/genome_reps_filtered.faa.gz
-    nucleotide:  tests/output_GTDBr95_n10/genes/genome_reps_filtered.fna.gz
-    metadata:    tests/output_GTDBr95_n10/genes/genome_reps_filtered.txt.gz
+    mmseqs_db:  tests/output_GTDBr95_n10/genes/genes_db.tar.gz
+    amino_acid: tests/output_GTDBr95_n10/genes/genome_reps_filtered.faa.gz
+    nucleotide: tests/output_GTDBr95_n10/genes/genome_reps_filtered.fna.gz
+    metadata:   tests/output_GTDBr95_n10/genes/genome_reps_filtered.txt.gz
   cluster:
-    mmseqs_db:   tests/output_GTDBr95_n10/genes/cluster/clusters_db.tar.gz    
+    mmseqs_db:  tests/output_GTDBr95_n10/genes/cluster/clusters_db.tar.gz    
 humann_db:
   query:
     hits: tests/output_GTDBr95_n10/humann3/annotation_hits.gz
@@ -53,17 +53,25 @@ humann_db:
 
 #-- Output --#
 # output location
-output_dir: tests/output_GTDBr95_n10_updated-genomes/
+output_dir: tests/output_GTDBr95_n10-n5/
 
+# Name of UniRef clustering (uniref90 or uniref50)
+## "uniref90" highly recommended
+uniref_name: uniref50
 # Name of the humann3 diamond database to create
 ## This must match naming allowed by humann3
-dmnd_name: uniref90_201901.dmnd
+dmnd_name: uniref50_201901.dmnd   # UniRef90 is recommended
 # Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
 ## Skip if annotating with UniRef50
-cluster_idx: /ebio/abt3_projects/databases_no-backup/uniref/2019.01/uniref50-90.pkl
+cluster_idx: data/uniref50-90.pkl
 
 # temporary file directory (your username will be added automatically)
-tmp_dir: /ebio/abt3_scratch/
+tmp_dir: tmp/db_update_tmp/
+
+#-- if custom NCBI/GTDB taxdump files, "Skip" if standard NCBI taxdump --#
+# Used for kraken taxonomy & metaphlan
+names_dmp: data/names.dmp
+nodes_dmp: data/nodes.dmp
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
@@ -86,15 +94,15 @@ params:
     vsearch_per_genome: --id 0.97 --strand both --qmask none --fasta_width 0
     mmseqs_cluster_update: --min-seq-id 0.9 -c 0.8 -s 4.0    
   humann3:
-    batches: 10
+    batches: 2
     filter_existing: --min-pident 0  # any existing genes w/ < cutoff with be re-queried
     mmseqs_search:
-      db: /ebio/abt3_projects/databases_no-backup/mmseqs/UniRef90/2019_01/uniref90
+      db: Skip #data/mmseqs2/uniref50   # UniRef90 is recommended!
       index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
-      db: /ebio/abt3_projects/databases_no-backup/humann3/201901/uniref90/uniref90_201901.dmnd
-      run: Skip #--evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2
+      db: data/uniref50_201901.dmnd   # UniRef90 is recommended!
+      run: --evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
 
 #-- snakemake pipeline --#

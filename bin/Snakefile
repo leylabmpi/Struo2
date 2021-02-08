@@ -45,7 +45,7 @@ def all_which_input(wildcards):
     # humann3
     if (not skipped(config['databases']['humann3_bowtie2']) and
         not skipped(config['databases']['humann3_diamond'])):
-        # multiple UniRef cutoffs
+        # multiple UniRef databases
         uniref_cutoffs = [config['uniref_name']]
         dmnd_names = [config['dmnd_name']]
         if config['uniref_name'] != 'uniref50' and not skipped(config['cluster_idx']):

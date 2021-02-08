@@ -64,7 +64,7 @@ rule humann3_diamond_pass1:
           --tmpdir $TMPDIR --threads {threads} \
           -q {input.faa} -d {input.dmnd_db} \
           -o {output.hits} --un {output.unaln} \
-          --outfmt 6 qseqid sseqid evalue length slen \
+          --outfmt 6 qseqid sseqid evalue pident length slen \
           2>> {log} 1>&2
         """
 
@@ -103,7 +103,7 @@ rule humann3_diamond_pass2:
           diamond blastp --sensitive {params.params} \
             --tmpdir $TMPDIR --threads {threads} \
             -q {input.faa} -d {input.dmnd_db} -o {output.hits} \
-            --outfmt 6 qseqid sseqid evalue length slen \
+            --outfmt 6 qseqid sseqid evalue pident length slen \
             2>> {log} 1>&2
         else
           touch {output.hits} 2> {log} 1>&2

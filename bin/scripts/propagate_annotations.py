@@ -33,7 +33,7 @@ parser.add_argument('--out-nuc', type=str, default='annotated.fna',
 parser.add_argument('--out-prot', type=str, default='annotated.faa',
                     help='Output amino acid fasta (default: %(default)s)')
 parser.add_argument('--dmnd-columns', type=str, default='qseqid,sseqid,evalue,pident,alnlen,slen',
-                    help='Diamond output columns (default: %(default)s)')      
+                    help='diamond/mmseqs output columns (default: %(default)s)')      
 parser.add_argument('--keep-unclassified', action='store_true', default=False,
                     help='Keep gene clusters without DIAMOND hit? (default: %(default)s)')
 parser.add_argument('--min-pident', type=float, default=50,

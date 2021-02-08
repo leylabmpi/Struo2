@@ -3,10 +3,24 @@
 if (not skipped(config['params']['humann3']['mmseqs_search']['db']) and
     not skipped(config['params']['humann3']['mmseqs_search']['index']) and
     not skipped(config['params']['humann3']['mmseqs_search']['run'])):
+    # checking on database
+    if not re.search(config['uniref_name'],
+                     str(config['params']['humann3']['mmseqs_search']['db']).lower()):
+        print('\33[35m  * WARNING the uniref_name does not match the query database\x1b[0m')
+        print('\33[35m    * ({} <=> {})\x1b[0m'.format(config['uniref_name'], config['params']['humann3']['mmseqs_search']['db']))               
     # mmseqs search
     print('\33[36m  * Using "mmseqs search" for annotating genes\x1b[0m')
     include: snake_dir + 'bin/db_create/humann3/query/mmseqs/Snakefile'
-else:
+elif (not skipped(config['params']['humann3']['diamond']['db']) and
+      not skipped(config['params']['humann3']['diamond']['run'])):
+    # checking on database
+    if not re.search(config['uniref_name'],
+                     str(config['params']['humann3']['diamond']['db']).lower()):
+        print('\33[35m  * WARNING the uniref_name does not match the query database\x1b[0m')
+        print('\33[35m    * ({} <=> {})\x1b[0m'.format(config['uniref_name'], config['params']['humann3']['diamond']['db']))               
     # diamond blastp
     print('\33[36m  * Using "diamond blastp" for annotating genes\x1b[0m')
     include: snake_dir + 'bin/db_create/humann3/query/dmnd/Snakefile'
+else:
+    print('\33[31m  ERROR: all query methods skipped!\x1b[0m')
+    

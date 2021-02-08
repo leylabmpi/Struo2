@@ -35,8 +35,14 @@ config['pipeline']['snakemake_folder'] = \
     os.path.abspath(config['pipeline']['snakemake_folder']) + '/'
 
 # uniref
-config['uniref_name'] = config['uniref_name'].lower()
-config['uniref_other_name'] = 'uniref50' if config['uniref_name'] == 'uniref90' else 'uniref90'
+config['uniref_name'] = str(config['uniref_name']).rstrip().lower()
+if config['uniref_name'] == 'uniref50':
+    config['uniref_other_name'] = 'uniref90'
+elif config['uniref_name'] == 'uniref90':
+    config['uniref_other_name'] = 'uniref50'
+else:
+    msg = 'Only "uniref90" and "uniref50" supported for "uniref_name:". Value provided: {}'
+    raise ValueError(msg.format(config['uniref_name']))
 
 ## base of the snakefile hierarchy 
 include: snake_dir + 'bin/Snakefile'
