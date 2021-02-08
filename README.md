@@ -3,11 +3,12 @@
 Struo2
 ======
 
+![logo](./img/logo.png)
+
+
 **Struo2:** a pipeline for building custom databases for common metagenome profilers
 
 > "Struo" --> from the Latin: “I build” or “I gather”
-
-![](https://media.giphy.com/media/lPSMFWqKCJY5Let2v5/giphy.gif)
 
 * Version: 2.2.0
 * Authors:
