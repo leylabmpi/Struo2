@@ -1,5 +1,6 @@
 channels:
 - bioconda
+- conda-forge
 dependencies:
 - libiconv
 - bioconda::kraken2

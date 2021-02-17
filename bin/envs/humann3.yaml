@@ -1,6 +1,7 @@
 channels:
 - bioconda
 - biobakery
+- conda-forge
 dependencies:
 - pigz
 - bioconda::seqkit
