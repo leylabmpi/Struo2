@@ -5,7 +5,6 @@ dependencies:
 - python=3
 - numpy
 - bioconda::seqkit
-- bioconda::fasta-splitter
 - bioconda::vsearch
 - bioconda::prodigal
 - bioconda::mmseqs2

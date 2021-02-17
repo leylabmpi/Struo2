@@ -62,13 +62,3 @@ rule humann3_batch_seqs:
         touch {output.done}
         """
 
-        # echo "# Uncompressing fasta..." > {log}
-        # mkdir -p `dirname {output.faa}` 2>> {log}
-        # ionice {params.ionice} gunzip -c {input.faa} > {output.faa} 2>> {log}
-
-        # echo "# Splitting fasta..." >> {log}
-        # mkdir -p {params.out_dir} 2>> {log}
-        # fasta-splitter \
-        #   --n-parts {params.n_splits} \
-        #   --out-dir {params.out_dir} \
-        #   {output.faa} 2>> {log} 1>&2
