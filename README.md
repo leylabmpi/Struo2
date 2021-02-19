@@ -20,10 +20,11 @@ Struo2
 
 # Citation
 
-Struo version 2 has major changes from version 1, but verion 2 has not yet been published.
-For now, please just cite Struo1:
+## Struo2
 
-## Struo version 1 
+Youngblut, Nicholas D., and Ruth E. Ley. 2021. “Struo2: Efficient Metagenome Profiling Database Construction for Ever-Expanding Microbial Genome Datasets.” Cold Spring Harbor Laboratory. https://doi.org/10.1101/2021.02.10.430604.
+
+## Struo (original)
 
 Cuesta-Zuluaga, Jacobo de la, Ruth E. Ley, and Nicholas D. Youngblut. 2019.
 "Struo: A Pipeline for Building Custom Databases for Common Metagenome Profilers."
