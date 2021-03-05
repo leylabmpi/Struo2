@@ -17,7 +17,7 @@ bin/scripts/metaphlan2/databases/
 no-log_jobs_sge.*
 *4test.yaml
 data/
-notebooks_Dev/
+notebooks_dev/
 
 # hg
 **/.hg/
