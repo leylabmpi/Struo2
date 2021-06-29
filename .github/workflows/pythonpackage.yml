@@ -25,10 +25,9 @@ jobs:
         activate-environment: struo2
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@master
       with:
-        remote: true
+        token: ${{ secrets.ACCESS_TOKEN }}
+        submodules: true
     - name: struo2 setup
       shell: bash -l {0}
       run: |

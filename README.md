@@ -22,14 +22,11 @@ Struo2
 
 ## Struo2
 
-Youngblut, Nicholas D., and Ruth E. Ley. 2021. “Struo2: Efficient Metagenome Profiling Database Construction for Ever-Expanding Microbial Genome Datasets.” Cold Spring Harbor Laboratory. https://doi.org/10.1101/2021.02.10.430604.
+> Youngblut, Nicholas D., and Ruth E. Ley. 2021. "Struo2: Efficient Metagenome Profiling Database Construction for Ever-Expanding Microbial Genome Datasets." Cold Spring Harbor Laboratory. https://doi.org/10.1101/2021.02.10.430604.
 
 ## Struo (original)
 
-Cuesta-Zuluaga, Jacobo de la, Ruth E. Ley, and Nicholas D. Youngblut. 2019.
-"Struo: A Pipeline for Building Custom Databases for Common Metagenome Profilers."
-Bioinformatics , November.
-[https://doi.org/10.1093/bioinformatics/btz899](https://doi.org/10.1093/bioinformatics/btz899)
+> Cuesta-Zuluaga, Jacobo de la, Ruth E. Ley, and Nicholas D. Youngblut. 2019. "Struo: A Pipeline for Building Custom Databases for Common Metagenome Profilers." Bioinformatics , November. [https://doi.org/10.1093/bioinformatics/btz899](https://doi.org/10.1093/bioinformatics/btz899)
 
 # Overview
 
@@ -50,7 +47,7 @@ generating gene & gene-cluster databases that can be efficiently updated via
 * All coding sequences from all genomes are now clustered prior to annotation,
   and then the annotations (UniRef IDs, by default) are propagated to each member
   of each cluster.
-  * This is substantially faster than the per-genome annotation appraoch used for Struo1
+  * This is substantially faster than the per-genome annotation approach used for Struo1
   * It also allows for efficient database updates via `mmseqs clusterupdate`.
 * By default `mmseqs search` is used for annotation instead of `diamond blastp`
   * `mmseqs search` can be a bit faster and more sensitive than DIAMOND
@@ -124,7 +121,9 @@ git submodule update --remote --init --recursive
   * newick_utils=1.6
 
 If you want email notifications upon pipeline success/failure, then you need
-mutt installed on your OS.
+`mutt` installed on your OS (e.g., `sudo apt-get install mutt`).
+
+See [the miniconda docs](https://docs.conda.io/en/latest/miniconda.html) for installing conda.
 
 ## Setting a location for necessary files
 
