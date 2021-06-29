@@ -14,7 +14,7 @@ jobs:
       DATADIR: data
     strategy:
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.7]
     steps:
     - uses: conda-incubator/setup-miniconda@v2
       with:
