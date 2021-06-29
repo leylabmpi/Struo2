@@ -25,9 +25,8 @@ jobs:
         activate-environment: struo2
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.ACCESS_TOKEN }}
-        submodules: true
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
     - name: struo2 setup
       shell: bash -l {0}
       run: |

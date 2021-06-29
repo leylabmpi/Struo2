@@ -5,7 +5,7 @@ dependencies:
 - pigz
 - python=3
 - numpy
-- bioconda::seqkit
+- bioconda::seqkit>=0.16.1
 - bioconda::vsearch
 - bioconda::prodigal
 - bioconda::mmseqs2
