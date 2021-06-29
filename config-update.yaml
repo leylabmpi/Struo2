@@ -23,7 +23,7 @@ new_genes:
 
 #--- If a set of genomes to add ---#
 # file listing samples and associated data
-samples_file: data/GTDBr95_n5/GTDBr95_n5.tsv
+samples_file: data/GTDBr95_n5/GTDBr95_n2.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -34,26 +34,26 @@ taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy'
 
 # Saved databases that will be updated
 kraken2_db:
-  library:  tests/output_GTDBr95_n10/kraken2/library/
-  taxonomy: tests/output_GTDBr95_n10/kraken2/taxonomy/
+  library:  tests/output_GTDBr95_n5/kraken2/library/
+  taxonomy: tests/output_GTDBr95_n5/kraken2/taxonomy/
 genes_db:
   genes:
-    mmseqs_db:  tests/output_GTDBr95_n10/genes/genes_db.tar.gz
-    amino_acid: tests/output_GTDBr95_n10/genes/genome_reps_filtered.faa.gz
-    nucleotide: tests/output_GTDBr95_n10/genes/genome_reps_filtered.fna.gz
-    metadata:   tests/output_GTDBr95_n10/genes/genome_reps_filtered.txt.gz
+    mmseqs_db:  tests/output_GTDBr95_n5/genes/genes_db.tar.gz
+    amino_acid: tests/output_GTDBr95_n5/genes/genome_reps_filtered.faa.gz
+    nucleotide: tests/output_GTDBr95_n5/genes/genome_reps_filtered.fna.gz
+    metadata:   tests/output_GTDBr95_n5/genes/genome_reps_filtered.txt.gz
   cluster:
-    mmseqs_db:  tests/output_GTDBr95_n10/genes/cluster/clusters_db.tar.gz    
+    mmseqs_db:  tests/output_GTDBr95_n5/genes/cluster/clusters_db.tar.gz    
 humann_db:
   query:
-    hits: tests/output_GTDBr95_n10/humann3/annotation_hits.gz
+    hits: tests/output_GTDBr95_n5/humann3/annotation_hits.gz
   cluster:
-    reps: tests/output_GTDBr95_n10/genes/cluster/clusters_reps.faa.gz
-    membership: tests/output_GTDBr95_n10/genes/cluster/clusters_membership.tsv.gz
+    reps: tests/output_GTDBr95_n5/genes/cluster/clusters_reps.faa.gz
+    membership: tests/output_GTDBr95_n5/genes/cluster/clusters_membership.tsv.gz
 
 #-- Output --#
 # output location
-output_dir: tests/output_GTDBr95_n10-n5/
+output_dir: tests/output_GTDBr95_n5-n2/
 
 # Name of UniRef clustering (uniref90 or uniref50)
 ## "uniref90" highly recommended

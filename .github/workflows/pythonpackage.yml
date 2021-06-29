@@ -52,4 +52,4 @@ jobs:
     - name: DB update tests
       shell: bash -l {0}
       run: |
-        snakemake --use-conda --configfile config.yaml -F --dryrun
+        snakemake --use-conda --configfile config-update.yaml -F --dryrun
