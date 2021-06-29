@@ -53,8 +53,8 @@ jobs:
     - name: DB create tests
       shell: bash -l {0}
       run: |
-        snakemake --use-conda --configfile config.yaml -F --dryrun
+        snakemake --use-conda --configfile config.yaml -j 1 -F --dryrun
     - name: DB update tests
       shell: bash -l {0}
       run: |
-        echo "todo" #snakemake --use-conda --configfile config-update.yaml -F --dryrun
+        echo "todo" #snakemake --use-conda --configfile config-update.yaml -j 1 -F --dryrun
