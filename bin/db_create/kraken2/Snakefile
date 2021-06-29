@@ -88,8 +88,6 @@ rule kraken2_add_taxID:
         {params.exe} {input.fasta} {params.taxID} > {output} 2> {log}
         """
 
-localrules: kraken2_build_add
-
 rule kraken2_build_add:
     """
     Adding genome fasta files to the kraken database.
@@ -101,9 +99,12 @@ rule kraken2_build_add:
         names = config['tmp_dir'] + 'kraken2/taxonomy/names.dmp'
     output:
         done = temp(config['tmp_dir'] + 'kraken2/added/{sample}.done')
+    threads:
+        4
     resources:
         time = lambda wildcards, attempt: attempt ** 2 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 6
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt: attempt * 3
     conda:
         '../../envs/kraken2.yaml'
     log:
@@ -115,7 +116,9 @@ rule kraken2_build_add:
         DB=`dirname {input.names}`
         DB=`dirname $DB`
 
-        kraken2-build --db $DB --add-to-library {input.fasta}  2> {log} 1>&2
+        kraken2-build --threads {threads} \
+          --db $DB --add-to-library {input.fasta} \
+          2> {log} 1>&2
         touch {output.done} 2>> {log}
         """
     
@@ -136,7 +139,7 @@ rule kraken2_build:
     resources:
         time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 2 + 4
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 2.7 + 4,0))
     conda:
         '../../envs/kraken2.yaml'
     log:

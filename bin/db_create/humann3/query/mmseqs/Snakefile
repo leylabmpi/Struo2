@@ -129,13 +129,14 @@ rule mmseqs_search_create_query_db:
         mmseqs createdb {input} {output.db} 2> {log} 1>&2
         """
 
-def mmseqs_search_mem(wildcards, attempt, threads=8):
+def mmseqs_search_mem(wildcards, input, attempt, threads=8):
     """ 
     memory for mmseqs searching the indexed database
     """
     x = config['params']['humann3']['mmseqs_search']['db']    
     prot_db_size = os.stat(x).st_size / 1e9
-    mem = prot_db_size * 3.5 + 10
+    query_db_size = os.stat(input.qdb).st_size / 1e9    
+    mem = prot_db_size * 3.5 + 10 + query_db_size
     mem = round(float(mem) / threads + 1.499,0) + attempt ** 2
     if x.lower().endswith('uniref90') and mem < 29:
         mem = 28 + attempt ** 2

@@ -160,7 +160,7 @@ rule check_gene_info:
         exe = config['pipeline']['script_folder'] + 'check_gene_info.py'
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt * 8
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt ** 2.5 * 8,0))
     log:
         log_dir + 'check_gene_info/all.log'
     benchmark:

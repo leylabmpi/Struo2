@@ -45,8 +45,8 @@ rule humann3_batch_seqs:
     params:
         n_splits = config['params']['humann3']['batches'],
     resources:
-        time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 10
+        time = lambda wildcards, attempt: int(round(attempt ** 3.5 * 59,0)),
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 10
     conda:
         '../../../envs/genes.yaml'
     log:
