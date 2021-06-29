@@ -31,8 +31,8 @@ jobs:
       shell: bash -l {0}
       run: |
         mkdir -p $DATADIR
-        wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/names.dmp
-        wget -O $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/nodes.dmp
+        wget -O $DATADIR/taxdump.tar.gz http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/taxdump.tar.gz
+	tar -pzxvf $DATADIR/taxdump.tar.gz -C $DATADIR && rm -f $DATADIR/taxdump.tar.gz
     - name: conda env setup
       shell: bash -l {0}
       run: |
