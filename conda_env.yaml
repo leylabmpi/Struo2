@@ -1,0 +1,16 @@
+# This file may be used to create an environment using:
+# `conda env create --name <env> --file <this file>`
+channels:
+- conda-forge
+- bioconda
+dependencies:
+- python>=3.6
+- pandas>=1.1.2
+- snakemake>=5.31.1
+- r-base>=3.6
+- r-argparse>=2.0.1
+- r-curl>=4.2
+- r-data.table>=1.12.4
+- r-dplyr>=0.8.3
+- ncbi-genome-download>=0.2.10
+- newick_utils>=1.6

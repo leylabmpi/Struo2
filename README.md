@@ -106,24 +106,20 @@ git submodule update --remote --init --recursive
 
 ## conda env setup
 
-> Versions listed are those that have been tested. Newer versions will likely work
+See [the miniconda docs](https://docs.conda.io/en/latest/miniconda.html) for installing conda.
 
-* If just running the pipeline
-  * python=3.6
-  * snakemake=5.31.1
-* If using the utility scripts
-  * r-base=3.6
-  * r-argparse=2.0.1
-  * r-curl=4.2
-  * r-data.table=1.12.4
-  * r-dplyr=0.8.3
-  * ncbi-genome-download=0.2.10
-  * newick_utils=1.6
+To install the main conda environment for running the snakemake pipeline and utility scripts:
+
+```
+conda env create --name struo2 conda_env.yaml
+```
 
 If you want email notifications upon pipeline success/failure, then you need
 `mutt` installed on your OS (e.g., `sudo apt-get install mutt`).
 
-See [the miniconda docs](https://docs.conda.io/en/latest/miniconda.html) for installing conda.
+All other dependencies are installed
+[automatically in conda environments via snakemake](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html)
+when running the pipeline.
 
 ## Setting a location for necessary files
 

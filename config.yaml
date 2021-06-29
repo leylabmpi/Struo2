@@ -40,8 +40,8 @@ cluster_idx: data/uniref50-90.pkl
 
 #-- if custom NCBI/GTDB taxdump files, "Skip" if standard NCBI taxdump --#
 # Used for kraken taxonomy & metaphlan
-names_dmp: data/names.dmp
-nodes_dmp: data/nodes.dmp
+names_dmp: data/taxdump/names.dmp
+nodes_dmp: data/taxdump/nodes.dmp
 
 #-- keep intermediate files required for re-creating DBs (eg., w/ more genomes) --#
 # If "True", the intermediate files are saved to `output_dir`
