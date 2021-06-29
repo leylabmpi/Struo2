@@ -10,7 +10,7 @@ Struo2
 
 > "Struo" --> from the Latin: “I build” or “I gather”
 
-* Version: 2.2.0
+* Version: 2.2.1
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
 * Maintainers:
