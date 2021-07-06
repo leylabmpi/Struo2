@@ -43,10 +43,13 @@ rule humann3_batch_seqs:
                            'humann3_search/stdin.part_{splitID}.fasta',
 	                   splitID=config['params']['humann3']['splits']))
     params:
-        n_splits = config['params']['humann3']['batches'],
+        n_splits = config['params']['humann3']['batches']
+    threads:
+        4
     resources:
-        time = lambda wildcards, attempt: int(round(attempt ** 3.5 * 59,0)),
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 10
+        time = lambda wildcards, attempt: int(round(attempt ** 4 * 59,0)),
+        n = lambda wildcards, attempt, threads: threads,
+        mem_gb_pt = lambda wildcards, attempt, threads: int(round(attempt ** 3 * 10.0 / threads,0))
     conda:
         '../../../envs/genes.yaml'
     log:
@@ -56,9 +59,9 @@ rule humann3_batch_seqs:
     shell:
         """
         OUTDIR=`dirname {output.done} 2> {log}`
-        seqkit shuffle -j 1 --two-pass {input.faa} 2>> {log} | \
-          perl -pe 's/^\n//' 2>> {log} | \
-          seqkit split -j 1 --by-part {params.n_splits} --out-dir $OUTDIR 2>> {log} 1>&2
+        seqkit shuffle -j {threads} {input.faa} 2>> {log} | \
+          seqkit split -j {threads} --by-part {params.n_splits} \
+            --out-dir $OUTDIR 2>> {log} 1>&2
         touch {output.done}
         """
 

@@ -5,6 +5,7 @@ channels:
 - bioconda
 dependencies:
 - python>=3.6
+- mamba>=0.11
 - pandas>=1.1.2
 - snakemake>=5.31.1
 - r-base>=3.6

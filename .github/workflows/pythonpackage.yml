@@ -31,7 +31,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda info -a
-        conda install python=${{ matrix.python-version }} pandas snakemake mamba r-base r-argparse r-curl r-data.table r-dplyr ncbi-genome-download newick_utils
+	conda env create -f conda_env.yaml python=${{ matrix.python-version }}
         conda list
     - name: taxdump db setup
       shell: bash -l {0}

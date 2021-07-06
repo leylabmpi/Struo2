@@ -193,7 +193,7 @@ rule mmseqs_search:
     threads:
         8
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 60 * 24,
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 24 + (60 * 24),
         n = lambda wildcards, attempt, threads: threads,
         mem_gb_pt = mmseqs_search_mem
     conda:
