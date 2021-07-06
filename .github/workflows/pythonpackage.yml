@@ -31,7 +31,7 @@ jobs:
       shell: bash -l {0}
       run: |
         conda info -a
-	conda env create -f conda_env.yaml python=${{ matrix.python-version }}
+        conda env create -f conda_env.yaml python=${{ matrix.python-version }}
         conda list
     - name: taxdump db setup
       shell: bash -l {0}
