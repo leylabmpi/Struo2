@@ -66,4 +66,4 @@ jobs:
     - name: Mis-assembly simulation test
       shell: bash -l {0}
       run: |
-        ./util_scripts/genome_mis-asmbl_sim.py -b 2 -r 2 -c 2 data/GTDBr95_n5/GTDBr95_n5.tsv
+        ./util_scripts/genome_mis-asmbl_sim.py -b 2 -r 2 -c 2 data/GTDBr95_n5/GTDBr95_n5_meta.tsv
