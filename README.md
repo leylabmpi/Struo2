@@ -115,6 +115,12 @@ To install the main conda environment for running the snakemake pipeline and uti
 conda env create --name struo2 conda_env.yaml
 ```
 
+The only real dependencies for running the Struo2 snakemake pipeline are:
+
+* Python
+* Snakemake
+* Pandas python package
+
 If you want email notifications upon pipeline success/failure, then you need
 `mutt` installed on your OS (e.g., `sudo apt-get install mutt`).
 
@@ -124,8 +130,12 @@ when running the pipeline.
 
 ## Setting a location for necessary files
 
+The pipeline requires a few publicly available database files (see below). 
+Some files are large and require many hours to download.
+
 ```
-# creating a directory to hold all of the necessary Struo2 data files
+# Create a directory to hold all of the necessary Struo2 data files
+# The directory location can be anywhere on your file system
 OUTDIR=./data/
 mkdir -p $OUTDIR
 ```
@@ -137,7 +147,8 @@ The taxdump files are used for creating/updating the Kraken2 database.
 ### GTDB taxdump
 
 By default, the pipeline uses custom GTDB taxIDs generated with
-[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump). 
+[gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
+from the [GTDB taxonomy](https://gtdb.ecogenomic.org/).
 To download the custom taxdump files:
 
 ```
