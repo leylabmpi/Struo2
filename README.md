@@ -19,6 +19,50 @@ Struo2
 
 > WARNING: the pipeline is still in development and could change substantially without warning!
 
+# TOC
+
+- [Citation](#citation)
+- [Overview](#overview)
+- [Changes from Version 1](#changes-from-version-1)
+- [Pre-built custom databases](#pre-built-custom-databases)
+- [Setup for installing Struo2](#setup-for-installing-struo2)
+  * [Download](#download)
+  * [conda env setup](#conda-env-setup)
+  * [Setting a location for necessary files](#setting-a-location-for-necessary-files)
+  * [taxdump files](#taxdump-files)
+    + [GTDB taxdump](#gtdb-taxdump)
+    + [NCBI taxdump](#ncbi-taxdump)
+  * [UniRef](#uniref)
+    + [IF using `mmseqs search` for gene annotation](#if-using--mmseqs-search--for-gene-annotation)
+    + [IF using `diamond blastp` for gene annotation](#if-using--diamond-blastp--for-gene-annotation)
+  * [UniRef50-90 index](#uniref50-90-index)
+  * [Getting reference genomes for the custom databases](#getting-reference-genomes-for-the-custom-databases)
+    + [Downloading genomes](#downloading-genomes)
+      - [A toy dataset](#a-toy-dataset)
+      - [Example of download from the GTDB](#example-of-download-from-the-gtdb)
+- [Input genome/gene data](#input-genome-gene-data)
+  * [Genome data](#genome-data)
+  * [Gene data](#gene-data)
+- [Running the pipeline](#running-the-pipeline)
+  * [Edit the config file](#edit-the-config-file)
+    + [Running locally](#running-locally)
+    + [Running on a cluster](#running-on-a-cluster)
+    + [General info on using `snakemake`](#general-info-on-using--snakemake-)
+  * [Using the resulting databases](#using-the-resulting-databases)
+    + [Example of a HUMANnN3 run](#example-of-a-humannn3-run)
+- [Utilities](#utilities)
+  * [`GTDB_metadata_filter.R`](#-gtdb-metadata-filterr-)
+  * [`genome_download.R`](#-genome-downloadr-)
+  * [`tree_prune.py`](#-tree-prunepy-)
+  * [`gtdb_to_taxdump`](#-gtdb-to-taxdump-)
+  * [`nbci-gtdb_map.py`](#-nbci-gtdb-mappy-)
+- [Tutorials](#tutorials)
+- [FAQ](#faq)
+  * [Why is MetaPhlAn not included in Struo2?](#why-is-metaphlan-not-included-in-struo2-)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 # Citation
 
 ## Struo2
@@ -254,8 +298,6 @@ tar -pzxvf $OUTDIR/UniRef50_n5.tar.gz --directory $OUTDIR
 # Note: genome fasta files can be compressed (gzip or bzip2) or uncompress for input to Struo2
 ```
 
-
-
 # Input genome/gene data
 
 The genomes and/or individual genes used for creating/updating databases
@@ -350,7 +392,7 @@ This is only recommended for test runs
 It is always good to run snakemake in `dryrun` mode first:
 
 ```
-snakemake --use-conda -j -Fqn
+snakemake --use-conda -j 1 -Fqn
 ```
 
 For an actual run with 2 cores:
@@ -476,6 +518,11 @@ This is located in a [separate repo](https://github.com/nick-youngblut/gtdb_to_t
 This is useful for mapping between GTDB and NCBI taxonomies.
 The mapping is based on the GTDB archaeal and bacterial metadata tables,
 which contain both GTDB and NCBI taxonomic lineages. 
+
+# Tutorials 
+
+See the [Struo2 wiki](https://github.com/leylabmpi/Struo2/wiki) for tutorials on
+database generation and updating.
 
 # FAQ
 
