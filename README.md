@@ -1,4 +1,5 @@
 ![Struo2](https://github.com/leylabmpi/Struo2/workflows/Struo2/badge.svg)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥5.6.0-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
 
 Struo2
 ======
@@ -465,3 +466,19 @@ This is useful for mapping between GTDB and NCBI taxonomies.
 The mapping is based on the GTDB archaeal and bacterial metadata tables,
 which contain both GTDB and NCBI taxonomic lineages. 
 
+# FAQ
+
+## Why is MetaPhlAn not included in Struo2?
+
+MetaPhlAn requires intra-clade information in regards to which genes are core and variable
+within the clade. Inter-clade information is also needed in order to specify which "core"
+genes for a clade are also present in other clades.
+
+Struo2 is designed to process one genome representative of each species, which is all
+that is required for generating the Kraken2/Bracken and HUMAnN databases.
+Inclusion of MetaPhlAn would require that users provide all genomes per clade (species),
+would greatly add to the total computation of the pipeline, and would greatly increase
+the total complexity of the pipeline.
+
+We note that `Kraken2 + Bracken` generally has the highest scores of any species-level
+taxonomic profilier tested in the [LEMMI evaluations](https://lemmi.ezlab.org/). 

@@ -17,6 +17,7 @@ if not config['names_dmp'].startswith('Skip') and \
             """
             cp -f {input.names} {output.names} 2> {log}
             cp -f {input.nodes} {output.nodes} 2>> {log}
+            chmod u+w {output.names} {output.nodes} 2>> {log}
             """
 else:
     localrules: kraken2_build_download_tax
