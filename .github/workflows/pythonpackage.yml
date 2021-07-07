@@ -44,12 +44,6 @@ jobs:
       run: |
         touch $DATADIR/uniref50_201901.dmnd
         touch $DATADIR/uniref50-90.pkl
-    - name: Util script tests
-      shell: bash -l {0}
-      run: |
-        ./util_scripts/genome_download.R -h
-        ./util_scripts/GTDB_metadata_filter.R -h
-        ./util_scripts/tree_prune.py -h
     - name: DB create tests
       shell: bash -l {0}
       run: |
@@ -58,3 +52,18 @@ jobs:
       shell: bash -l {0}
       run: |
         echo "todo" #snakemake --use-conda --configfile config-update.yaml -j 1 -F --dryrun
+    - name: Util script dependency tests
+      shell: bash -l {0}
+      run: |
+        ./util_scripts/genome_download.R -h
+        ./util_scripts/GTDB_metadata_filter.R -h
+        ./util_scripts/tree_prune.py -h
+        ./util_scripts/genome_mis-asmbl_sim.py -h
+    - name: Tree pruning test
+      shell: bash -l {0}
+      run: |
+        ./util_scripts/tree_prune.py tests/data/phylogeny/accs_to_keep.txt tests/data/phylogeny/ar122_r95.tree
+    - name: Mis-assembly simulation test
+      shell: bash -l {0}
+      run: |
+        ./util_scripts/genome_mis-asmbl_sim.py -b 2 -r 2 -c 2 tests/data/GTDBr95_genome-n5.tsv
