@@ -503,6 +503,11 @@ for phylogenetic analyses of metagenomes (e.g., Faith's PD or Unifrac).
 Prune >=1 phylogeny to just certain taxa. If >1 phylogeny provided,
 then the phylogenies are merged.
 
+## `genome_mis-asmbl_sim.py`
+
+A simple script for simulating mis-assemblies among a set of microbial genomes.
+See the script help docs for more information. 
+
 ## `gtdb_to_taxdump`
 
 This is located in a [separate repo](https://github.com/nick-youngblut/gtdb_to_taxdump).
