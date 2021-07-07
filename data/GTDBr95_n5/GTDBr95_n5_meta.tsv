@@ -1,0 +1,6 @@
+taxon	fasta
+RS_GCF_006715045.1_Amycolatopsis cihanbeyliensis	data/GTDBr95_n5/GCA_006715045.1_ASM671504v1_genomic.fna.gz
+GB_GCA_002478565.1_Flavobacteriales bacterium UBA7468	data/GTDBr95_n5/GCA_002478565.1_ASM247856v1_genomic.fna.gz
+GB_GCA_007116575.1_Rhodobacteraceae bacterium	data/GTDBr95_n5/GCA_007116575.1_ASM711657v1_genomic.fna.gz
+GB_GCA_000014945.1_Methanosaeta thermophila PT	data/GTDBr95_n5/GCA_000014945.1_ASM1494v1_genomic.fna.gz
+GB_GCA_000720375.1_Rhodococcus rhodnii	data/GTDBr95_n5/GCA_000720375.1_ASM72037v1_genomic.fna.gz
