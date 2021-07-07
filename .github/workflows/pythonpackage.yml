@@ -62,8 +62,8 @@ jobs:
     - name: Tree pruning test
       shell: bash -l {0}
       run: |
-        ./util_scripts/tree_prune.py tests/data/phylogeny/accs_to_keep.txt tests/data/phylogeny/ar122_r95.tree
+        ./util_scripts/tree_prune.py data/phylogeny/accs_to_keep.txt data/phylogeny/ar122_r95.tree
     - name: Mis-assembly simulation test
       shell: bash -l {0}
       run: |
-        ./util_scripts/genome_mis-asmbl_sim.py -b 2 -r 2 -c 2 tests/data/GTDBr95_genome-n5.tsv
+        ./util_scripts/genome_mis-asmbl_sim.py -b 2 -r 2 -c 2 data/GTDBr95_n5.tsv
