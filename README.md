@@ -307,7 +307,7 @@ The genomes and/or individual genes used for creating/updating databases
 The table of input files/data can be created using the helper scripts described above
 if you downloaded the genomes from the GTDB or NCBI.
 
-The `samples.txt` file, by default.
+The `samples.txt` file lists all reference genomes to be included in the custom databases:
 
 * The pipeline requires a tab-delimited table that includes the following columns (column names specified in the `config.yaml` file):
   * `samples_col` (default = `ncbi_organism_name`)
@@ -332,7 +332,9 @@ The `samples.txt` file, by default.
       * `s__unclassified`  (if no species)
     * This is needed for HUMAnN3
 
-Other columns in the file will be ignored. The path to the samples file should be specified in the `config.yaml` file (see below)
+Other columns in the file will be ignored. 
+See [this table](https://github.com/leylabmpi/Struo2/blob/master/tests/samples/GTDBr95_n10.tsv) for an example.
+The path to the samples table file should be specified in the `config.yaml` file (see below).
 
 ## Gene data
 
