@@ -136,13 +136,13 @@ def mmseqs_search_mem(wildcards, input, attempt, threads=8):
     x = config['params']['humann3']['mmseqs_search']['db']    
     prot_db_size = os.stat(x).st_size / 1e9
     query_db_size = os.stat(input.qdb).st_size / 1e9    
-    mem = prot_db_size * 3.5 + 10 + query_db_size
-    mem = round(float(mem) / threads + 1.499,0) + attempt ** 2
+    mem = prot_db_size * 3.5 + 10 + query_db_size * 1.2
+    mem = round(float(mem) / threads + 1.499,0) + attempt ** 2.5
     if x.lower().endswith('uniref90') and mem < 29:
-        mem = 28 + attempt ** 2
+        mem = 28 + attempt ** 3
     elif x.lower().endswith('uniref50') and mem < 18:
-        mem = 18 + attempt ** 2
-    return int(mem)
+        mem = 18 + attempt ** 3
+    return int(round(mem,0))
 
 rule mmseqs_search:
     """
