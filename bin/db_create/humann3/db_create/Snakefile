@@ -19,7 +19,7 @@ rule humann3_annotate_genes:
         params = config['params']['humann3']['propagate_annotations']
     resources:
         time = lambda wildcards, attempt: attempt ** 3 * 59,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 3 * 3 + 11,
+        mem_gb_pt = lambda wildcards, attempt: attempt ** 4 * 3 + 11,
     log:
         log_dir + 'humann3_annotate_genes/all.log'
     benchmark:
@@ -173,8 +173,8 @@ rule humann3_diamond_makedb:
     conda:
         '../../../envs/humann3.yaml'
     resources:
-        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
-        mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 2) * 12
+        time = lambda wildcards, attempt: attempt * 2 * 60 * 24 + 60 * 24,
+        mem_gb_pt = lambda wildcards, attempt: (attempt ** 3 + 3) * 12
     log:
         log_dir + 'humann3_diamond_makedb/{uniref}/{dmnd}.log'
     benchmark:

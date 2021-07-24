@@ -117,7 +117,7 @@ generating gene & gene-cluster databases that can be efficiently updated via
 Custom GTDB databases available at the [Struo2 data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo2/)
 
 **GTDB releases available:**
-* Release 202 (27.04.2021)  **[IN PROGRESS]**
+* Release 202 (27.04.2021)
   * Number of genomes included: 46,434
   * GTDB taxdump
     * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
