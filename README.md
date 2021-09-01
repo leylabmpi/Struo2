@@ -307,6 +307,13 @@ The genomes and/or individual genes used for creating/updating databases
 The table of input files/data can be created using the helper scripts described above
 if you downloaded the genomes from the GTDB or NCBI.
 
+We recommend to use the highest quality genome assemblies possible.
+See the Struo2 manuscript for data on how genome assembly quality affects database accuracy.
+
+We also recommend to de-replicate genomes to 95% ANI, since within-species variation can result
+in multi-mapping of reads and lower sensitivity. Also, de-replicating to 95% ANI reduces the dataset
+to more manageable numbers.
+
 The `samples.txt` file lists all reference genomes to be included in the custom databases:
 
 * The pipeline requires a tab-delimited table that includes the following columns (column names specified in the `config.yaml` file):
