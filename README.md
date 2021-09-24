@@ -67,7 +67,7 @@ Struo2
 
 ## Struo2
 
-> Youngblut, Nicholas D., and Ruth E. Ley. 2021. "Struo2: Efficient Metagenome Profiling Database Construction for Ever-Expanding Microbial Genome Datasets." Cold Spring Harbor Laboratory. https://doi.org/10.1101/2021.02.10.430604.
+> Youngblut, Nicholas D., and Ruth E. Ley. 2021. “Struo2: Efficient Metagenome Profiling Database Construction for Ever-Expanding Microbial Genome Datasets.” PeerJ 9 (September): e12198. [https://doi.org/10.7717/peerj.12198](https://doi.org/10.7717/peerj.12198)
 
 ## Struo (original)
 
