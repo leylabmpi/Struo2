@@ -16,6 +16,8 @@ parser$add_argument("-c", "--columns", type='character', default='ncbi_organism_
 			   help="Table columns to keep [default: %(default)s]")
 parser$add_argument("-f", "--filter", type='character', default='gtdb_representative == "t" & checkm_completeness >= 50 & checkm_contamination < 5',
 			   help="Table columns to keep [default: %(default)s]")
+#parser$add_argument("-t", "--tmpdir", type='character', default='GMF_TMP',
+#			   help="Directory for temporary output [default: %(default)s]")	   
 parser$add_argument("-v", "--verbose", action="store_true", default=TRUE,
 			   help="Print extra output [default: %(default)s]")
 parser$add_argument("-q", "--quietly", action="store_false",
@@ -29,9 +31,27 @@ cols = unlist(strsplit(unlist(args['columns']), ','))
 write('----', stderr())
 
 df = list()
+tmpdir = NULL
 for(url in unlist(args['metadata_urls'])){
+    # download and uncompress tarball
+    if(grepl('.tar.gz$', url)){
+        write('url points to tarball; downloading and uncompressing', stderr())
+        tmpdir = 'GTDB_metadata_filter_TMP'
+	if(! dir.exists(tmpdir)){
+	    dir.create(tmpdir)
+	}
+        tmpfile = file.path(tmpdir, 'GTDB_metadata_filter_TMP.tar.gz')
+        download.file(url, destfile=tmpfile)
+        untar(tmpfile, exdir=tmpdir)
+	url = file.path(tmpdir, gsub('.tar.gz$', '.tsv', basename(url)))
+    }
+    # read table
     write(sprintf('Reading in file: %s', url), stderr())
     df[[url]] = fread(url, sep='\t', check.names=TRUE)[, ..cols]
+    # clean up
+    if(!is.null(tmpdir) & dir.exists(tmpdir)){
+        unlink(tmpdir, recursive = TRUE)
+    }
 }
 
 df = do.call(rbind, df)
