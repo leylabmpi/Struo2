@@ -24,18 +24,20 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
 def main(args):
-    if args.genome_file.endswith('.gz'):
+    gz = args.genome_file.endswith('.gz')
+    if gz:
         inF = gzip.open(args.genome_file)
     else:
         inF = open(args.genome_file)
     for line in inF:
-        line = line.decode('utf8').rstrip()
+        if gz:
+            line = line.decode('utf8')
+        line = line.rstrip()
         if line.startswith('>'):
             line = '>kraken:taxid|{}|{}'.format(args.taxID, line.lstrip('>'))
         print(line)
 
     inF.close()
-    
 
 if __name__ == '__main__':
     args = parser.parse_args()
