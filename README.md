@@ -11,7 +11,7 @@ Struo2
 
 > "Struo" --> from the Latin: “I build” or “I gather”
 
-* Version: 2.2.1
+* Version: 2.2.2
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
 * Maintainers:
@@ -487,6 +487,18 @@ humann3 --bypass-nucleotide-index \
 
 
 # Utilities
+
+## `database_download.py`
+
+Helper script for downloading existing custom Struo2-generated GTDB databases.
+
+Example for downloading Kraken2/Bracken database (and associated files):
+
+```
+# requires `requests` and `bs4` python packages
+# using 4 threads in this example
+./util_scripts/database_download.py -t 4 -r 202 -d kraken2 metadata taxdump phylogeny -- custom_dbs
+```
 
 ## `GTDB_metadata_filter.R`
 
