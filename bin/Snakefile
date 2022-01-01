@@ -19,7 +19,8 @@ def all_which_input(wildcards):
     """
     F = []    
     # kraken2
-    if not skipped(config['databases']['kraken2']):
+    if (config['samples'] is not None and
+        not skipped(config['databases']['kraken2'])):
         F.append(os.path.join(kraken2_dir, 'hash.k2d'))
         F.append(os.path.join(kraken2_dir, 'opts.k2d'))
         F.append(os.path.join(kraken2_dir, 'taxo.k2d'))

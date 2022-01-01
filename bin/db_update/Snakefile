@@ -7,34 +7,38 @@ config['output_dir'] = config['output_dir'].rstrip('/') + '/'
 print('\33[33mUsing output directory: {} \x1b[0m'.format(config['output_dir']))
 
 ## Samples table
-if not os.path.isfile(config['samples_file']):
-    raise IOError('Cannot find file: {}'.format(config['samples_file']))
-config['samples'] = pd.read_csv(config['samples_file'], sep='\t')
-### required columns
-for f in [config['samples_col'], config['accession_col'], config['fasta_file_path_col'],
-          config['taxID_col'], config['taxonomy_col']]:
-    if f not in config['samples'].columns:
-        raise ValueError('Cannot find column: {}'.format(f))
-config['samples'][config['samples_col']] = config['samples'][config['samples_col']].str.replace('[^A-Za-z0-9]+', '_')
-config['samples'] = config['samples'].set_index(config['samples'][config['samples_col']])
-
+if skipped(os.path.split(config['samples_file'])[1]):
+    config['samples'] = None
+else:
+    if not os.path.isfile(config['samples_file']):
+        raise IOError('Cannot find file: {}'.format(config['samples_file']))
+    config['samples'] = pd.read_csv(config['samples_file'], sep='\t')
+    ### required columns
+    for f in [config['samples_col'], config['accession_col'], config['fasta_file_path_col'],
+              config['taxID_col'], config['taxonomy_col']]:
+        if f not in config['samples'].columns:
+            raise ValueError('Cannot find column: {}'.format(f))
+    config['samples'][config['samples_col']] = config['samples'][config['samples_col']].str.replace('[^A-Za-z0-9]+', '_')
+    config['samples'] = config['samples'].set_index(config['samples'][config['samples_col']])
+    
 ### check that files exist (skipping if not)
-rowID = 0
-to_rm = []
-for index,row in config['samples'].iterrows():
-    rowID += 1
-    file_cols = [config['fasta_file_path_col']]
-    for f in file_cols:
-        if not os.path.isfile(str(row[f])):
-           msg = 'Samples table (Row {}): Cannot find file: {}; Skipping\n'
-           sys.stderr.write(msg.format(rowID, row[f]))
-           to_rm.append(row[config['samples_col']])
-ssw('\33[33mNumber of skipped sample table entries: {}\n\x1b[0m'.format(len(to_rm)))
-config['samples'].drop(to_rm, inplace=True)
-if config['samples'].shape[0] < 1:
-    raise ValueError('No genomes remaining after filtering!')
-config['samples_unique'] = config['samples'][config['samples_col']].unique().tolist()
-
+if config['samples'] is not None:
+    rowID = 0
+    to_rm = []
+    for index,row in config['samples'].iterrows():
+        rowID += 1
+        file_cols = [config['fasta_file_path_col']]
+        for f in file_cols:
+            if not os.path.isfile(str(row[f])):
+               msg = 'Samples table (Row {}): Cannot find file: {}; Skipping\n'
+               sys.stderr.write(msg.format(rowID, row[f]))
+               to_rm.append(row[config['samples_col']])
+    ssw('\33[33mNumber of skipped sample table entries: {}\n\x1b[0m'.format(len(to_rm)))
+    config['samples'].drop(to_rm, inplace=True)
+    if config['samples'].shape[0] < 1:
+        raise ValueError('No genomes remaining after filtering!')
+    config['samples_unique'] = config['samples'][config['samples_col']].unique().tolist()
+    
 # check that user-gene info (if provided) as all of the required columns
 if (not skipped(config['new_genes']['amino_acid']) or
     not skipped(config['new_genes']['nucleotide'])):
@@ -62,7 +66,7 @@ if (not skipped(config['new_genes']['amino_acid']) or
 
 ## temp_folder
 config['pipeline']['username'] = getpass.getuser()
-config['pipeline']['email'] = config['pipeline']['username'] + '@tuebingen.mpg.de'
+config['pipeline']['email'] = config['email']
 config['tmp_dir'] = os.path.join(config['tmp_dir'], config['pipeline']['username'])
 config['tmp_dir'] = os.path.join(config['tmp_dir'], 'Struo2_' + str(os.stat('.').st_ino) + '/')
 print('\33[33mUsing temporary directory: {} \x1b[0m'.format(config['tmp_dir']))
@@ -76,7 +80,8 @@ print('\33[36m--Running db-update pipeline--\x1b[0m')
 snake_dir = config['pipeline']['snakemake_folder']
 include: snake_dir + 'bin/dirs'
 ### Adding genomes to kraken/bracken (user cannot provide gene list)
-if not skipped(config['databases']['kraken2']):
+if (config['samples'] is not None and
+    not skipped(config['databases']['kraken2'])):
     print('\33[36m* Updating kraken2 database\x1b[0m')        
     include: snake_dir + 'bin/db_update/kraken2/Snakefile'
     if not skipped(config['databases']['bracken']):
