@@ -3,7 +3,7 @@ email: None
 
 #-- I/O --#
 # file listing samples and associated data
-samples_file: data/GTDBr95_n5/GTDBr95_n5.tsv
+samples_file: data/GTDBr95_n10/GTDBr95_n10.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
