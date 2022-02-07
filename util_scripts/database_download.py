@@ -25,6 +25,8 @@ epi = """DESCRIPTION:
 A helper script for downloading pre-built custom database files.
 Multiple GTDB releases & databases (eg., kraken2 or humann3) 
 can be downloaded.
+
+Note: use "--" to separate --databass parameters from <output_dir>
 """
 parser = argparse.ArgumentParser(description=desc, epilog=epi,
                                  formatter_class=CustomFormatter)
@@ -45,18 +47,36 @@ parser.add_argument('-t', '--threads', type=int, default=1,
 parser.add_argument('--version', action='version', version='0.0.1')
 
 # functions
+def decode(x):
+    """
+    Decoding input, if needed
+    """
+    try:
+        x = x.decode('utf-8')
+    except AttributeError:
+        pass
+    return x
+
 def dl_file(l, url, out_dir):
     """
     Download file from url
     """
     if l['href'].startswith('?') or l['href'].endswith('/'):
         return None
-    r = requests.get(url + '/' + l['href'].lstrip('/'))
-    if r.status_code != 404:
-        out_file = os.path.join(out_dir, l['href'])
-        with open(out_file, 'wb') as outF:
-            outF.write(r.content)
-        logging.info('File written: {}'.format(out_file))
+    with requests.get(url + '/' + l['href'].lstrip('/'), stream=True) as r:
+        if r.status_code != 404:
+            comp = os.path.splitext(l['href'])[1] in ('.gz', '.bz2')
+            out_file = os.path.join(out_dir, l['href'])
+            if comp:
+                with open(out_file, 'wb') as outF:
+                    for chunk in r.iter_content(chunk_size = 1024):
+                        if chunk:
+                            outF.write(chunk)
+            else:
+                with open(out_file, 'w') as outF:
+                    for line in r.iter_lines(decode_unicode=True):
+                        outF.write(decode(line) + '\n')                        
+            logging.info('File written: {}'.format(out_file))
     return None
             
 def dl_files(base_url, release, database, out_dir, threads):
@@ -72,7 +92,7 @@ def dl_files(base_url, release, database, out_dir, threads):
     r = requests.get(url)
     if r.status_code == 404:
         logging.warning('WARNING: 404 status code for url: {}'.format(url))
-        return None    
+        return None
     # file urls: GET
     data = bs4.BeautifulSoup(r.text, 'html.parser')
     func = functools.partial(dl_file, url=url, out_dir=out_dir)
