@@ -18,7 +18,7 @@ else:
               config['taxID_col'], config['taxonomy_col']]:
         if f not in config['samples'].columns:
             raise ValueError('Cannot find column: {}'.format(f))
-    config['samples'][config['samples_col']] = config['samples'][config['samples_col']].str.replace('[^A-Za-z0-9]+', '_')
+    config['samples'][config['samples_col']] = config['samples'][config['samples_col']].str.replace('[^A-Za-z0-9]+', '_', regex=True)
     config['samples'] = config['samples'].set_index(config['samples'][config['samples_col']])
     
 ### check that files exist (skipping if not)

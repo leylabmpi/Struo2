@@ -103,7 +103,8 @@ rule filter_gene_seqs:
            {output.fna} {output.faa} \
            > {output.txt} 2> {log}
         """        
-                
+
+localrule: genes_combine_fna
 rule genes_combine_fna:
     """
     For all per-genome de-replicated genes of all genomes, combining into 1 collection
@@ -118,6 +119,7 @@ rule genes_combine_fna:
     run:
         cat_files(input.fna, outfile=output.fna) 
 
+localrule: genes_combine_faa
 rule genes_combine_faa:
     """
     For all per-genome de-replicated genes of all genomes, combining into 1 collection
@@ -132,6 +134,7 @@ rule genes_combine_faa:
     run:
         cat_files(input.faa, outfile=output.faa) 
 
+localrule: genes_combine_txt
 rule genes_combine_txt:
     """
     For all per-genome de-replicated genes of all genomes, combining into 1 collection
