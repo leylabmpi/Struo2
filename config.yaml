@@ -3,7 +3,7 @@ email: None
 
 #-- I/O --#
 # file listing samples and associated data
-samples_file: data/GTDBr95_n5/GTDBr95_n5.tsv
+samples_file: data/GTDBr95_n10/GTDBr95_n10.tsv
 
 ## column names in samples table
 samples_col: 'ncbi_organism_name'
@@ -13,7 +13,7 @@ taxID_col: 'gtdb_taxid'          # or 'ncbi_species_taxid'
 taxonomy_col: 'gtdb_taxonomy'    # or 'ncbi_taxonomy' 
 
 # output location
-output_dir: tests/output_GTDBr95_n10/
+output_dir: tests/output/GTDBr95_n10/
 
 # temporary file directory (your username will be added automatically)
 tmp_dir: /ebio/abt3_scratch/
@@ -30,10 +30,10 @@ databases:
 
 # Name of UniRef clustering (uniref90 or uniref50)
 ## "uniref90" highly recommended
-uniref_name: uniref50
+uniref_name: uniref90
 # Name of the humann3 diamond database to be created
 ## This must match the naming allowed by humann3 (eg., "uniref90_201901.dmnd")
-dmnd_name: uniref50_201901.dmnd
+dmnd_name: uniref90_201901.dmnd
 # Index mapping UniRef90 clusters to UniRef50 (saves time vs re-annotating)
 ## This is skipped if annotating with UniRef50 instead of UniRef90
 cluster_idx: data/uniref50-90.pkl
@@ -68,12 +68,12 @@ params:
   humann3:
     batches: 2
     mmseqs_search:
-      db: Skip #data/mmmseq2/uniref50    # UniRef90 is recommended!
+      db: data/UniRef90/uniref90
       index: -s 6
       run: -e 1e-3 --max-accept 1 --max-seqs 100 --num-iterations 2 --start-sens 1 --sens-steps 3 -s 6
     diamond:
-      db: data/uniref50_201901.dmnd   # UniRef90 is recommended!
-      run: --evalue 1e-3 --query-cover 80 --id 50 --max-target-seqs 1 --block-size 4 --index-chunks 2
+      db: Skip #data/uniref90_ec-filtered/uniref90_ec_filt_201901.dmnd
+      run: --evalue 1e-3 --query-cover 80 --id 90 --max-target-seqs 1 --block-size 4 --index-chunks 2
     propagate_annotations: --min-cov 80 --min-pident 90
 
 #-- snakemake pipeline --#
