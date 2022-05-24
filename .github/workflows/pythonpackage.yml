@@ -42,8 +42,9 @@ jobs:
     - name: UniRef db setup
       shell: bash -l {0}
       run: |
-        wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/UniRef90_mmseqs.tar.gz
-        tar -pzxvf $DATADIR/UniRef90_mmseqs.tar.gz --directory $DATADIR
+        touch $DATADIR/UniRef90/uniref90 $DATADIR/UniRef90/uniref90.dbtype $DATADIR/UniRef90/uniref90.index
+        touch $DATADIR/UniRef90/uniref90.lookup $DATADIR/UniRef90/uniref90.source
+        touch $DATADIR/UniRef90/uniref90_h $DATADIR/UniRef90/uniref90_h.dbtype $DATADIR/UniRef90/uniref90_h.index
         wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
     - name: Reference genome download
       shell: bash -l {0}
