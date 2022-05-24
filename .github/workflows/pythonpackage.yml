@@ -38,13 +38,13 @@ jobs:
       run: |
         mkdir -p $DATADIR
         wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release95/taxdump/taxdump.tar.gz
-	tar -pzxvf $DATADIR/taxdump.tar.gz --directory $DATADIR
+        tar -pzxvf $DATADIR/taxdump.tar.gz --directory $DATADIR
     - name: UniRef db setup
       shell: bash -l {0}
       run: |
         wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/UniRef90_mmseqs.tar.gz
         tar -pzxvf $DATADIR/UniRef90_mmseqs.tar.gz --directory $DATADIR
-	wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
+        wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/install/uniref_2019.01/uniref50-90.pkl
     - name: Reference genome download
       shell: bash -l {0}
       run: |
