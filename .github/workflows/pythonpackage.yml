@@ -42,6 +42,7 @@ jobs:
     - name: UniRef db setup
       shell: bash -l {0}
       run: |
+        mkdir -p $DATADIR/UniRef90/
         touch $DATADIR/UniRef90/uniref90 $DATADIR/UniRef90/uniref90.dbtype $DATADIR/UniRef90/uniref90.index
         touch $DATADIR/UniRef90/uniref90.lookup $DATADIR/UniRef90/uniref90.source
         touch $DATADIR/UniRef90/uniref90_h $DATADIR/UniRef90/uniref90_h.dbtype $DATADIR/UniRef90/uniref90_h.index
