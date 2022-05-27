@@ -22,6 +22,7 @@ jobs:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
         channels: conda-forge,bioconda
+        channel-priority: strict
         activate-environment: struo2
     - name: Checkout repository
       uses: actions/checkout@v2
