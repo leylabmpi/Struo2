@@ -136,11 +136,11 @@ rule kraken2_build:
 	map  = temp(config['tmp_dir'] + 'kraken2/seqid2taxid.map'),
 	taxo = temp(config['tmp_dir'] + 'kraken2/taxo.k2d')        
     threads:
-        18
+        12
     resources:
-        time = lambda wildcards, attempt: attempt * 2 * 60 * 24,
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 24,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 2.7 + 4,0))
+        mem_gb_pt = lambda wildcards, attempt: int(round(attempt * 18 + 4,0))
     conda:
         '../../envs/kraken2.yaml'
     log:

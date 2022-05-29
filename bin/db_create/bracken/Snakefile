@@ -14,11 +14,11 @@ rule bracken_build:
         exe = config['pipeline']['script_folder'] + 'bracken-build.py',
         read_len = lambda wildcards: wildcards.read_len,
     threads:
-        18
+        12
     resources:
-        time = lambda wildcards, attempt: attempt ** 2 * 60 * 12,
+        time = lambda wildcards, attempt: attempt ** 2 * 60 * 24,
         n = lambda wildcards, attempt, threads: threads,
-        mem_gb_pt = lambda wildcards, attempt: attempt ** 2 * 5
+        mem_gb_pt = lambda wildcards, attempt: attempt * 16
     conda:
         '../../envs/kraken2.yaml'
     log:

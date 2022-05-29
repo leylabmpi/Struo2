@@ -45,7 +45,6 @@ write(sprintf('Reading table: %s', x), stderr())
 df = read.delim(x, sep='\t')
 write(sprintf('Number of rows: %s', nrow(df)), stderr())
 
-
 # filtering table
 ## checking for "fasta_file_path" column
 filter_bool = unlist(args['filter'])[1]
@@ -60,7 +59,7 @@ if(filter_bool == TRUE){
 }
 
 ## Filtering based on user params & getting accessions
-write('Filtering out genomes lacking NCBI genbank assembly accession')
+write('Filtering out genomes lacking NCBI genbank assembly accession', stderr())
 col = unlist(args['column'])[1]
 df = df[df[,col] != 'none',]
 write(sprintf('Number of rows after filtering: %s', nrow(df)), stderr())
@@ -84,7 +83,8 @@ params = as.character(unlist(args['params'])[1])
 database = as.character(unlist(args['database'])[1])
 skip_bool = args['skip'][1]
 if(skip_bool != TRUE){
-    cmd = paste(c(exe, '-F', 'fasta', '-o', D, '-p', procs, '-r', retries, '-A', F, '-s', database, params), collapse=' ')
+    cmd = paste(c(exe, '-F', 'fasta', '-o', D, '-p', procs, '-r', retries,
+                  '-A', F, '-s', database, params), collapse=' ')
     write(sprintf('Running cmd: %s', cmd), stderr())
     system(cmd)
 } else {
