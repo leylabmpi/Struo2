@@ -18,6 +18,7 @@ no-log_jobs_sge.*
 *4test.yaml
 data/
 notebooks_dev/
+util_scripts/data
 
 # hg
 **/.hg/
