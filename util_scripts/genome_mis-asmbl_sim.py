@@ -24,8 +24,8 @@ epi = """DESCRIPTION:
 * Input is a table of genomes
   * tab-delimited table
   * columns must include:
-    * "taxon" => name of taxon
-    * "fasta" => path to assembly fasta file   
+    * "taxon" => name of taxon (change via --taxon-column)
+    * "fasta" => path to assembly fasta file (change via --fasta-column)
 * Simulated miassemblies
   * Contig breaks => slicing contigs into mulitiple
   * Relocations => intra genome fragment relocation
@@ -54,6 +54,10 @@ parser.add_argument('-o', '--outdir', type=str, default='mis-asmbl',
                     help='Output directory')
 parser.add_argument('-t', '--threads', type=int, default=1,
                     help='Parallel processes')
+parser.add_argument('-T', '--taxon-column', type=str, default='taxon',
+                    help='Name of taxon column')
+parser.add_argument('-F', '--fasta-column', type=str, default='fasta',
+                    help='Name of fasta column')
 parser.add_argument('-g', '--gzip-out', action='store_true', default=False,
                     help='gzip output?')
 parser.add_argument('--version', action='version', version='0.0.1')
@@ -97,7 +101,7 @@ def read_fasta(filename):
                 fasta[header] = line
     return fasta
 
-def load_input_table(filename):
+def load_input_table(filename, args):
     header = dict()
     D = dict()
     with open(filename) as inF:
@@ -106,8 +110,8 @@ def load_input_table(filename):
             if i == 0:
                 header = {x:ii for ii,x in enumerate(line)}
                 continue
-            taxon = line[header['taxon']]
-            fasta = line[header['fasta']]
+            taxon = line[header[args.taxon_column]]
+            fasta = line[header[args.fasta_column]]
             D[taxon] = fasta    
     return D
 
@@ -298,7 +302,7 @@ def write_table(outfiles):
 
 def main(args):
     # load table of genomes
-    genomes = load_input_table(args.input_table)
+    genomes = load_input_table(args.input_table, args)
     # per genome
     func = partial(per_genome,
                    genomes=genomes,
