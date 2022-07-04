@@ -71,6 +71,8 @@ jobs:
     - name: Tree pruning test
       shell: bash -l {0}
       run: |
+        wget --directory-prefix $DATADIR http://ftp.tue.mpg.de/ebio/projects/struo2/dev_data/phylogeny.tar.gz
+        tar -pzxvf $DATADIR/phylogeny.tar.gz --directory $DATADIR
         ./util_scripts/tree_prune.py data/phylogeny/accs_to_keep.txt data/phylogeny/ar122_r95.tree
     - name: Mis-assembly simulation test
       shell: bash -l {0}
