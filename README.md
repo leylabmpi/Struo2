@@ -22,6 +22,8 @@ Struo2
 # TOC
 
 - [Citation](#citation)
+  * [Struo2](#struo2)
+  * [Struo (original)](#struo--original-)
 - [Overview](#overview)
 - [Changes from Version 1](#changes-from-version-1)
 - [Pre-built custom databases](#pre-built-custom-databases)
@@ -51,16 +53,16 @@ Struo2
   * [Using the resulting databases](#using-the-resulting-databases)
     + [Example of a HUMANnN3 run](#example-of-a-humannn3-run)
 - [Utilities](#utilities)
+  * [`database_download.py`](#-database-downloadpy-)
   * [`GTDB_metadata_filter.R`](#-gtdb-metadata-filterr-)
   * [`genome_download.R`](#-genome-downloadr-)
   * [`tree_prune.py`](#-tree-prunepy-)
+  * [`genome_mis-asmbl_sim.py`](#-genome-mis-asmbl-simpy-)
   * [`gtdb_to_taxdump`](#-gtdb-to-taxdump-)
   * [`nbci-gtdb_map.py`](#-nbci-gtdb-mappy-)
 - [Tutorials](#tutorials)
 - [FAQ](#faq)
   * [Why is MetaPhlAn not included in Struo2?](#why-is-metaphlan-not-included-in-struo2-)
-
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 
 # Citation
@@ -120,7 +122,7 @@ Custom GTDB databases available at the [Struo2 data ftp server](http://ftp.tue.m
 
 **GTDB releases available:**
 
-* Release 207 (08.04.2022) [in progress]
+* Release 207 (08.04.2022) **[Now available!]**
   * Number of genomes included: 62,443
   * GTDB taxdump
     * Utilizing [gtdb-taxdump](https://github.com/shenwei356/gtdb-taxdump)
