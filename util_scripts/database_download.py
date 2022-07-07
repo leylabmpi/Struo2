@@ -26,14 +26,14 @@ A helper script for downloading pre-built custom database files.
 Multiple GTDB releases & databases (eg., kraken2 or humann3) 
 can be downloaded.
 
-Note: use "--" to separate --databass parameters from <output_dir>
+Note: use "--" to separate "--database" parameters from <output_dir>
 """
 parser = argparse.ArgumentParser(description=desc, epilog=epi,
                                  formatter_class=CustomFormatter)
 parser.add_argument('output_dir', type=str,
                     help='Output directory')
 parser.add_argument('-r', '--release', type=str, nargs='+',
-                    choices = ['95', '202'], default=['202'],
+                    choices = ['95', '202', '207'], default=['207'],
                     help='GTDB release')
 parser.add_argument('-d', '--database', type=str, nargs='+',
                     choices = ['kraken2', 'humann3', 'taxdump', 'phylogeny',
@@ -58,6 +58,9 @@ def decode(x):
     return x
 
 def write_lines(url, l, out_dir):
+    """"
+    Writing lines obtained from requests 
+    """
     with requests.get(url + '/' + l['href'].lstrip('/'), stream=True) as r:        
         if r.status_code == 404:
             return None
@@ -70,6 +73,9 @@ def write_lines(url, l, out_dir):
     logging.info(f'File written: {out_file}')
     
 def write_chunks(url, l, out_dir):
+    """
+    Writing chunks obtained from requests
+    """
     with requests.get(url + '/' + l['href'].lstrip('/'), stream=True) as r:        
         if r.status_code == 404:
             return None
@@ -89,8 +95,7 @@ def dl_file(l, url, out_dir):
     try:
         write_lines(url, l, out_dir)
     except UnicodeDecodeError:
-        write_chunks(url, l, out_dir)
-    
+        write_chunks(url, l, out_dir)    
     return None
             
 def dl_files(base_url, release, database, out_dir, threads):
@@ -110,11 +115,12 @@ def dl_files(base_url, release, database, out_dir, threads):
     # file urls: GET
     data = bs4.BeautifulSoup(r.text, 'html.parser')
     func = functools.partial(dl_file, url=url, out_dir=out_dir)
+    bs4_list = [x for x in data.find_all('a')]
     if args.threads > 1:
         pool = mp.Pool(threads)
-        pool.map(func, data.find_all('a'))
+        pool.map(func, bs4_list)
     else:
-        [x for x in map(func, data.find_all('a'))]
+        [x for x in map(func, bs4_list)]
     try:
         pool.close()
     except UnboundLocalError:

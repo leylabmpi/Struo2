@@ -11,7 +11,7 @@ Struo2
 
 > "Struo" --> from the Latin: “I build” or “I gather”
 
-* Version: 2.2.2
+* Version: 2.3.0
 * Authors:
   * Nick Youngblut <nyoungb2@gmail.com>
 * Maintainers:
@@ -79,6 +79,7 @@ Efficiently create/update custom databases for the following metagenome profiler
 
 * [Kraken2](https://github.com/DerrickWood/kraken2)
 * [Bracken](https://github.com/jenniferlu717/Bracken)
+* [KrakenUniq](https://github.com/fbreitwieser/krakenuniq)
 * [HUMAnN3](https://github.com/biobakery/humann)
 
 You can also just use Struo2 for efficiently clustering genes via mmseqs and
@@ -110,20 +111,28 @@ generating gene & gene-cluster databases that can be efficiently updated via
     * Note: currently only works for updating existing Struo2-generated databases
     * If only amino-acid genes provided, the sequences can be rev-translated or skipped
     * If only nucleotide genes provided, the sequences can be translated or skipped
-* Experimental support for metaphlan3, but see the notes below
+* KrakenUniq database construction
+  * Note: Bracken can be used with KrakenUniq output, BUT Bracken databases can only be produced from a Kraken2 database
 
 # Pre-built custom databases
 
 Custom GTDB databases available at the [Struo2 data ftp server](http://ftp.tue.mpg.de/ebio/projects/struo2/)
 
 **GTDB releases available:**
+
+* Release 207 (08.04.2022) [in progress]
+  * Number of genomes included: 62,443
+  * GTDB taxdump
+    * Utilizing [gtdb-taxdump](https://github.com/shenwei356/gtdb-taxdump)
+      * Benefit over [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump): trackable TaxIds
+  * Genome phylogeny
+    * GTDB `ar53_r207.tree` & `bac120_r207.tree` grafted together      
 * Release 202 (27.04.2021)
   * Number of genomes included: 46,434
   * GTDB taxdump
     * taxIDs assigned with [gtdb_to_taxdump](https://github.com/nick-youngblut/gtdb_to_taxdump)
   * Genome phylogeny
     * GTDB `ar122_r202.tree` & `bac120_r202.tree` grafted together
-
 * Release 95 (13.07.2020)
   * Number of genomes included: 30,989
   * GTDB taxdump
