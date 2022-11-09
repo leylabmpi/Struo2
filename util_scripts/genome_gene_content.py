@@ -34,19 +34,19 @@ parser.add_argument('annotations', metavar='annotations', type=str,
                     help='Struo2 HUMAnN3 gene annotation file')
 parser.add_argument('--content', type=str,
                     choices = ['uniref', 'cog', 'cog-categories', 'pfam', 'pfam-categories'],
-                    default='/ebio/abt3_projects/databases_no-backup/humann3/201901/utility_mapping/map_eggnog_uniref90.txt.gz',
+                    default='/ebio/abt3_projects2/databases_no-backup/humann3/201901/utility_mapping/map_eggnog_uniref90.txt.gz',
                     help='UniRef <=> COG mapping file')
 parser.add_argument('--cog-map', type=str,
-                    default='/ebio/abt3_projects/databases_no-backup/humann3/201901/utility_mapping/map_eggnog_uniref90.txt.gz',
+                    default='/ebio/abt3_projects2/databases_no-backup/humann3/201901/utility_mapping/map_eggnog_uniref90.txt.gz',
                     help='UniRef <=> COG mapping file')
 parser.add_argument('--cog-cat', type=str,
-                    default='/ebio/abt3_projects/databases_no-backup/humann3/201901/utility_mapping/hierarchy/COG.tsv',
+                    default='/ebio/abt3_projects2/databases_no-backup/humann3/201901/utility_mapping/hierarchy/COG.tsv',
                     help='COG <=> COG-category mapping file')
 parser.add_argument('--pfam-map', type=str,
-                    default='/ebio/abt3_projects/databases_no-backup/humann3/201901/utility_mapping/map_pfam_uniref90.txt.gz',
+                    default='/ebio/abt3_projects2/databases_no-backup/humann3/201901/utility_mapping/map_pfam_uniref90.txt.gz',
                     help='UniRef <=> Pfam mapping file')
 parser.add_argument('--pfam-cat', type=str,
-                    default='/ebio/abt3_projects/databases_no-backup/humann3/201901/utility_mapping/hierarchy/pfam.tsv',
+                    default='/ebio/abt3_projects2/databases_no-backup/humann3/201901/utility_mapping/hierarchy/pfam.tsv',
                     help='Pfam <=> Pfam-category mapping file')
 parser.add_argument('--genome-metadata', type=str,
                     help='Tab-delim metadata file that contains at least 2 columns: "accession" & "protein_count' + \

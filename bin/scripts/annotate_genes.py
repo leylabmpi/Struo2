@@ -28,7 +28,7 @@ parser.add_argument('--columns', type=str, default='qseqid,sseqid,pident,length,
                         help='Diamond output columns (default:  %(default)s)')                    
 parser.add_argument('--outdir', type=str, default='genes_annotated',
                         help='Output directory (default:  %(default)s)')
-parser.add_argument('--dmnd-db', type=str, default='/ebio/abt3_projects/databases_no-backup/humann2/uniref50/uniref50_annotated.1.1.dmnd',
+parser.add_argument('--dmnd-db', type=str, default='/ebio/abt3_projects2/databases_no-backup/humann2/uniref50/uniref50_annotated.1.1.dmnd',
                     help='UniRef dmnd db for annotating genes (default: %(default)s)')
 parser.add_argument('--percid', type=float, default=50.0,
                         help='Percent sequence ID cutoff for calling a hit (default:  %(default)s)')
