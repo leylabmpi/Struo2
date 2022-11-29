@@ -109,12 +109,13 @@ Custom GTDB databases available at the [Struo2 data ftp server](http://ftp.tue.m
 To download the pipeline, clone the Git repository:
 
 ```
-git clone --recurse-submodules git@github.com:leylabmpi/struo2.git 
+git clone --recurse-submodules https://github.com/leylabmpi/Struo2.git 
 ```
 
 Note the use of submodules. If needed, you can update the submodule(s) via:
 
 ```
+cd Struo2
 git submodule update --remote --init --recursive
 ```
 
@@ -125,7 +126,7 @@ See [the miniconda docs](https://docs.conda.io/en/latest/miniconda.html) for ins
 To install the main conda environment for running the snakemake pipeline and utility scripts:
 
 ```
-conda env create --name struo2 conda_env.yaml
+conda env create --name struo2 -f conda_env.yaml
 ```
 
 The only real dependencies for running the Struo2 snakemake pipeline are:
