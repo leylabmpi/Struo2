@@ -133,7 +133,7 @@ def remove_seq(seq, s_start, s_len):
 
 def select_donor_contig(genome, max_tries, min_len):
     for i in range(max_tries):
-        contig_d = random.sample(genome.keys(), 1)[0]
+        contig_d = random.sample([x for x in genome.keys()], 1)[0]
         contig_d_seq = genome[contig_d]
         if len(contig_d_seq) < min_len:
             continue
