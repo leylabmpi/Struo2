@@ -189,7 +189,7 @@ def add_relocate(focal_gen, min_len=1000, max_len=10000, max_tries=10):
         focal_gen.pop(contig_d + '_R', None)
     # adding fragment to focal genome
     ## selecting recipient contig
-    contig_r = random.sample(focal_gen.keys(), 1)[0]
+    contig_r = random.sample([x for x in focal_gen.keys()], 1)[0]
     contig_r_seq = focal_gen[contig_r]
     ## selecting insert location
     if len(contig_r_seq) < 100:
@@ -236,7 +236,7 @@ def add_chimera(focal_gen, taxon, genomes, min_len=1000, max_len=10000, max_trie
         donor_gen.pop(contig_d + '_R', None)
     # adding fragment to focal genome
     ## selecting contig
-    contig_r = random.sample(focal_gen.keys(), 1)[0]
+    contig_r = random.sample([x for x in focal_gen.keys()], 1)[0]
     contig_r_seq = focal_gen[contig_r]
     ## selecting insert location
     c_insert_loc = random.randint(0, len(contig_r_seq)-1)
