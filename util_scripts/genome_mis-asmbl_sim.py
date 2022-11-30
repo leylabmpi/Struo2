@@ -145,7 +145,7 @@ def add_break(focal_gen):
     adding break point to contigs
     """
     # selecting contig
-    contig = random.sample(focal_gen.keys(), 1)[0]
+    contig = random.sample([x for x in focal_gen.keys()], 1)[0]
     contig_seq = focal_gen[contig]
     # selecting split location
     if len(contig_seq) < 100:
