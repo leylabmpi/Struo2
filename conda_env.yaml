@@ -16,3 +16,4 @@ dependencies:
 - r-r.utils
 - ncbi-genome-download>=0.2.10
 - newick_utils>=1.6
+- beautifulsoup4>=4.11
