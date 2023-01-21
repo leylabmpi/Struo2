@@ -10,26 +10,26 @@ parser <- ArgumentParser()
 # specifying options
 parser$add_argument("acc_table", nargs=1, help="Table containing assembly accessions (tab-delim with header)")
 parser$add_argument("-c", "--column", type='character', default='ncbi_genbank_assembly_accession',
-			   help="Column name containing accessions [default: %(default)s]")
+                    help="Column name containing accessions [default: %(default)s]")
 parser$add_argument("-o", "--output", type='character', default='.',
-			   help="Path for output [default: %(default)s]")
+                    help="Path for output [default: %(default)s]")
 parser$add_argument("-p", "--procs", type='integer', default=1,
-			   help="Number of parallel processes [default: %(default)s]")
+	            help="Number of parallel processes [default: %(default)s]")
 parser$add_argument("-r", "--retries", type='integer', default=3,
-			   help="Number of retries [default: %(default)s]")
+                    help="Number of retries [default: %(default)s]")
 parser$add_argument("-d", "--database", type='character', default='genbank',
-			   help="database to download (-s flag for ncbi-genome-download) [default: %(default)s]")
-parser$add_argument("-x", "--params", type='character', default='"archaea,bacteria"',
-			   help="Filtering parameters for ncbi-genome-download [default: %(default)s]")
+                    help="database to download (-s flag for ncbi-genome-download) [default: %(default)s]")
+parser$add_argument("-x", "--params", type='character', default='archaea,bacteria',
+	            help="Filtering parameters for ncbi-genome-download [default: %(default)s]")
 parser$add_argument("-f", "--filter", action="store_true", default=FALSE,
-			   help="Check for 'fasta_file_path' and just download any accessions lacking values [default: %(default)s]")
+                    help="Check for 'fasta_file_path' and just download any accessions lacking values [default: %(default)s]")
 parser$add_argument("-s", "--skip", action="store_true", default=FALSE,
-			   help="Skip the genome downloading; useful if re-running to re-make the output table [default: %(default)s]")
+                    help="Skip the genome downloading; useful if re-running to re-make the output table [default: %(default)s]")
 parser$add_argument("-v", "--verbose", action="store_true", default=TRUE,
-			   help="Print extra output [default: %(default)s]")
+                    help="Print extra output [default: %(default)s]")
 parser$add_argument("-q", "--quietly", action="store_false",
-			   dest="verbose", help="Print little output")
-args <- parser$parse_args()
+                    dest="verbose", help="Print little output")
+args = parser$parse_args()
 
 
 # checking for executables
