@@ -5,6 +5,7 @@ import sys
 import re
 import gzip
 import bz2
+import resource
 import argparse
 import logging
 import functools
@@ -44,6 +45,8 @@ parser.add_argument('-u', '--base-url', type=str,
                     help='Base url for downloads')
 parser.add_argument('-t', '--threads', type=int, default=1,
                     help='Parallel download processes')
+parser.add_argument('-m', '--max-recursion', type=int, default=1048576,
+                    help='Max recursion limit')
 parser.add_argument('--version', action='version', version='0.0.1')
 
 # functions
@@ -126,9 +129,19 @@ def dl_files(base_url, release, database, out_dir, threads):
     except UnboundLocalError:
         pass
         
+def set_recursion(max_rec):
+    """
+    max_rec = 0x100000
+    """
+    resource.setrlimit(resource.RLIMIT_STACK, [0x100 * max_rec, resource.RLIM_INFINITY])
+    sys.setrecursionlimit(max_rec)
+    logging.info(f'Max recursion set to: {max_rec}')
+    
 def main(args):
     # args
     args.release = ['GTDB_release{}'.format(x) for x in args.release]
+    # recursion
+    set_recursion(args.max_recursion)
     # output
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
