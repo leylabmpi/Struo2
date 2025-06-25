@@ -1,5 +1,5 @@
 ![Struo2](https://github.com/leylabmpi/Struo2/workflows/Struo2/badge.svg)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥5.6.0-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥8.0.0-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
 
 Struo2
 ======
@@ -132,7 +132,7 @@ conda env create --name struo2 -f conda_env.yaml
 The only real dependencies for running the Struo2 snakemake pipeline are:
 
 * Python
-* Snakemake
+* Snakemake v.8+
 * Pandas python package
 
 If you want email notifications upon pipeline success/failure, then you need
