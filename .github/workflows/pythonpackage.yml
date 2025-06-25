@@ -28,6 +28,26 @@ jobs:
       uses: actions/checkout@v2
     - name: Checkout submodules
       run: git submodule update --init --recursive
+    - name: Clean up Conda config - Remove all non-forge channels
+      shell: bash
+      run: |
+        echo "Overwriting global .condarc..."
+        sudo mkdir -p /usr/share/miniconda3
+        sudo bash -c "echo 'channels:' > /usr/share/miniconda3/.condarc"
+        sudo bash -c "echo '  - conda-forge' >> /usr/share/miniconda3/.condarc"
+        sudo bash -c "echo '  - bioconda' >> /usr/share/miniconda3/.condarc"
+        sudo bash -c "echo '  - nodefaults' >> /usr/share/miniconda3/.condarc"
+        sudo bash -c "echo 'channel_priority: strict' >> /usr/share/miniconda3/.condarc"
+
+        echo "Overwriting user .condarc..."
+        echo 'channels:' > ~/.condarc
+        echo '  - conda-forge' >> ~/.condarc
+        echo '  - bioconda' >> ~/.condarc
+        echo '  - nodefaults' >> ~/.condarc
+        echo 'channel_priority: strict' >> ~/.condarc
+        echo 'always_yes: true' >> ~/.condarc
+        echo 'auto_activate: true' >> ~/.condarc
+        echo 'changeps1: false' >> ~/.condarc
     - name: conda env setup
       shell: bash -l {0}
       run: |
