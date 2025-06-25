@@ -105,12 +105,12 @@ rule kraken2_build:
     """
     input:
         expand(config['tmp_dir'] + 'db_update/kraken2/added/{sample}.done',
-	       sample = config['samples_unique'])
+           sample = config['samples_unique'])
     output:
         hash = temp(config['tmp_dir'] + 'db_update/kraken2/hash.k2d'),
-	opts = temp(config['tmp_dir'] + 'db_update/kraken2/opts.k2d'),
-	map  = temp(config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'),
-	taxo = temp(config['tmp_dir'] + 'db_update/kraken2/taxo.k2d')
+        opts = temp(config['tmp_dir'] + 'db_update/kraken2/opts.k2d'),
+        map  = temp(config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'),
+        taxo = temp(config['tmp_dir'] + 'db_update/kraken2/taxo.k2d')
     threads:
         12
     resources:
@@ -139,14 +139,14 @@ rule kraken2_db_copy:
         nodes = config['tmp_dir'] + 'db_update/kraken2/taxonomy/nodes.dmp',
         names = config['tmp_dir'] + 'db_update/kraken2/taxonomy/names.dmp',
         hash = config['tmp_dir'] + 'db_update/kraken2/hash.k2d',
-	opts = config['tmp_dir'] + 'db_update/kraken2/opts.k2d',
-	taxo = config['tmp_dir'] + 'db_update/kraken2/taxo.k2d',
-	map  = config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'
+        opts = config['tmp_dir'] + 'db_update/kraken2/opts.k2d',
+        taxo = config['tmp_dir'] + 'db_update/kraken2/taxo.k2d',
+        map  = config['tmp_dir'] + 'db_update/kraken2/seqid2taxid.map'
     output:
         hash = kraken2_dir + 'hash.k2d',
-	opts = kraken2_dir + 'opts.k2d',
-	taxo = kraken2_dir + 'taxo.k2d',
-	map  = kraken2_dir + 'seqid2taxid.map'
+        opts = kraken2_dir + 'opts.k2d',
+        taxo = kraken2_dir + 'taxo.k2d',
+        map  = kraken2_dir + 'seqid2taxid.map'
     params:
         keep = config['keep_intermediate'],
         ionice = config['params']['ionice']

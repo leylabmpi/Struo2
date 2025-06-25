@@ -132,9 +132,9 @@ rule kraken2_build:
 	       sample = config['samples_unique'])
     output:
         hash = temp(config['tmp_dir'] + 'kraken2/hash.k2d'),
-	opts = temp(config['tmp_dir'] + 'kraken2/opts.k2d'),
-	map  = temp(config['tmp_dir'] + 'kraken2/seqid2taxid.map'),
-	taxo = temp(config['tmp_dir'] + 'kraken2/taxo.k2d')        
+        opts = temp(config['tmp_dir'] + 'kraken2/opts.k2d'),
+        map  = temp(config['tmp_dir'] + 'kraken2/seqid2taxid.map'),
+        taxo = temp(config['tmp_dir'] + 'kraken2/taxo.k2d')        
     threads:
         12
     resources:
@@ -159,14 +159,14 @@ rule kraken2_db_copy:
     """
     input:
         hash = config['tmp_dir'] + 'kraken2/hash.k2d',
-	opts = config['tmp_dir'] + 'kraken2/opts.k2d',
-	taxo = config['tmp_dir'] + 'kraken2/taxo.k2d',
-	map  = config['tmp_dir'] + 'kraken2/seqid2taxid.map'
+        opts = config['tmp_dir'] + 'kraken2/opts.k2d',
+        taxo = config['tmp_dir'] + 'kraken2/taxo.k2d',
+        map  = config['tmp_dir'] + 'kraken2/seqid2taxid.map'
     output:
         hash = kraken2_dir + 'hash.k2d',
-	opts = kraken2_dir + 'opts.k2d',
-	taxo = kraken2_dir + 'taxo.k2d',
-	map  = kraken2_dir + 'seqid2taxid.map'
+        opts = kraken2_dir + 'opts.k2d',
+        taxo = kraken2_dir + 'taxo.k2d',
+        map  = kraken2_dir + 'seqid2taxid.map'
     params:
         keep = config['keep_intermediate'],
         ionice = config['params']['ionice']
@@ -200,9 +200,9 @@ rule kraken2_tmp_db_rm:
     input:
         hash_tmp = config['tmp_dir'] + 'kraken2/hash.k2d',
         hash = kraken2_dir + 'hash.k2d',
-	opts = kraken2_dir + 'opts.k2d',
-	taxo = kraken2_dir + 'taxo.k2d',
-	map  = kraken2_dir + 'seqid2taxid.map'
+        opts = kraken2_dir + 'opts.k2d',
+        taxo = kraken2_dir + 'taxo.k2d',
+        map  = kraken2_dir + 'seqid2taxid.map'
     output:
         done = kraken2_dir + 'tmp_db_rm.done'
     resources:
