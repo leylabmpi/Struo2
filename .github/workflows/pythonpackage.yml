@@ -32,24 +32,25 @@ jobs:
       shell: bash
       run: |
         echo "Overwriting global and user .condarc to disable defaults..."
-        sudo tee /usr/share/miniconda3/.condarc > /dev/null <<EOF
-        channels:
-          - conda-forge
-          - bioconda
-          - nodefaults
-        channel_priority: strict
-    EOF
 
-        tee ~/.condarc > /dev/null <<EOF
-        channels:
-          - conda-forge
-          - bioconda
-          - nodefaults
-        channel_priority: strict
-        always_yes: true
-        auto_activate: true
-        changeps1: false
-    EOF
+        sudo bash -c 'cat > /usr/share/miniconda3/.condarc' << 'EOF'
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+channel_priority: strict
+        EOF
+
+        cat > ~/.condarc << 'EOF'
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+channel_priority: strict
+always_yes: true
+auto_activate: true
+changeps1: false
+      EOF
     - name: conda env setup
       shell: bash -l {0}
       run: |
